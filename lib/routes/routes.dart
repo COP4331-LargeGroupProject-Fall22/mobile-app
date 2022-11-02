@@ -3,7 +3,7 @@ import 'package:smart_chef/screens/StartupScreen.dart';
 import 'package:smart_chef/screens/RecipeScreen.dart';
 import 'package:smart_chef/screens/IngredientScreen.dart';
 import 'package:smart_chef/screens/ShoppingCartScreen.dart';
-import 'package:smart_chef/screens/UserProfileScreen.dart';
+import 'package:smart_chef/screens/UsersProfileScreen.dart';
 
 class Routes {
   static const String startupScreen = '/startup';

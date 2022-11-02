@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class IngredientsScreen extends StatefulWidget {
+class UserProfileScreen extends StatefulWidget {
   @override
-  _IngredientsState createState() => _IngredientsState();
+  _UserProfileState createState() => _UserProfileState();
 }
 
-class _IngredientsState extends State<IngredientsScreen> {
+class _UserProfileState extends State<UserProfileScreen> {
   @override
   void initState() {
     super.initState();
@@ -13,16 +13,16 @@ class _IngredientsState extends State<IngredientsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return IngredientsPage();
+    return UserProfilePage();
   }
 }
 
-class IngredientsPage extends StatefulWidget {
+class UserProfilePage extends StatefulWidget {
   @override
-  _IngredientsPageState createState() => _IngredientsPageState();
+  _UserProfilePageState createState() => _UserProfilePageState();
 }
 
-class _IngredientsPageState extends State<IngredientsPage> {
+class _UserProfilePageState extends State<UserProfilePage> {
   @override
   void initState() {
     super.initState();
@@ -38,24 +38,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
           ),
           centerTitle: true,
           backgroundColor: Colors.white,
-          leading: IconButton(
-            onPressed: () {},
-            icon: Icon(
-              Icons.search,
-              color: Colors.black,
-            ),
-            iconSize: 35,
-          ),
-          actions: <Widget>[
-            IconButton(
-              icon: Icon(
-                Icons.manage_search,
-                color: Colors.black,
-              ),
-              iconSize: 35,
-              onPressed: () {},
-            ),
-          ]),
+      ),
       body: GestureDetector(
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: SingleChildScrollView(
@@ -85,15 +68,17 @@ class _IngredientsPageState extends State<IngredientsPage> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.pushReplacementNamed(context, '/food');
+                          },
                           icon: Icon(Icons.egg),
                           iconSize: 55,
-                          color: Color(0xff008600),
+                          color: Color(0xff5E5E5E),
                         ),
                         const Text(
                           'Ingredients',
                           style:
-                          TextStyle(fontSize: 12, color: Color(0xff008600)),
+                          TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
                           textAlign: TextAlign.center,
                         )
                       ])),
@@ -145,16 +130,14 @@ class _IngredientsPageState extends State<IngredientsPage> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/user');
-                      },
+                      onPressed: () {},
                       icon: Icon(Icons.person),
                       iconSize: 55,
-                      color: Color(0xff5E5E5E),
+                      color: Color(0xff008600),
                     ),
                     const Text(
                       'User Profile',
-                      style: TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
+                      style: TextStyle(fontSize: 12, color: Color(0xff008600)),
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -164,14 +147,6 @@ class _IngredientsPageState extends State<IngredientsPage> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.large(
-        onPressed: () {},
-        backgroundColor: Color(0xff008600),
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add, size: 65, color: Colors.white),
-        elevation: 25,
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
