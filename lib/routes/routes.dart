@@ -16,6 +16,7 @@ class Routes {
 
   static const String userProfileScreen = '/user';
   static const String editUserProfileScreen = '/user/edit';
+  static const String editPasswordScreen = '/user/changePassword';
 
   // routes of pages in the app
   static Map<String, Widget Function(BuildContext)> get getroutes => {
@@ -30,5 +31,6 @@ class Routes {
 
     userProfileScreen: (context) => UserProfileScreen(),
     editUserProfileScreen: (context) => EditUserProfilePage(),
+    editPasswordScreen: (context) => EditPasswordPage(),
   };
 }

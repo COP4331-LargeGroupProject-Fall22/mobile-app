@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:smart_chef/utils/globals.dart';
+import 'package:smart_chef/utils/getAPI.dart';
 
 class IngredientsScreen extends StatefulWidget {
   @override
@@ -32,9 +34,9 @@ class _IngredientsPageState extends State<IngredientsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: const Text(
+          title: Text(
             'SmartChef',
-            style: TextStyle(fontSize: 24, color: Color(0xff008600)),
+            style: TextStyle(fontSize: 24, color: greenScheme),
           ),
           centerTitle: true,
           backgroundColor: Colors.white,
@@ -88,12 +90,12 @@ class _IngredientsPageState extends State<IngredientsPage> {
                           onPressed: () {},
                           icon: Icon(Icons.egg),
                           iconSize: 55,
-                          color: Color(0xff008600),
+                          color: greenScheme,
                         ),
                         const Text(
                           'Ingredients',
                           style:
-                          TextStyle(fontSize: 12, color: Color(0xff008600)),
+                          TextStyle(fontSize: 12, color: greenScheme),
                           textAlign: TextAlign.center,
                         )
                       ])),
@@ -166,7 +168,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
       ),
       floatingActionButton: FloatingActionButton.large(
         onPressed: () {},
-        backgroundColor: Color(0xff008600),
+        backgroundColor: greenScheme,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add, size: 65, color: Colors.white),
         elevation: 25,

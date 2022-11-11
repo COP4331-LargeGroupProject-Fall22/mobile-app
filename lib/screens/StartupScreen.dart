@@ -103,7 +103,7 @@ class _StartPageState extends State<StartPage> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    backgroundColor: const Color(0xff008600),
+                                    backgroundColor: greenScheme,
                                     padding: const EdgeInsets.all(2),
                                     shadowColor: Colors.black,
                                   ),
@@ -136,7 +136,7 @@ class _StartPageState extends State<StartPage> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    backgroundColor: const Color(0xff008600),
+                                    backgroundColor: greenScheme,
                                     padding: const EdgeInsets.all(2),
                                     shadowColor: Colors.black,
                                   ),
@@ -397,7 +397,7 @@ class _SignInPageState extends State<SignInPage> {
                             onChanged: (password) {
                               setState(() => unfilledPassword = false);
                             },
-                            textInputAction: TextInputAction.go,
+                            textInputAction: TextInputAction.done,
                           ),
                         ),
                       ],
@@ -445,20 +445,25 @@ class _SignInPageState extends State<SignInPage> {
 
                                   try {
                                     String payload = '{"username": "$username","password": "$password"}';
-                                    final ret = await UserData.authUser('auth/login', payload);
-                                    print(ret.statusCode);
+                                    final ret = await UserData.authUser('auth/login?includeInfo=true', payload);
                                     switch (ret.statusCode) {
                                       case 200:
                                         var data = json.decode(ret.body);
-                                        LocalData.token = data["accessToken"];
+                                        LocalData.accessToken = data["accessToken"];
+                                        LocalData.refreshToken = data["refreshToken"];
+                                        LocalData.password = password;
 
                                         _email.clear();
                                         _password.clear();
-                                        bool foundUser = await getUserInfo();
-                                        if (foundUser){
-                                          Navigator.pushNamedAndRemoveUntil(context,
+
+                                        print(ret.body);
+
+                                        LocalData.firstName = data['userInfo']['firstName'];
+                                        LocalData.lastName = data['userInfo']['lastName'];
+                                        LocalData.email = data['userInfo']['username'];
+                                        LocalData.lastSeen = data['userInfo']['lastSeen'];
+                                        Navigator.pushNamedAndRemoveUntil(context,
                                               '/food', ((Route<dynamic> route) => false));
-                                        }
                                         break;
                                       case 400:
                                         print("Incorrect formatting!");
@@ -466,7 +471,7 @@ class _SignInPageState extends State<SignInPage> {
                                       case 401:
                                         errorMessage = 'Account not verified';
                                         break;
-                                      case 404:
+                                      case 403:
                                         errorMessage = 'Email/password incorrect';
                                         setState(() {
                                           unfilledPassword = true;
@@ -494,7 +499,7 @@ class _SignInPageState extends State<SignInPage> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              backgroundColor: const Color(0xff008600),
+                              backgroundColor: greenScheme,
                               padding: const EdgeInsets.all(2),
                               shadowColor: Colors.black,
                             ),
@@ -671,7 +676,7 @@ class _SignInPageState extends State<SignInPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-              backgroundColor: const Color(0xff008600),
+              backgroundColor: greenScheme,
               padding: const EdgeInsets.all(2),
               shadowColor: Colors.black,
             ),
@@ -685,45 +690,6 @@ class _SignInPageState extends State<SignInPage> {
         )
       ],
     );
-  }
-
-  Future <bool> getUserInfo() async {
-    try {
-      final response = await UserData.getUser('user', LocalData.token);
-      switch (response.statusCode) {
-        case 200:
-          errorMessage = '';
-          var userData = json.decode(response.body);
-          LocalData.firstName = userData['firstName'];
-          LocalData.lastName = userData['lastName'];
-          LocalData.email = userData['username'];
-          LocalData.password = userData['password'];
-          return true;
-        case 400:
-          print("Incorrect formatting!");
-          break;
-        case 401:
-          errorMessage = 'Access token missing or invalid';
-          break;
-        case 404:
-          errorMessage = 'User Not Found';
-          setState(() {
-            unfilledPassword = true;
-            unfilledEmail = true;
-          });
-          break;
-        default:
-          print('Something somewhere went wrong!');
-          break;
-      }
-    }
-    catch(e) {
-      setState(() {
-        errorMessage = 'Could not get User';
-      });
-      print('Could not connect to /user');
-    }
-    return false;
   }
 }
 
@@ -1045,7 +1011,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             onChanged: (password) {
                               setState(() => unfilledPassword = false);
                             },
-                            textInputAction: TextInputAction.next,
+                            textInputAction: TextInputAction.done,
                           ),
                         ),
                       ],
@@ -1100,7 +1066,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
                                 try {
                                   String payload = '{"firstname": "$firstName","lastname": "$lastName","username": "$username","password": "$password"}';
-                                  final ret = await UserData.authUser('auth/register', payload);
+                                  final ret = await UserData.authUser(
+                                      'auth/register', payload);
                                   switch (ret.statusCode) {
                                     case 200:
                                       errorMessage = '';
@@ -1110,22 +1077,27 @@ class _RegisterPageState extends State<RegisterPage> {
                                       _lastName.clear();
                                       setState(() {
                                         state = 1;
-                                      });;
+                                      });
                                       break;
                                     case 400:
                                       print("Incorrect formatting!");
                                       break;
                                     case 401:
-                                      errorMessage = 'Access token is missing or invalid';
+                                      errorMessage =
+                                      'Access token is missing or invalid';
                                       break;
                                     case 404:
-                                      errorMessage = 'Email/password incorrect';
+                                      errorMessage =
+                                      'Email/password incorrect';
+                                      break;
+                                    default:
+                                      errorMessage = 'Something went wrong!';
                                       break;
                                   }
 
                                   //jsonObject = json.decode(ret.body);
                                 }
-                                catch(e) {
+                                catch (e) {
                                   print('Could not connect to server');
                                 }
                               }
@@ -1134,7 +1106,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              backgroundColor: const Color(0xff008600),
+                              backgroundColor: greenScheme,
                               padding: const EdgeInsets.all(2),
                               shadowColor: Colors.black,
                             ),
@@ -1303,7 +1275,7 @@ class _RegisterPageState extends State<RegisterPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-              backgroundColor: const Color(0xff008600),
+              backgroundColor: greenScheme,
               padding: const EdgeInsets.all(2),
               shadowColor: Colors.black,
             ),

@@ -36,6 +36,62 @@ class UserData {
     }
     throw Exception('Could not connect to server');
   }
+
+  static Future<http.Response> logoutUser(String url, String auth) async{
+    http.Response response;
+    final headers = {HttpHeaders.contentTypeHeader: 'application/json', HttpHeaders.authorizationHeader: auth};
+    try {
+      String totalurl = '$API_PREFIX$url';
+      response = await http.get(Uri.parse(totalurl), headers: headers);
+      return response;
+    }
+    catch(e) {
+      print(e.toString());
+    }
+    throw Exception('Could not connect to server');
+  }
+
+  static Future<http.Response> updateUser(String url, String changes) async{
+    http.Response response;
+    final headers = {HttpHeaders.contentTypeHeader: 'application/json', HttpHeaders.authorizationHeader: LocalData.accessToken};
+    try {
+      String totalurl = '$API_PREFIX$url';
+      response = await http.put(Uri.parse(totalurl), body: utf8.encode(changes), headers: headers);
+      return response;
+    }
+    catch(e) {
+      print(e.toString());
+    }
+    throw Exception('Could not connect to server');
+  }
+
+  static Future<http.Response> refreshToken(String url) async{
+    http.Response response;
+    final headers = {HttpHeaders.contentTypeHeader: 'application/json'};
+    try {
+      String totalurl = '$API_PREFIX$url';
+      response = await http.put(Uri.parse(totalurl), body: utf8.encode('{"refreshToken": "${LocalData.refreshToken}"}'), headers: headers);
+      return response;
+    }
+    catch(e) {
+      print(e.toString());
+    }
+    throw Exception('Could not connect to server');
+  }
+
+  static Future<http.Response> deleteUser(String url, String auth) async{
+    http.Response response;
+    final headers = {HttpHeaders.contentTypeHeader: 'application/json', HttpHeaders.authorizationHeader: LocalData.accessToken};
+    try {
+      String totalurl = '$API_PREFIX$url';
+      response = await http.put(Uri.parse(totalurl), headers: headers);
+      return response;
+    }
+    catch(e) {
+      print(e.toString());
+    }
+    throw Exception('Could not connect to server');
+  }
 }
 
 class LocalData {
@@ -43,7 +99,9 @@ class LocalData {
   static late String firstName;
   static late String email;
   static late String password;
-  static late String token;
+  static late String accessToken;
+  static late String refreshToken;
+  static late int lastSeen;
   //static late bool hasProfileImage;
   //static late String profileImage;
 }
