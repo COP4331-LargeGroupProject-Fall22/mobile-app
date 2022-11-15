@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:smart_chef/utils/globals.dart';
-import 'package:smart_chef/utils/getAPI.dart';
 import 'dart:convert';
+import 'package:smart_chef/utils/APIutils.dart';
+import 'package:smart_chef/utils/colors.dart';
+import 'package:smart_chef/utils/userData.dart';
+import 'package:smart_chef/utils/authAPI.dart';
+import 'package:http/http.dart' as http;
 
 class StartupScreen extends StatefulWidget {
   @override
@@ -103,7 +106,7 @@ class _StartPageState extends State<StartPage> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    backgroundColor: greenScheme,
+                                    backgroundColor: mainScheme,
                                     padding: const EdgeInsets.all(2),
                                     shadowColor: Colors.black,
                                   ),
@@ -136,7 +139,7 @@ class _StartPageState extends State<StartPage> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    backgroundColor: greenScheme,
+                                    backgroundColor: mainScheme,
                                     padding: const EdgeInsets.all(2),
                                     shadowColor: Colors.black,
                                   ),
@@ -186,8 +189,7 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
-  final _email = TextEditingController();
-  final emailDecoration = InputDecoration(
+  final generalDecoration = InputDecoration(
     contentPadding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
     filled: true,
     fillColor: const Color(0xffD1D1D1),
@@ -195,20 +197,12 @@ class _SignInPageState extends State<SignInPage> {
       borderRadius: BorderRadius.circular(10),
       borderSide: const BorderSide(color: Color(0xff47A1E2)),
     ),
-    hintText: 'Enter Email',
   );
+
+  final _email = TextEditingController();
   bool unfilledEmail = false;
 
   final _password = TextEditingController();
-  final passwordDecoration = InputDecoration(
-      contentPadding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
-      filled: true,
-      fillColor: const Color(0xffD1D1D1),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xff47A1E2)),
-      ),
-      hintText: 'Enter Password');
   bool unfilledPassword = false;
 
   String errorMessage = '';
@@ -295,10 +289,7 @@ class _SignInPageState extends State<SignInPage> {
                         ),
                       ),
                       onPressed: () {
-                        unfilledPassword = false;
-                        unfilledEmail = false;
-                        _email.clear();
-                        _password.clear();
+                        clearFields();
                         setState(() {
                           Navigator.pop(context);
                         });
@@ -338,23 +329,24 @@ class _SignInPageState extends State<SignInPage> {
                             maxLines: 1,
                             controller: _email,
                             decoration: unfilledEmail
-                                ? emailDecoration.copyWith(
+                                ? generalDecoration.copyWith(
                                     enabledBorder: const OutlineInputBorder(
                                         borderSide:
                                             BorderSide(color: Colors.red)),
                                     suffixIcon: const Icon(Icons.clear,
                                         color: Colors.red),
+                                    hintText: 'Enter Email',
                                   )
-                                : emailDecoration,
+                                : generalDecoration.copyWith(hintText: 'Enter Email'),
                             onChanged: (email) {
-                              /*if (!isEmail(email)) {
+                              if (!isEmail(email)) {
                                 errorMessage = 'Email must be in valid form';
                                 setState(() => unfilledEmail = true);
                               }
                               else {
                                 errorMessage = '';
                                 setState(() => unfilledEmail = false);
-                              }*/
+                              }
                             },
                             textInputAction: TextInputAction.next,
                           ),
@@ -387,13 +379,14 @@ class _SignInPageState extends State<SignInPage> {
                             controller: _password,
                             obscureText: true,
                             decoration: unfilledPassword
-                                ? passwordDecoration.copyWith(
+                                ? generalDecoration.copyWith(
                                     enabledBorder: const OutlineInputBorder(
                                         borderSide:
                                             BorderSide(color: Colors.red)),
                                     suffixIcon: const Icon(Icons.clear,
-                                        color: Colors.red))
-                                : passwordDecoration,
+                                        color: Colors.red),
+                                      hintText: 'Enter Email')
+                                : generalDecoration.copyWith(hintText: 'Enter Email'),
                             onChanged: (password) {
                               setState(() => unfilledPassword = false);
                             },
@@ -421,85 +414,44 @@ class _SignInPageState extends State<SignInPage> {
                           width: 85,
                           child: ElevatedButton(
                             onPressed: () async {
-                              if (_email.value.text.isEmpty |
-                                  _password.value.text.isEmpty ){
-                                  //|!isEmail(_email.value.text)) {
-                                if (_email.value.text.isEmpty) {
-                                  setState(() => unfilledEmail = true);
-                                }
-                                if (_password.value.text.isEmpty) {
-                                  setState(() => unfilledPassword = true);
-                                }
-                                /*if (!isEmail(_email.value.text)) {
-                                  errorMessage = 'Email must be in valid form';
-                                  setState(() => unfilledEmail = true);
-                                }*/
-                              } else {
-                                  //var jsonObject;
-                                  String username = _email.value.text.trim();
-                                  String password = _password.value.text.trim();
-                                  setState(() {
-                                    unfilledEmail = false;
-                                    unfilledPassword = false;
-                                  });
+                              if (areFieldsValid(true)) {
+                                String username = _email.value.text.trim();
+                                String password = _password.value.text.trim();
+                                setState(() => clearFields());
 
-                                  try {
-                                    String payload = '{"username": "$username","password": "$password"}';
-                                    final ret = await UserData.authUser('auth/login?includeInfo=true', payload);
-                                    switch (ret.statusCode) {
-                                      case 200:
-                                        var data = json.decode(ret.body);
-                                        LocalData.accessToken = data["accessToken"];
-                                        LocalData.refreshToken = data["refreshToken"];
-                                        LocalData.password = password;
+                                try {
+                                  String payload = '{"username": "$username","password": "$password"}';
+                                  final ret = await Authentication.login(payload);
+                                  if (status(ret)) {
+                                    var data = json.decode(ret.body);
+                                    user = UserData(
+                                      firstName: data['userInfo']['firstName'],
+                                      lastName: data['userInfo']['lastName'],
+                                      email: data['userInfo']['username'],
+                                      lastSeen: data['userInfo']['lastSeen'],
+                                      accessToken: data["accessToken"],
+                                      refreshToken: data["refreshToken"],
+                                      password: password,
+                                    );
 
-                                        _email.clear();
-                                        _password.clear();
-
-                                        print(ret.body);
-
-                                        LocalData.firstName = data['userInfo']['firstName'];
-                                        LocalData.lastName = data['userInfo']['lastName'];
-                                        LocalData.email = data['userInfo']['username'];
-                                        LocalData.lastSeen = data['userInfo']['lastSeen'];
-                                        Navigator.pushNamedAndRemoveUntil(context,
-                                              '/food', ((Route<dynamic> route) => false));
-                                        break;
-                                      case 400:
-                                        print("Incorrect formatting!");
-                                        break;
-                                      case 401:
-                                        errorMessage = 'Account not verified';
-                                        break;
-                                      case 403:
-                                        errorMessage = 'Email/password incorrect';
-                                        setState(() {
-                                          unfilledPassword = true;
-                                          unfilledEmail = true;
-                                        });
-                                        break;
-                                      default:
-                                        print('Something in auth went wrong!');
-                                        break;
-                                    }
+                                    Navigator.pushNamedAndRemoveUntil(context,
+                                        '/food', ((Route<dynamic> route) => false));
                                   }
-                                  catch(e) {
-                                    errorMessage = 'Could not connect to server';
-                                    print('Could not connect to /auth/user');
-                                  }
-                                  /*LocalData.firstName = 'Joe';
-                                  LocalData.lastName = 'Mama';
-                                  LocalData.email = username;
-                                  LocalData.password = password;
-                                  Navigator.pushNamedAndRemoveUntil(context,
-                                      '/food', ((Route<dynamic> route) => false));*/
+                                }
+                                catch(e) {
+                                  errorMessage = 'Could not connect to server';
+                                  print('Could not connect to /auth/user');
+                                }
+                              }
+                              else {
+                                setState(() {});
                               }
                             },
                             style: ElevatedButton.styleFrom(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              backgroundColor: greenScheme,
+                              backgroundColor: mainScheme,
                               padding: const EdgeInsets.all(2),
                               shadowColor: Colors.black,
                             ),
@@ -528,10 +480,7 @@ class _SignInPageState extends State<SignInPage> {
                         ),
                       ),
                       onPressed: () {
-                        unfilledEmail = false;
-                        unfilledPassword = false;
-                        _email.clear();
-                        _password.clear();
+                        clearFields();
                         topMessage = 'Forgot Your\nPassword?';
                         setState(() {
                           state = 1;
@@ -564,7 +513,7 @@ class _SignInPageState extends State<SignInPage> {
               ),
             ),
             onPressed: () {
-              topMessage = "Welcome\nTo SmartChef!";
+              topMessage = "Welcome\nBack!";
               setState(
                 () {
                   state = 0;
@@ -631,12 +580,12 @@ class _SignInPageState extends State<SignInPage> {
                     maxLines: 1,
                     obscureText: false,
                     decoration: unfilledEmail
-                        ? emailDecoration.copyWith(
+                        ? generalDecoration.copyWith(
                             enabledBorder: const OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.red)),
                             suffixIcon:
                                 const Icon(Icons.clear, color: Colors.red))
-                        : emailDecoration,
+                        : generalDecoration,
                     onChanged: (email) {
                       setState(() => unfilledEmail = false);
                     },
@@ -658,17 +607,11 @@ class _SignInPageState extends State<SignInPage> {
           child: ElevatedButton(
             onPressed: () {
               setState(() {
-                if (_email.value.text.isEmpty) {
-                  setState(() => unfilledEmail = true);
-                } else {
-                  if (!isEmail(_email.value.text)) {
-                    errorMessage = 'Email must be in valid form';
-                    setState(() => unfilledEmail = true);
-                  } else {
-                    setState(() {
-                      _email.clear();
-                    });
-                  }
+                if (areFieldsValid(false)) {
+                  //TODO Add support for reseting password
+                  setState(() {
+                    _email.clear();
+                  });
                 }
               });
             },
@@ -676,7 +619,7 @@ class _SignInPageState extends State<SignInPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-              backgroundColor: greenScheme,
+              backgroundColor: mainScheme,
               padding: const EdgeInsets.all(2),
               shadowColor: Colors.black,
             ),
@@ -690,6 +633,54 @@ class _SignInPageState extends State<SignInPage> {
         )
       ],
     );
+  }
+
+  bool areFieldsValid(bool hasPassword) {
+    bool toReturn = true;
+    if (_email.value.text.isEmpty) {
+      toReturn = false;
+      setState(() => unfilledEmail = true);
+    }
+    if (hasPassword & _password.value.text.isEmpty) {
+      toReturn = false;
+      setState(() => unfilledPassword = true);
+    }
+    if (!isEmail(_email.value.text)) {
+      toReturn = false;
+      errorMessage = 'Email must be in valid form';
+      setState(() => unfilledEmail = true);
+    }
+    return toReturn;
+  }
+
+  void clearFields() {
+    unfilledEmail = false;
+    unfilledPassword = false;
+    _email.clear();
+    _password.clear();
+  }
+
+  bool status(http.Response res) {
+    switch (res.statusCode) {
+      case 200:
+        return true;
+      case 400:
+        print("Incorrect formatting!");
+        return false;
+      case 401:
+        errorMessage = 'Account not verified';
+        return false;
+      case 403:
+        errorMessage = 'Email/password incorrect';
+        setState(() {
+          unfilledPassword = true;
+          unfilledEmail = true;
+        });
+        return false;
+      default:
+        print('Something in auth went wrong!');
+        return false;
+    }
   }
 }
 
@@ -809,14 +800,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ),
                       onPressed: () {
-                        unfilledFirstName = false;
-                        unfilledLastName = false;
-                        unfilledPassword = false;
-                        unfilledEmail = false;
-                        _firstName.clear();
-                        _lastName.clear();
-                        _email.clear();
-                        _password.clear();
+                        clearFields();
                         setState(
                           () {
                             Navigator.pop(context);
@@ -1036,77 +1020,51 @@ class _RegisterPageState extends State<RegisterPage> {
                           height: 36,
                           child: ElevatedButton(
                             onPressed: () async {
-                              if (_email.value.text.isEmpty |
-                                  _password.value.text.isEmpty |
-                                  _firstName.value.text.isEmpty |
-                                  _lastName.value.text.isEmpty |
-                                  !isEmail(_email.value.text)) {
-                                if (_firstName.value.text.isEmpty) {
-                                  setState(() => unfilledFirstName = true);
-                                }
-                                if (_lastName.value.text.isEmpty) {
-                                  setState(() => unfilledLastName = true);
-                                }
-                                if (_email.value.text.isEmpty) {
-                                  setState(() => unfilledEmail = true);
-                                }
-                                if (_password.value.text.isEmpty) {
-                                  setState(() => unfilledPassword = true);
-                                }
-                                if (!isEmail(_email.value.text)) {
-                                  errorMessage = 'Email must be in valid form';
-                                  setState(() => unfilledEmail = true);
-                                }
-                              } else {
-                                //var jsonObject;
+                              if (areFieldsValid()) {
                                 String username = _email.value.text.trim();
                                 String password = _password.value.text.trim();
                                 String firstName = _firstName.value.text.trim();
                                 String lastName = _lastName.value.text.trim();
 
                                 try {
-                                  String payload = '{"firstname": "$firstName","lastname": "$lastName","username": "$username","password": "$password"}';
-                                  final ret = await UserData.authUser(
-                                      'auth/register', payload);
-                                  switch (ret.statusCode) {
-                                    case 200:
-                                      errorMessage = '';
-                                      _email.clear();
-                                      _password.clear();
-                                      _firstName.clear();
-                                      _lastName.clear();
-                                      setState(() {
-                                        state = 1;
-                                      });
-                                      break;
-                                    case 400:
-                                      print("Incorrect formatting!");
-                                      break;
-                                    case 401:
-                                      errorMessage =
-                                      'Access token is missing or invalid';
-                                      break;
-                                    case 404:
-                                      errorMessage =
-                                      'Email/password incorrect';
-                                      break;
-                                    default:
-                                      errorMessage = 'Something went wrong!';
-                                      break;
-                                  }
 
-                                  //jsonObject = json.decode(ret.body);
+                                  String payload = '{"firstName": "$firstName","lastName": "$lastName","username": "$username","password": "$password"}';
+                                  final ret = await Authentication.register(payload);
+                                  if (status(ret)) {
+                                    var data = json.decode(ret.body);
+                                    user = UserData(
+                                      firstName: data['userInfo']['firstName'],
+                                      lastName: data['userInfo']['lastName'],
+                                      email: data['userInfo']['username'],
+                                      lastSeen: data['userInfo']['lastSeen'],
+                                      accessToken: data["accessToken"],
+                                      refreshToken: data["refreshToken"],
+                                      password: password,
+                                    );
+
+                                      errorMessage = '';
+                                      clearFields();
+                                      //TODO Add support for verifying registered email
+                                      /*setState(() {
+                                        state = 1;
+                                      });*/
+                                      Navigator.pushNamedAndRemoveUntil(context,
+                                          '/food', ((Route<dynamic> route) => false));
+                                  }
                                 }
                                 catch (e) {
                                   print('Could not connect to server');
                                 }
+                              }
+                              else {
+                                setState(() {});
                               }
                             },
                             style: ElevatedButton.styleFrom(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              backgroundColor: greenScheme,
+                              backgroundColor: mainScheme,
                               padding: const EdgeInsets.all(2),
                               shadowColor: Colors.black,
                             ),
@@ -1136,14 +1094,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ),
                       onPressed: () {
-                        unfilledEmail = false;
-                        unfilledPassword = false;
-                        unfilledFirstName = false;
-                        unfilledLastName = false;
-                        _email.clear();
-                        _password.clear();
-                        _firstName.clear();
-                        _lastName.clear();
+                        clearFields();
                         setState(() {
                           Navigator.pushReplacementNamed(context, '/signin');
                         });
@@ -1275,7 +1226,7 @@ class _RegisterPageState extends State<RegisterPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-              backgroundColor: greenScheme,
+              backgroundColor: mainScheme,
               padding: const EdgeInsets.all(2),
               shadowColor: Colors.black,
             ),
@@ -1289,5 +1240,61 @@ class _RegisterPageState extends State<RegisterPage> {
         )
       ],
     );
+  }
+
+  bool areFieldsValid() {
+    bool toReturn = true;
+    if (_firstName.value.text.isEmpty) {
+      toReturn = false;
+      unfilledFirstName = true;
+    }
+    if (_lastName.value.text.isEmpty) {
+      toReturn = false;
+      unfilledLastName = true;
+    }
+    if (_email.value.text.isEmpty) {
+      toReturn = false;
+      unfilledEmail = true;
+    }
+    if (_password.value.text.isEmpty) {
+      toReturn = false;
+      unfilledPassword = true;
+    }
+    if (!isEmail(_email.value.text)) {
+      toReturn = false;
+      errorMessage = 'Email must be in valid form';
+      unfilledEmail = true;
+    }
+    return toReturn;
+  }
+
+  void clearFields() {
+    unfilledEmail = false;
+    unfilledPassword = false;
+    unfilledFirstName = false;
+    unfilledLastName = false;
+    _email.clear();
+    _password.clear();
+    _firstName.clear();
+    _lastName.clear();
+  }
+
+  bool status(http.Response res) {
+    switch (res.statusCode) {
+      case 200:
+        return true;
+      case 400:
+        print("Incorrect formatting!");
+        return false;
+      case 401:
+        errorMessage = 'Access token is missing or invalid';
+        return false;
+      case 404:
+        errorMessage = 'Email/password incorrect';
+        return false;
+      default:
+        errorMessage = 'Something went wrong!';
+        return false;
+    }
   }
 }

@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:smart_chef/utils/APIutils.dart';
+import 'package:smart_chef/utils/colors.dart';
+import 'dart:convert';
+
 
 class RecipeScreen extends StatefulWidget {
   @override
@@ -34,7 +38,7 @@ class _RecipePageState extends State<RecipePage> {
       appBar: AppBar(
           title: const Text(
             'SmartChef',
-            style: TextStyle(fontSize: 24, color: Color(0xff008600)),
+            style: TextStyle(fontSize: 24, color: mainScheme),
           ),
           centerTitle: true,
           backgroundColor: Colors.white,
@@ -90,12 +94,12 @@ class _RecipePageState extends State<RecipePage> {
                           },
                           icon: Icon(Icons.egg),
                           iconSize: 55,
-                          color: Color(0xff5E5E5E),
+                          color: bottomRowIcon,
                         ),
                         const Text(
                           'Ingredients',
                           style:
-                          TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
+                          TextStyle(fontSize: 12, color: bottomRowIcon),
                           textAlign: TextAlign.center,
                         )
                       ])),
@@ -107,12 +111,12 @@ class _RecipePageState extends State<RecipePage> {
                     IconButton(
                       onPressed: () {},
                       icon: Icon(Icons.restaurant),
-                      color: Color(0xff008600),
+                      color: mainScheme,
                       iconSize: 55,
                     ),
                     const Text(
                       'Recipes',
-                      style: TextStyle(fontSize: 12, color: Color(0xff008600)),
+                      style: TextStyle(fontSize: 12, color: mainScheme),
                       textAlign: TextAlign.right,
                     ),
                   ],
@@ -129,11 +133,11 @@ class _RecipePageState extends State<RecipePage> {
                       },
                       icon: Icon(Icons.shopping_cart),
                       iconSize: 55,
-                      color: Color(0xff5E5E5E),
+                      color: bottomRowIcon,
                     ),
                     const Text(
                       'Shopping Cart',
-                      style: TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
+                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -150,11 +154,11 @@ class _RecipePageState extends State<RecipePage> {
                       },
                       icon: Icon(Icons.person),
                       iconSize: 55,
-                      color: Color(0xff5E5E5E),
+                      color: bottomRowIcon,
                     ),
                     const Text(
                       'User Profile',
-                      style: TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
+                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -166,7 +170,7 @@ class _RecipePageState extends State<RecipePage> {
       ),
       floatingActionButton: FloatingActionButton.large(
         onPressed: () {},
-        backgroundColor: Color(0xff008600),
+        backgroundColor: mainScheme,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add, size: 65, color: Colors.white),
         elevation: 25,

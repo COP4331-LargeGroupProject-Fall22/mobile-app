@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:smart_chef/utils/globals.dart';
-import 'package:smart_chef/utils/getAPI.dart';
 import 'dart:convert';
+import 'package:smart_chef/utils/APIutils.dart';
+import 'package:smart_chef/utils/colors.dart';
+import 'package:smart_chef/utils/userAPI.dart';
+import 'package:smart_chef/utils/authAPI.dart';
+import 'package:http/http.dart' as http;
 
 class UserProfileScreen extends StatefulWidget {
   @override
@@ -39,27 +42,22 @@ class _UserProfilePageState extends State<UserProfilePage> {
       appBar: AppBar(
         title: const Text(
           'SmartChef',
-          style: TextStyle(fontSize: 24, color: greenScheme),
+          style: TextStyle(fontSize: 24, color: mainScheme),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
         leading: IconButton(
           onPressed: () async{
+            //TODO Finish registration verification once API is done
             try {
-              final response = await UserData.logoutUser('auth/logout', LocalData.accessToken);
+              final response = await Authentication.logout();
               switch (response.statusCode) {
                 case 200:
                   setState(() {
                     errorMessage = 'Logout successful!';
                   });
                   await Future.delayed(Duration(seconds: 1));
-                  LocalData.accessToken = '';
-                  LocalData.refreshToken = '';
-                  LocalData.firstName = '';
-                  LocalData.lastName = '';
-                  LocalData.lastSeen = -1;
-                  LocalData.email = '';
-                  LocalData.password = '';
+                  user.clear();
 
                   Navigator.pushNamedAndRemoveUntil(context,
                       '/startup', ((Route<dynamic> route) => false));
@@ -74,15 +72,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   print('Something went wrong!');
                   break;
               }
-
-              //jsonObject = json.decode(ret.body);
-            }
-            catch (e) {
+            } catch (e) {
               print('Could not connect to server');
             }
-
-            LocalData.accessToken = '';
-            LocalData.refreshToken = '';
           },
           icon: Icon(
             Icons.logout,
@@ -138,18 +130,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 return;
               }
 
-              LocalData.firstName = '';
-              LocalData.lastName = '';
-              LocalData.lastSeen = -1;
-              LocalData.email = '';
-              LocalData.password = '';
+              user.clear();
 
               try {
-                final response = await UserData.deleteUser('auth/logout', LocalData.accessToken);
+                final response = await User.deleteUser();
                 switch (response.statusCode) {
                   case 200:
-                    LocalData.accessToken = '';
-                    LocalData.refreshToken = '';
+                    user.accessToken = '';
+                    user.refreshToken = '';
 
                     Navigator.pushNamedAndRemoveUntil(context,
                         '/startup', ((Route<dynamic> route) => false));
@@ -173,11 +161,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
               catch (e) {
                 print('Could not connect to server');
               }
-
-              LocalData.accessToken = '';
-              LocalData.refreshToken = '';
             },
-            icon: Icon(
+            icon: const Icon(
               Icons.delete,
               color: Colors.red,
             ),
@@ -191,14 +176,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
           child: Container(
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
-            decoration: BoxDecoration(color: Colors.white),
+            decoration: const BoxDecoration(color: Colors.white),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 Container(
                   width: 200,
                   height: 200,
-                  margin: EdgeInsets.only(top: 40),
+                  margin: const EdgeInsets.only(top: 40),
                   decoration: BoxDecoration(
                     color: Colors.grey,
                     border: Border.all(color: Colors.black, width: 2),
@@ -207,14 +192,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 Container(
                   padding: EdgeInsets.symmetric(vertical: 10),
                   width: 200,
-                  child: Text(
+                  child: const Text(
                     'Your profile image',
                     style: TextStyle(fontSize: 14, color: Colors.black),
                     textAlign: TextAlign.center,
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.only(top: 60),
+                  margin: const EdgeInsets.only(top: 60),
                   alignment: Alignment.topCenter,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -236,17 +221,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               ),
                               Container(
                                 width: 150,
-                                margin: EdgeInsets.only(right: 10),
-                                padding: EdgeInsets.symmetric(
+                                margin: const EdgeInsets.only(right: 10),
+                                padding: const EdgeInsets.symmetric(
                                     vertical: 10, horizontal: 5),
-                                decoration: BoxDecoration(
-                                  color: greenScheme,
+                                decoration: const BoxDecoration(
+                                  color: mainScheme,
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(10)),
                                 ),
                                 child: Text(
-                                  LocalData.firstName,
-                                  style: TextStyle(
+                                  user.firstName,
+                                  style: const TextStyle(
                                     fontSize: 20,
                                     color: Colors.white,
                                   ),
@@ -269,17 +254,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               ),
                               Container(
                                 width: 150,
-                                margin: EdgeInsets.only(left: 10),
-                                padding: EdgeInsets.symmetric(
+                                margin: const EdgeInsets.only(left: 10),
+                                padding: const EdgeInsets.symmetric(
                                     vertical: 10, horizontal: 5),
-                                decoration: BoxDecoration(
-                                  color: greenScheme,
+                                decoration: const BoxDecoration(
+                                  color: mainScheme,
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(10)),
                                 ),
                                 child: Text(
-                                  LocalData.lastName,
-                                  style: TextStyle(
+                                  user.lastName,
+                                  style: const TextStyle(
                                     fontSize: 20,
                                     color: Colors.white,
                                   ),
@@ -293,7 +278,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       Column(
                         children: <Widget>[
                           Container(
-                            margin: EdgeInsets.only(top: 20),
+                            margin: const EdgeInsets.only(top: 20),
                             child: const Text(
                               'Email',
                               style: TextStyle(
@@ -305,17 +290,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           ),
                           Container(
                             width: 320,
-                            margin: EdgeInsets.only(bottom: 100),
-                            padding: EdgeInsets.symmetric(
+                            margin: const EdgeInsets.only(bottom: 100),
+                            padding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 5),
-                            decoration: BoxDecoration(
-                              color: greenScheme,
+                            decoration: const BoxDecoration(
+                              color: mainScheme,
                               borderRadius:
                                   BorderRadius.all(Radius.circular(10)),
                             ),
                             child: Text(
-                              LocalData.email,
-                              style: TextStyle(
+                              user.email,
+                              style: const TextStyle(
                                 fontSize: 20,
                                 color: Colors.white,
                               ),
@@ -336,7 +321,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         children: <Widget>[
                           Container(
                             width: 180,
-                            padding: EdgeInsets.all(15),
+                            padding: const EdgeInsets.all(15),
                             child: ElevatedButton(
                               onPressed: () {
                                 setState(() {
@@ -347,7 +332,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                backgroundColor: greenScheme,
+                                backgroundColor: mainScheme,
                                 padding: const EdgeInsets.all(2),
                                 shadowColor: Colors.black,
                               ),
@@ -364,7 +349,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           ),
                           Container(
                             width: 180,
-                            padding: EdgeInsets.all(15),
+                            padding: const EdgeInsets.all(15),
                             child: ElevatedButton(
                               onPressed: () {
                                 setState(() {
@@ -375,7 +360,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                backgroundColor: greenScheme,
+                                backgroundColor: mainScheme,
                                 padding: const EdgeInsets.all(2),
                                 shadowColor: Colors.black,
                               ),
@@ -421,14 +406,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           onPressed: () {
                             Navigator.pushReplacementNamed(context, '/food');
                           },
-                          icon: Icon(Icons.egg),
+                          icon: const Icon(Icons.egg),
                           iconSize: 55,
-                          color: Color(0xff5E5E5E),
+                          color: bottomRowIcon,
                         ),
                         const Text(
                           'Ingredients',
                           style:
-                              TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
+                              TextStyle(fontSize: 12, color: bottomRowIcon),
                           textAlign: TextAlign.center,
                         )
                       ])),
@@ -441,13 +426,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       onPressed: () {
                         Navigator.pushReplacementNamed(context, '/recipe');
                       },
-                      icon: Icon(Icons.restaurant),
-                      color: Color(0xff5E5E5E),
+                      icon: const Icon(Icons.restaurant),
+                      color: bottomRowIcon,
                       iconSize: 55,
                     ),
                     const Text(
                       'Recipes',
-                      style: TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
+                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
                       textAlign: TextAlign.right,
                     ),
                   ],
@@ -462,13 +447,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       onPressed: () {
                         Navigator.pushReplacementNamed(context, '/cart');
                       },
-                      icon: Icon(Icons.shopping_cart),
+                      icon: const Icon(Icons.shopping_cart),
                       iconSize: 55,
-                      color: Color(0xff5E5E5E),
+                      color: bottomRowIcon,
                     ),
                     const Text(
                       'Shopping Cart',
-                      style: TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
+                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -481,13 +466,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {},
-                      icon: Icon(Icons.person),
+                      icon: const Icon(Icons.person),
                       iconSize: 55,
-                      color: greenScheme,
+                      color: mainScheme,
                     ),
                     const Text(
                       'User Profile',
-                      style: TextStyle(fontSize: 12, color: greenScheme),
+                      style: TextStyle(fontSize: 12, color: mainScheme),
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -509,16 +494,16 @@ class EditUserProfilePage extends StatefulWidget {
 class _EditUserProfilePageState extends State<EditUserProfilePage> {
   @override
   void initState() {
-    _firstName.text = LocalData.firstName;
-    _lastName.text = LocalData.lastName;
-    _email.text = LocalData.email;
+    _firstName.text = user.firstName;
+    _lastName.text = user.lastName;
+    _email.text = user.email;
     super.initState();
   }
 
   final globalDecoration = InputDecoration(
       contentPadding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
       filled: true,
-      fillColor: const Color(0xffD1D1D1),
+      fillColor: textFieldBacking,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: Color(0xff47A1E2)),
@@ -547,7 +532,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
       appBar: AppBar(
         title: const Text(
           'SmartChef',
-          style: TextStyle(fontSize: 24, color: greenScheme),
+          style: TextStyle(fontSize: 24, color: mainScheme),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -555,7 +540,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
           onPressed: () {
             Navigator.pop(context);
           },
-          icon: Icon(
+          icon: const Icon(
             Icons.navigate_before,
             color: Colors.black,
           ),
@@ -567,7 +552,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
         child: Container(
           width: MediaQuery.of(context).size.width,
           height: MediaQuery.of(context).size.height,
-          decoration: BoxDecoration(color: Colors.white),
+          decoration: const BoxDecoration(color: Colors.white),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -575,23 +560,23 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                 Container(
                   width: 200,
                   height: 200,
-                  margin: EdgeInsets.only(top: 20),
+                  margin: const EdgeInsets.only(top: 20),
                   decoration: BoxDecoration(
                     color: Colors.grey,
                     border: Border.all(color: Colors.black, width: 2),
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(vertical: 10),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   width: 200,
-                  child: Text(
+                  child: const Text(
                     'Your profile image',
                     style: TextStyle(fontSize: 14, color: Colors.black),
                     textAlign: TextAlign.center,
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.only(top: 10),
+                  margin: const EdgeInsets.only(top: 10),
                   alignment: Alignment.topCenter,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -613,11 +598,11 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                               ),
                               Container(
                                 width: 150,
-                                margin: EdgeInsets.only(right: 10),
-                                padding: EdgeInsets.symmetric(
+                                margin: const EdgeInsets.only(right: 10),
+                                padding: const EdgeInsets.symmetric(
                                     vertical: 5, horizontal: 5),
-                                decoration: BoxDecoration(
-                                  color: greenScheme,
+                                decoration: const BoxDecoration(
+                                  color: mainScheme,
                                   borderRadius: BorderRadius.all(Radius.circular(10)),
                                 ),
                                 child: TextField(
@@ -632,7 +617,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                           color: Colors.red),
                                       hintText: 'Enter First Name')
                                       : globalDecoration.copyWith(hintText: 'Enter First Name'),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 20,
                                     color: Colors.black,
                                   ),
@@ -664,11 +649,11 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                               ),
                               Container(
                                 width: 150,
-                                margin: EdgeInsets.only(left: 10),
-                                padding: EdgeInsets.symmetric(
+                                margin: const EdgeInsets.only(left: 10),
+                                padding: const EdgeInsets.symmetric(
                                     vertical: 5, horizontal: 5),
-                                decoration: BoxDecoration(
-                                  color: greenScheme,
+                                decoration: const BoxDecoration(
+                                  color: mainScheme,
                                   borderRadius: BorderRadius.all(Radius.circular(10)),
                                 ),
                                 child: TextField(
@@ -683,7 +668,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                           color: Colors.red),
                                       hintText: 'Enter Last Name')
                                       : globalDecoration.copyWith(hintText: 'Enter Last Name'),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 20,
                                     color: Colors.black,
                                   ),
@@ -706,7 +691,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                       Column(
                         children: <Widget>[
                           Container(
-                            margin: EdgeInsets.only(top: 15),
+                            margin: const EdgeInsets.only(top: 15),
                             child: const Text(
                               'Email',
                               style: TextStyle(
@@ -718,10 +703,10 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                           ),
                           Container(
                             width: 320,
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 vertical: 5, horizontal: 5),
-                            decoration: BoxDecoration(
-                              color: greenScheme,
+                            decoration: const BoxDecoration(
+                              color: mainScheme,
                               borderRadius:
                               BorderRadius.all(Radius.circular(10)),
                             ),
@@ -737,7 +722,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                       color: Colors.red),
                                   hintText: 'Enter Email')
                                   : globalDecoration.copyWith(hintText: 'Enter Email'),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 20,
                                 color: Colors.black,
                               ),
@@ -760,7 +745,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                       Column(
                         children: <Widget>[
                           Container(
-                            margin: EdgeInsets.only(top: 15),
+                            margin: const EdgeInsets.only(top: 15),
                             child: const Text(
                               'Enter Password to confirm changes',
                               style: TextStyle(
@@ -772,11 +757,11 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                           ),
                           Container(
                             width: 320,
-                            margin: EdgeInsets.only(bottom: 10),
-                            padding: EdgeInsets.symmetric(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.symmetric(
                                 vertical: 5, horizontal: 5),
-                            decoration: BoxDecoration(
-                              color: greenScheme,
+                            decoration: const BoxDecoration(
+                              color: mainScheme,
                               borderRadius:
                               BorderRadius.all(Radius.circular(10)),
                             ),
@@ -793,7 +778,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                       color: Colors.red),
                                   hintText: 'Enter Password')
                                   : globalDecoration.copyWith(hintText: 'Enter Password'),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 20,
                                 color: Colors.black,
                               ),
@@ -811,10 +796,10 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                           ),
                           Container(
                             width: 320,
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 vertical: 5, horizontal: 5),
-                            decoration: BoxDecoration(
-                              color: greenScheme,
+                            decoration: const BoxDecoration(
+                              color: mainScheme,
                               borderRadius:
                               BorderRadius.all(Radius.circular(10)),
                             ),
@@ -831,7 +816,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                       color: Colors.red),
                                   hintText: 'Confirm Password')
                                   : globalDecoration.copyWith(hintText: 'Confirm Password'),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 20,
                                 color: Colors.black,
                               ),
@@ -845,19 +830,17 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                   if (_password.value.text.isEmpty) {
                                     errorMessage = 'Passwords must match!';
                                   }
-                                  else if (_password.value.text != password) {
-                                    errorMessage = 'Passwords must match!';
-                                  }
-                                  else {
+                                  else if (passwordsMatch()) {
                                     errorMessage = '';
-                                    setState(() =>unfilledConfirmPassword = false);
+                                    unfilledConfirmPassword = false;
                                   }
+                                  setState(() {});
                                 }
                               },
                             ),
                           ),
                           Container(
-                            margin: EdgeInsets.only(bottom: 20),
+                            margin: const EdgeInsets.only(bottom: 20),
                             child: Text(
                               errorMessage,
                               style: const TextStyle(fontSize: 14, color: Colors.red),
@@ -869,104 +852,43 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                             //padding: EdgeInsets.all(15),
                             child: ElevatedButton(
                               onPressed: () async {
-                                if (_email.value.text.isEmpty |
-                                _password.value.text.isEmpty |
-                                _firstName.value.text.isEmpty |
-                                _lastName.value.text.isEmpty |
-                                _confirmPassword.value.text.isEmpty |
-                                !isEmail(_email.value.text)) {
-                                  if (_firstName.value.text.isEmpty) {
-                                    setState(() => unfilledFirstName = true);
-                                  }
-                                  if (_lastName.value.text.isEmpty) {
-                                    setState(() => unfilledLastName = true);
-                                  }
-                                  if (_email.value.text.isEmpty) {
-                                    setState(() => unfilledEmail = true);
-                                  }
-                                  if (_password.value.text.isEmpty) {
-                                    setState(() => unfilledPassword = true);
-                                  }
-                                  if (_confirmPassword.value.text.isEmpty) {
-                                    setState(() => unfilledConfirmPassword = true);
-                                  }
-                                  if (!isEmail(_email.value.text)) {
-                                    errorMessage = 'Email must be in valid form';
-                                    setState(() => unfilledEmail = true);
-                                  }
-                                } else {
-                                  if (_password.value.text != LocalData.password) {
-                                    errorMessage = 'Password is incorrect';
-                                    setState(() {
-                                      unfilledConfirmPassword = true;
-                                      unfilledPassword = true;
-                                    });
-                                  }
-                                  else {
+                                if (areFieldsValid()) {
+                                  if (passwordsMatch()) {
                                     String firstName = _firstName.value.text.trim();
                                     String lastName = _lastName.value.text.trim();
                                     String username = _email.value.text.trim();
-                                    String changes = '{"firstname": "$firstName","lastname": "$lastName","lastSeen": ${LocalData
-                                        .lastSeen}"username": "$username","password": "${LocalData
+                                    String changes = '{"firstname": "$firstName","lastname": "$lastName","lastSeen": ${user
+                                        .lastSeen}"username": "$username","password": "${user
                                         .password}"}';
                                     try {
-                                      final response = await UserData.updateUser('user', changes);
-
-                                      bool accepted = true;
-                                      while (accepted) {
-                                        switch (response.statusCode) {
-                                          case 200:
-                                            LocalData.firstName = firstName;
-                                            LocalData.email = username;
-                                            LocalData.lastName = lastName;
-                                            accepted = false;
-                                            Navigator.pop(context);
-                                            break;
-                                          case 400:
-                                            print("Incorrect formatting!");
-                                            break;
-                                          case 401:
-                                            errorMessage = 'Access token missing';
-                                            break;
-                                          case 403:
-                                            final changeToken = await UserData.refreshToken('auth/refreshJWT');
-                                            switch (changeToken.statusCode) {
-                                              case 200:
-                                                var tokens = json.decode(changeToken.body);
-                                                LocalData.accessToken = tokens['accessToken'];
-                                                LocalData.refreshToken = tokens['refreshToken'];
-                                                break;
-                                              case 400:
-                                                errorMessage = 'Could not refresh tokens';
-                                                break;
-                                              case 401:
-                                                errorMessage = 'Token missing';
-                                                break;
-                                              case 404:
-                                                errorMessage = 'User not found';
-                                                break;
-                                            }
-                                            break;
-                                          case 404:
-                                            errorMessage = 'User not found';
-                                            break;
-                                          default:
-                                            print('Something in edit profile went wrong!');
-                                            break;
-                                        }
+                                      final response = await User.updateUser(changes);
+                                      if (await status(response)) {
+                                        user.firstName = firstName;
+                                        user.email = username;
+                                        user.lastName = lastName;
+                                        Navigator.pop(context);
                                       }
                                     }
                                     catch(e) {
                                       print('Could not connect to server');
                                     }
                                   }
+                                  else {
+                                    setState(() {
+                                      unfilledConfirmPassword = true;
+                                      unfilledPassword = true;
+                                    });
+                                  }
+                                }
+                                else {
+                                  setState(() {});
                                 }
                               },
                               style: ElevatedButton.styleFrom(
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                backgroundColor: greenScheme,
+                                backgroundColor: mainScheme,
                                 //padding: const EdgeInsets.all(2),
                                 shadowColor: Colors.black,
                               ),
@@ -1014,12 +936,12 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                           },
                           icon: Icon(Icons.egg),
                           iconSize: 55,
-                          color: Color(0xff5E5E5E),
+                          color: bottomRowIcon,
                         ),
                         const Text(
                           'Ingredients',
                           style:
-                          TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
+                          TextStyle(fontSize: 12, color: bottomRowIcon),
                           textAlign: TextAlign.center,
                         )
                       ])),
@@ -1033,12 +955,12 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                         Navigator.pushReplacementNamed(context, '/recipe');
                       },
                       icon: Icon(Icons.restaurant),
-                      color: Color(0xff5E5E5E),
+                      color: bottomRowIcon,
                       iconSize: 55,
                     ),
                     const Text(
                       'Recipes',
-                      style: TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
+                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
                       textAlign: TextAlign.right,
                     ),
                   ],
@@ -1055,11 +977,11 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                       },
                       icon: Icon(Icons.shopping_cart),
                       iconSize: 55,
-                      color: Color(0xff5E5E5E),
+                      color: bottomRowIcon,
                     ),
                     const Text(
                       'Shopping Cart',
-                      style: TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
+                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -1074,11 +996,11 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                       onPressed: () {},
                       icon: Icon(Icons.person),
                       iconSize: 55,
-                      color: greenScheme,
+                      color: mainScheme,
                     ),
                     const Text(
                       'User Profile',
-                      style: TextStyle(fontSize: 12, color: greenScheme),
+                      style: TextStyle(fontSize: 12, color: mainScheme),
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -1089,6 +1011,104 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
         ),
       ),
     );
+  }
+
+  bool areFieldsValid() {
+    bool toReturn = true;
+    if (_firstName.value.text.isEmpty) {
+      toReturn = false;
+      unfilledFirstName = true;
+    }
+    if (_lastName.value.text.isEmpty) {
+      toReturn = false;
+      unfilledLastName = true;
+    }
+    if (_email.value.text.isEmpty) {
+      toReturn = false;
+      unfilledEmail = true;
+    }
+    if (_password.value.text.isEmpty) {
+      toReturn = false;
+      unfilledPassword = true;
+    }
+    if (_confirmPassword.value.text.isEmpty) {
+      toReturn = false;
+      unfilledConfirmPassword = true;
+    }
+    if (!isEmail(_email.value.text)) {
+      toReturn = false;
+      errorMessage = 'Email must be in valid form';
+      unfilledEmail = true;
+    }
+    return toReturn;
+  }
+
+  bool passwordsMatch() {
+    if (_password.value.text != user.password) {
+      errorMessage = 'Passwords do not match';
+      return false;
+    }
+    return true;
+  }
+
+  void clearFields() {
+    unfilledEmail = false;
+    unfilledPassword = false;
+    _email.clear();
+    _password.clear();
+  }
+
+  Future<bool> status(http.Response res) async {
+    bool accepted = true;
+    while (accepted) {
+      switch (res.statusCode) {
+        case 200:
+          return true;
+        case 400:
+          print("Incorrect formatting!");
+          return false;
+        case 401:
+          errorMessage = 'Access token missing';
+          return false;
+        case 403:
+          final changeToken = await Authentication.refreshToken();
+          if (refreshTokenStatus(changeToken)) {
+            var tokens = json.decode(changeToken.body);
+            user.accessToken = tokens['accessToken'];
+            user.refreshToken = tokens['refreshToken'];
+          }
+          else {
+            print('something went wrong!');
+            return false;
+          }
+          break;
+        case 404:
+          errorMessage = 'User not found';
+          return false;
+        default:
+          print('Something in edit profile went wrong!');
+          return false;
+      }
+    }
+  }
+
+  bool refreshTokenStatus(http.Response changeToken) {
+    switch (changeToken.statusCode) {
+      case 200:
+        return true;
+      case 400:
+        errorMessage = 'Could not refresh tokens';
+        return false;
+      case 401:
+        errorMessage = 'Token missing';
+        return false;
+      case 404:
+        errorMessage = 'User not found';
+        return false;
+      default:
+        print('Something went wrong!');
+        return false;
+    }
   }
 }
 
@@ -1106,7 +1126,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
   final globalDecoration = InputDecoration(
       contentPadding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
       filled: true,
-      fillColor: const Color(0xffD1D1D1),
+      fillColor: textFieldBacking,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: Color(0xff47A1E2)),
@@ -1129,7 +1149,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
       appBar: AppBar(
         title: const Text(
           'SmartChef',
-          style: TextStyle(fontSize: 24, color: greenScheme),
+          style: TextStyle(fontSize: 24, color: mainScheme),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -1181,10 +1201,10 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                           ),
                           Container(
                             width: 320,
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 vertical: 5, horizontal: 5),
-                            decoration: BoxDecoration(
-                              color: greenScheme,
+                            decoration: const BoxDecoration(
+                              color: mainScheme,
                               borderRadius:
                               BorderRadius.all(Radius.circular(10)),
                             ),
@@ -1235,7 +1255,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                             padding: EdgeInsets.symmetric(
                                 vertical: 5, horizontal: 5),
                             decoration: BoxDecoration(
-                              color: greenScheme,
+                              color: mainScheme,
                               borderRadius:
                               BorderRadius.all(Radius.circular(10)),
                             ),
@@ -1279,7 +1299,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                             padding: EdgeInsets.symmetric(
                                 vertical: 5, horizontal: 5),
                             decoration: BoxDecoration(
-                              color: greenScheme,
+                              color: mainScheme,
                               borderRadius:
                               BorderRadius.all(Radius.circular(10)),
                             ),
@@ -1344,7 +1364,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                                   }
                                 } else {
                                   if (_oldPassword.value.text !=
-                                      LocalData.password) {
+                                      user.password) {
                                     errorMessage = 'Old Password is incorrect';
                                     setState(() {
                                       unfilledConfirmPassword = true;
@@ -1352,11 +1372,10 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                                   }
                                   else {
                                     String newPassword = _newPassword.value.text.trim();
-                                    String changes = '{"firstname": "${LocalData.firstName}","lastname": "${LocalData.lastName}","lastSeen": ${LocalData
-                                        .lastSeen}"username": "${LocalData.email}","password": "$newPassword"}';
+                                    String changes = '{"firstname": "${user.firstName}","lastname": "${user.lastName}","lastSeen": ${user
+                                        .lastSeen}"username": "${user.email}","password": "$newPassword"}';
                                     try {
-                                      final response = await UserData
-                                          .updateUser('user', changes);
+                                      final response = await User.updateUser(changes);
 
                                       bool accepted = false;
                                       while (!accepted) {
@@ -1373,16 +1392,14 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                                             'Access token missing';
                                             break;
                                           case 403:
-                                            final changeToken = await UserData
-                                                .refreshToken(
-                                                'auth/refreshJWT');
+                                            final changeToken = await Authentication.refreshToken();
                                             switch (changeToken.statusCode) {
                                               case 200:
                                                 var tokens = json.decode(
                                                     changeToken.body);
-                                                LocalData.accessToken =
+                                                user.accessToken =
                                                 tokens['accessToken'];
-                                                LocalData.refreshToken =
+                                                user.refreshToken =
                                                 tokens['refreshToken'];
                                                 break;
                                               case 400:
@@ -1417,7 +1434,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                backgroundColor: greenScheme,
+                                backgroundColor: mainScheme,
                                 //padding: const EdgeInsets.all(2),
                                 shadowColor: Colors.black,
                               ),
@@ -1471,12 +1488,12 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                           },
                           icon: Icon(Icons.egg),
                           iconSize: 55,
-                          color: Color(0xff5E5E5E),
+                          color: bottomRowIcon,
                         ),
                         const Text(
                           'Ingredients',
                           style:
-                          TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
+                          TextStyle(fontSize: 12, color: bottomRowIcon),
                           textAlign: TextAlign.center,
                         )
                       ])),
@@ -1493,12 +1510,12 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                         Navigator.pushReplacementNamed(context, '/recipe');
                       },
                       icon: Icon(Icons.restaurant),
-                      color: Color(0xff5E5E5E),
+                      color: bottomRowIcon,
                       iconSize: 55,
                     ),
                     const Text(
                       'Recipes',
-                      style: TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
+                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
                       textAlign: TextAlign.right,
                     ),
                   ],
@@ -1518,11 +1535,11 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                       },
                       icon: Icon(Icons.shopping_cart),
                       iconSize: 55,
-                      color: Color(0xff5E5E5E),
+                      color: bottomRowIcon,
                     ),
                     const Text(
                       'Shopping Cart',
-                      style: TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
+                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -1540,11 +1557,11 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                       onPressed: () {},
                       icon: Icon(Icons.person),
                       iconSize: 55,
-                      color: greenScheme,
+                      color: mainScheme,
                     ),
                     const Text(
                       'User Profile',
-                      style: TextStyle(fontSize: 12, color: greenScheme),
+                      style: TextStyle(fontSize: 12, color: mainScheme),
                       textAlign: TextAlign.center,
                     )
                   ],

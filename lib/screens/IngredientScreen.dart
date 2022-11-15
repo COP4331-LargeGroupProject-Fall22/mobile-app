@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:smart_chef/utils/globals.dart';
-import 'package:smart_chef/utils/getAPI.dart';
+import 'package:smart_chef/utils/APIutils.dart';
+import 'package:smart_chef/utils/colors.dart';
 
 class IngredientsScreen extends StatefulWidget {
   @override
@@ -36,7 +36,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
       appBar: AppBar(
           title: Text(
             'SmartChef',
-            style: TextStyle(fontSize: 24, color: greenScheme),
+            style: TextStyle(fontSize: 24, color: mainScheme),
           ),
           centerTitle: true,
           backgroundColor: Colors.white,
@@ -90,12 +90,12 @@ class _IngredientsPageState extends State<IngredientsPage> {
                           onPressed: () {},
                           icon: Icon(Icons.egg),
                           iconSize: 55,
-                          color: greenScheme,
+                          color: mainScheme,
                         ),
                         const Text(
                           'Ingredients',
                           style:
-                          TextStyle(fontSize: 12, color: greenScheme),
+                          TextStyle(fontSize: 12, color: mainScheme),
                           textAlign: TextAlign.center,
                         )
                       ])),
@@ -109,12 +109,12 @@ class _IngredientsPageState extends State<IngredientsPage> {
                         Navigator.pushReplacementNamed(context, '/recipe');
                       },
                       icon: Icon(Icons.restaurant),
-                      color: Color(0xff5E5E5E),
+                      color: bottomRowIcon,
                       iconSize: 55,
                     ),
                     const Text(
                       'Recipes',
-                      style: TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
+                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
                       textAlign: TextAlign.right,
                     ),
                   ],
@@ -131,11 +131,11 @@ class _IngredientsPageState extends State<IngredientsPage> {
                       },
                       icon: Icon(Icons.shopping_cart),
                       iconSize: 55,
-                      color: Color(0xff5E5E5E),
+                      color: bottomRowIcon,
                     ),
                     const Text(
                       'Shopping Cart',
-                      style: TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
+                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -152,11 +152,11 @@ class _IngredientsPageState extends State<IngredientsPage> {
                       },
                       icon: Icon(Icons.person),
                       iconSize: 55,
-                      color: Color(0xff5E5E5E),
+                      color: bottomRowIcon,
                     ),
                     const Text(
                       'User Profile',
-                      style: TextStyle(fontSize: 12, color: Color(0xff5E5E5E)),
+                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -168,7 +168,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
       ),
       floatingActionButton: FloatingActionButton.large(
         onPressed: () {},
-        backgroundColor: greenScheme,
+        backgroundColor: mainScheme,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add, size: 65, color: Colors.white),
         elevation: 25,
@@ -177,3 +177,22 @@ class _IngredientsPageState extends State<IngredientsPage> {
     );
   }
 }
+
+//TODO Make the individual ingredient tiles
+//Might not be an actual class. Just a method
+/*class IngredientTile extends Widget {
+
+
+  @override
+  Widget build() {
+    return Container(
+      width: 150,
+      height: 180,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+        color: Colors.white,
+      ),
+      child:
+    );
+  }
+}*/
