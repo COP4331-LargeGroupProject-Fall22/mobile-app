@@ -417,12 +417,12 @@ class _SignInPageState extends State<SignInPage> {
                               if (areFieldsValid(true)) {
                                 String username = _email.value.text.trim();
                                 String password = _password.value.text.trim();
-                                setState(() => clearFields());
 
                                 try {
                                   String payload = '{"username": "$username","password": "$password"}';
                                   final ret = await Authentication.login(payload);
                                   if (status(ret)) {
+                                    setState(() => clearFields());
                                     var data = json.decode(ret.body);
                                     user = UserData(
                                       firstName: data['userInfo']['firstName'],
