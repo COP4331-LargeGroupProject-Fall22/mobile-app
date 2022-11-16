@@ -58,17 +58,21 @@ class _IngredientsPageState extends State<IngredientsPage> {
               onPressed: () {},
             ),
           ]),
-      body: GestureDetector(
-        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-        child: SingleChildScrollView(
-          child: Container(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-            decoration: BoxDecoration(color: Colors.white),
-            child: Text("To be changed"),
+      body: SafeArea(
+        child: GestureDetector(
+          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+          child: SingleChildScrollView(
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height,
+              padding: EdgeInsets.only(bottom: kBottomNavigationBarHeight),
+              decoration: BoxDecoration(color: Colors.white),
+              child: BuildTiles(),
+            ),
           ),
         ),
       ),
+      extendBody: false,
       bottomNavigationBar: BottomAppBar(
         child: Container(
           height: 90,
@@ -94,8 +98,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                         ),
                         const Text(
                           'Ingredients',
-                          style:
-                          TextStyle(fontSize: 12, color: mainScheme),
+                          style: TextStyle(fontSize: 12, color: mainScheme),
                           textAlign: TextAlign.center,
                         )
                       ])),
@@ -176,23 +179,84 @@ class _IngredientsPageState extends State<IngredientsPage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
-}
 
-//TODO Make the individual ingredient tiles
-//Might not be an actual class. Just a method
-/*class IngredientTile extends Widget {
+  GridView BuildTiles() {
+    int numIngreds = 10;
+    List<Widget> ingredients = [];
 
+    for (int i = 0; i < numIngreds; i++) {
+      ingredients.add(
+        GestureDetector(
+          onTap: () {},
+          child: IngredientTile(),
+        ),
+      );
+    }
 
-  @override
-  Widget build() {
-    return Container(
-      width: 150,
-      height: 180,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(20)),
-        color: Colors.white,
+    GridView ingreds = GridView.count(
+        crossAxisCount: 2,
+        padding: const EdgeInsets.all(15),
+        scrollDirection: Axis.vertical,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        children: ingredients);
+    return ingreds;
+  }
+
+  //TODO Make the individual ingredient tiles
+  Widget IngredientTile() {
+    return SizedBox(
+      child: Stack(
+        children: <Widget>[
+          Container(
+            margin: EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(20)),
+              image: DecorationImage(
+                image: AssetImage('assets/images/Background.png'),
+                fit: BoxFit.fitWidth,
+              ),
+            ),
+          ),
+          Container(
+            margin: EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.all(Radius.circular(20)),
+              gradient: LinearGradient(
+                begin: FractionalOffset.topCenter,
+                end: FractionalOffset.bottomCenter,
+                colors: [
+                  Colors.grey.withOpacity(0.0),
+                  Colors.black.withOpacity(0.5),
+                ],
+                stops: [0.0, 1.0],
+              ),
+            ),
+            child: Align(
+              alignment: FractionalOffset.bottomLeft,
+              child: Padding(
+                padding: EdgeInsets.all(10),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Text(
+                        'To Be Changed',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
-      child:
     );
   }
-}*/
+}
