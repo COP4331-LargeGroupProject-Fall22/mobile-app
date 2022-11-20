@@ -103,7 +103,7 @@ class _StartPageState extends State<StartPage> {
                                 width: MediaQuery.of(context).size.width / 2,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    Navigator.pushNamed(context, '/signin');
+                                    Navigator.pushNamed(context, '/login');
                                   },
                                   style: ElevatedButton.styleFrom(
                                     shape: RoundedRectangleBorder(
@@ -322,14 +322,8 @@ class _LogInPageState extends State<LogInPage> {
                             maxLines: 1,
                             controller: _email,
                             decoration: unfilledEmail
-                                ? globalDecoration.copyWith(
-                                    enabledBorder: const OutlineInputBorder(
-                                        borderSide:
-                                            BorderSide(color: Colors.red)),
-                                    suffixIcon: const Icon(Icons.clear,
-                                        color: Colors.red),
-                                    hintText: 'Enter Email',
-                                  )
+                                ? invalidTextField.copyWith(
+                                hintText: 'Enter Email')
                                 : globalDecoration.copyWith(
                                     hintText: 'Enter Email'),
                             onChanged: (email) {
@@ -376,15 +370,10 @@ class _LogInPageState extends State<LogInPage> {
                             controller: _password,
                             obscureText: true,
                             decoration: unfilledPassword
-                                ? globalDecoration.copyWith(
-                                    enabledBorder: const OutlineInputBorder(
-                                        borderSide:
-                                            BorderSide(color: Colors.red)),
-                                    suffixIcon: const Icon(Icons.clear,
-                                        color: Colors.red),
-                                    hintText: 'Enter Email')
+                                ? invalidTextField.copyWith(
+                                hintText: 'Enter Password')
                                 : globalDecoration.copyWith(
-                                    hintText: 'Enter Email'),
+                                    hintText: 'Enter Password'),
                             onChanged: (password) {
                               if (password.isEmpty) {
                                 setState(() => unfilledPassword = true);
@@ -586,12 +575,10 @@ class _LogInPageState extends State<LogInPage> {
                     maxLines: 1,
                     obscureText: false,
                     decoration: unfilledEmail
-                        ? globalDecoration.copyWith(
-                            enabledBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.red)),
-                            suffixIcon:
-                                const Icon(Icons.clear, color: Colors.red))
-                        : globalDecoration,
+                        ? invalidTextField.copyWith(
+                        hintText: 'Enter Email')
+                        : globalDecoration.copyWith(
+                        hintText: 'Enter Email'),
                     onChanged: (email) {
                       if (email.isEmpty) {
                         setState(() => unfilledEmail = true);
@@ -855,12 +842,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           controller: _firstName,
                           obscureText: false,
                           decoration: unfilledFirstName
-                              ? globalDecoration.copyWith(
-                                  enabledBorder: const OutlineInputBorder(
-                                      borderSide:
-                                          BorderSide(color: Colors.red)),
-                                  suffixIcon: const Icon(Icons.clear,
-                                      color: Colors.red),
+                              ? invalidTextField.copyWith(
                                   hintText: 'Enter First Name')
                               : globalDecoration.copyWith(
                                   hintText: 'Enter First Name'),
@@ -901,12 +883,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               controller: _lastName,
                               obscureText: false,
                               decoration: unfilledLastName
-                                  ? globalDecoration.copyWith(
-                                      enabledBorder: const OutlineInputBorder(
-                                          borderSide:
-                                              BorderSide(color: Colors.red)),
-                                      suffixIcon: const Icon(Icons.clear,
-                                          color: Colors.red),
+                                  ? invalidTextField.copyWith(
                                       hintText: 'Enter Last Name')
                                   : globalDecoration.copyWith(
                                       hintText: 'Enter Last Name'),
@@ -947,12 +924,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             maxLines: 1,
                             obscureText: false,
                             decoration: unfilledEmail
-                                ? globalDecoration.copyWith(
-                                    enabledBorder: const OutlineInputBorder(
-                                        borderSide:
-                                            BorderSide(color: Colors.red)),
-                                    suffixIcon: const Icon(Icons.clear,
-                                        color: Colors.red),
+                                ? invalidTextField.copyWith(
                                     hintText: 'Enter Email')
                                 : globalDecoration.copyWith(
                                     hintText: 'Enter Email'),
@@ -997,12 +969,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             maxLines: 1,
                             obscureText: true,
                             decoration: unfilledPassword
-                                ? globalDecoration.copyWith(
-                                    enabledBorder: const OutlineInputBorder(
-                                        borderSide:
-                                            BorderSide(color: Colors.red)),
-                                    suffixIcon: const Icon(Icons.clear,
-                                        color: Colors.red),
+                                ? invalidTextField.copyWith(
                                     hintText: 'Enter Password')
                                 : globalDecoration.copyWith(
                                     hintText: 'Enter Password'),
