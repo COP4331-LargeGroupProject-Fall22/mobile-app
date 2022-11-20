@@ -406,17 +406,19 @@ class _LogInPageState extends State<LogInPage> {
                           width: 85,
                           child: ElevatedButton(
                             onPressed: () async {
-                              /*if (allLoginFieldsValid(true)) {
-                                String username = _email.value.text.trim();
-                                String password = _password.value.text.trim();
+                              if (allLoginFieldsValid(true)) {
+
+                                Map<String, dynamic> payload = {
+                                  'username': _email.value.text.trim(),
+                                  'password': _password.value.text.trim(),
+                                };
 
                                 try {
-                                  String payload = '{"username": "$username","password": "$password"}';
                                   final ret = await Authentication.login(payload);
                                   if (ret.statusCode == 200) {
                                     setState(() => clearFields());
                                     var tokens = json.decode(ret.body);
-                                    user = UserData.defineTokens(tokens);
+                                    user.defineTokens(tokens);
 
                                     final res = await User.getUser();
                                     if (res.statusCode == 200) {
@@ -438,7 +440,7 @@ class _LogInPageState extends State<LogInPage> {
                               }
                               else {
                                 setState(() {});
-                              }*/
+                              }
                               Navigator.pushNamedAndRemoveUntil(context,
                                   '/food', ((Route<dynamic> route) => false));
                             },
@@ -1130,7 +1132,7 @@ class _RegisterPageState extends State<RegisterPage> {
             children: const <Widget>[
               Flexible(
                 child: Text(
-                  'Please check your email for the validation code and enter that code below:',
+                  'Please check your email for your validation code and enter that code below:',
                   style: TextStyle(
                       fontSize: 16,
                       color: Colors.white,
@@ -1167,11 +1169,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       FilteringTextInputFormatter.allow(RegExp(r''))
                     ],
                     decoration: unfilledCode
-                        ? globalDecoration.copyWith(
-                            enabledBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.red)),
-                            suffixIcon:
-                                const Icon(Icons.clear, color: Colors.red),
+                        ? invalidTextField.copyWith(
                             hintText: 'Enter Code')
                         : globalDecoration.copyWith(hintText: 'Enter Code'),
                     onChanged: (code) {
