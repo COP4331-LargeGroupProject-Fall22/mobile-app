@@ -7,11 +7,14 @@ import 'package:smart_chef/screens/UsersProfileScreen.dart';
 
 class Routes {
   static const String startupScreen = '/startup';
-  static const String signinScreen = '/signin';
+  static const String loginScreen = '/login';
   static const String registerScreen = '/register';
 
   static const String recipeScreen = '/recipe';
-  static const String ingredientScreen = '/food';
+
+  static const String ingredientsScreen = '/food';
+  static const String ingredientScreen = '/food/food';
+
   static const String shoppingCartScreen = '/cart';
 
   static const String userProfileScreen = '/user';
@@ -22,11 +25,14 @@ class Routes {
   static Map<String, Widget Function(BuildContext)> get getroutes => {
     '/': (context) => StartupScreen(),
     startupScreen: (context) => StartupScreen(),
-    signinScreen: (context) => SignInPage(),
+    loginScreen: (context) => LogInPage(),
     registerScreen: (context) => RegisterPage(),
 
     recipeScreen: (context) => RecipeScreen(),
-    ingredientScreen: (context) => IngredientsScreen(),
+
+    ingredientsScreen: (context) => IngredientsScreen(),
+    ingredientScreen: (context) => IngredientPage(),
+
     shoppingCartScreen: (context) => ShoppingCartScreen(),
 
     userProfileScreen: (context) => UserProfileScreen(),

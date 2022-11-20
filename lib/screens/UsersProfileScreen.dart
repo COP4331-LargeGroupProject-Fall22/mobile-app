@@ -1,10 +1,12 @@
-import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:smart_chef/utils/APIutils.dart';
-import 'package:smart_chef/utils/colors.dart';
-import 'package:smart_chef/utils/userAPI.dart';
-import 'package:smart_chef/utils/authAPI.dart';
+
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:smart_chef/utils/APIutils.dart';
+import 'package:smart_chef/utils/authAPI.dart';
+import 'package:smart_chef/utils/colors.dart';
+import 'package:smart_chef/utils/globals.dart';
+import 'package:smart_chef/utils/userAPI.dart';
 
 class UserProfileScreen extends StatefulWidget {
   @override
@@ -47,30 +49,21 @@ class _UserProfilePageState extends State<UserProfilePage> {
         centerTitle: true,
         backgroundColor: Colors.white,
         leading: IconButton(
-          onPressed: () async{
-            //TODO Finish registration verification once API is done
+          onPressed: () async {
             try {
-              final response = await Authentication.logout();
-              switch (response.statusCode) {
-                case 200:
-                  setState(() {
-                    errorMessage = 'Logout successful!';
-                  });
-                  await Future.delayed(Duration(seconds: 1));
-                  user.clear();
+              final res = await Authentication.logout();
 
-                  Navigator.pushNamedAndRemoveUntil(context,
-                      '/startup', ((Route<dynamic> route) => false));
-                  break;
-                case 400:
-                  print("Could not logout");
-                  break;
-                case 401:
-                  print('Access Token missing');
-                  break;
-                default:
-                  print('Something went wrong!');
-                  break;
+              if (res.statusCode == 200) {
+                setState(() {
+                  errorMessage = 'Logout successful!';
+                });
+                await Future.delayed(Duration(seconds: 1));
+                user.clear();
+
+                Navigator.pushNamedAndRemoveUntil(
+                    context, '/startup', ((Route<dynamic> route) => false));
+              } else {
+                errorMessage = getLogoutError(res.statusCode);
               }
             } catch (e) {
               print('Could not connect to server');
@@ -92,7 +85,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 builder: (context) {
                   return AlertDialog(
                     title: const Text('Deleting your account?'),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                     elevation: 15,
                     actions: <Widget>[
                       TextButton(
@@ -117,11 +111,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       )
                     ],
                     content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Flexible(child: const Text('Are you sure you want to delete your account?')),
-                      ]
-                    ),
+                        mainAxisSize: MainAxisSize.min,
+                        children: const <Widget>[
+                          Flexible(
+                              child: Text(
+                                  'Are you sure you want to delete your account?')),
+                        ]),
                   );
                 },
               );
@@ -130,36 +125,18 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 return;
               }
 
-              user.clear();
-
               try {
-                final response = await User.deleteUser();
-                switch (response.statusCode) {
-                  case 200:
-                    user.accessToken = '';
-                    user.refreshToken = '';
+                final res = await User.deleteUser();
+                if (res.statusCode == 200) {
+                  user.clear();
 
-                    Navigator.pushNamedAndRemoveUntil(context,
-                        '/startup', ((Route<dynamic> route) => false));
-                    break;
-                  case 400:
-                    print("Incorrect request format");
-                    break;
-                  case 401:
-                    print('Access Token missing');
-                    break;
-                  case 404:
-                    errorMessage = "User wasn't found";
-                    break;
-                  default:
-                    print('Something went wrong!');
-                    break;
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, '/startup', ((Route<dynamic> route) => false));
+                } else {
+                  errorMessage = getDeleteError(res.statusCode);
                 }
-
-                //jsonObject = json.decode(ret.body);
-              }
-              catch (e) {
-                print('Could not connect to server');
+              } catch (e) {
+                errorDialog(context);
               }
             },
             icon: const Icon(
@@ -230,7 +207,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                       BorderRadius.all(Radius.circular(10)),
                                 ),
                                 child: Text(
-                                  user.firstName,
+                                  user.firstName.isEmpty ? '' : user.firstName,
                                   style: const TextStyle(
                                     fontSize: 20,
                                     color: Colors.white,
@@ -263,7 +240,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                       BorderRadius.all(Radius.circular(10)),
                                 ),
                                 child: Text(
-                                  user.lastName,
+                                  user.lastName.isEmpty ? '' : user.lastName,
                                   style: const TextStyle(
                                     fontSize: 20,
                                     color: Colors.white,
@@ -299,7 +276,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                   BorderRadius.all(Radius.circular(10)),
                             ),
                             child: Text(
-                              user.email,
+                              user.email.isEmpty ? '' : user.email,
                               style: const TextStyle(
                                 fontSize: 20,
                                 color: Colors.white,
@@ -312,7 +289,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       Container(
                         child: Text(
                           errorMessage,
-                          style: const TextStyle(fontSize: 20, color: Colors.red),
+                          style:
+                              const TextStyle(fontSize: 20, color: Colors.red),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -339,8 +317,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               child: const Text(
                                 'Edit Information',
                                 style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.white,
+                                  fontSize: 18,
+                                  color: Colors.white,
                                   fontWeight: FontWeight.w300,
                                 ),
                                 textAlign: TextAlign.center,
@@ -353,7 +331,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                             child: ElevatedButton(
                               onPressed: () {
                                 setState(() {
-                                  Navigator.pushNamed(context, '/user/changePassword');
+                                  Navigator.pushNamed(
+                                      context, '/user/changePassword');
                                 });
                               },
                               style: ElevatedButton.styleFrom(
@@ -412,8 +391,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         ),
                         const Text(
                           'Ingredients',
-                          style:
-                              TextStyle(fontSize: 12, color: bottomRowIcon),
+                          style: TextStyle(fontSize: 12, color: bottomRowIcon),
                           textAlign: TextAlign.center,
                         )
                       ])),
@@ -484,6 +462,30 @@ class _UserProfilePageState extends State<UserProfilePage> {
       ),
     );
   }
+
+  String getLogoutError(int statusCode) {
+    switch (statusCode) {
+      case 400:
+        return "Could not logout";
+      case 401:
+        return 'Access Token invalid';
+      default:
+        return 'Something went wrong!';
+    }
+  }
+
+  String getDeleteError(int statusCode) {
+    switch (statusCode) {
+      case 400:
+        return 'Incorrect request format';
+      case 401:
+        return 'Token is invalid';
+      case 404:
+        return 'User not found';
+      default:
+        return 'Something went wrong!';
+    }
+  }
 }
 
 class EditUserProfilePage extends StatefulWidget {
@@ -499,15 +501,6 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
     _email.text = user.email;
     super.initState();
   }
-
-  final globalDecoration = InputDecoration(
-      contentPadding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
-      filled: true,
-      fillColor: textFieldBacking,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xff47A1E2)),
-      ));
 
   final _email = TextEditingController();
   bool unfilledEmail = false;
@@ -603,20 +596,23 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                     vertical: 5, horizontal: 5),
                                 decoration: const BoxDecoration(
                                   color: mainScheme,
-                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(10)),
                                 ),
                                 child: TextField(
                                   maxLines: 1,
                                   controller: _firstName,
                                   decoration: unfilledFirstName
                                       ? globalDecoration.copyWith(
-                                      enabledBorder: const OutlineInputBorder(
-                                          borderSide:
-                                          BorderSide(color: Colors.red)),
-                                      suffixIcon: const Icon(Icons.clear,
-                                          color: Colors.red),
-                                      hintText: 'Enter First Name')
-                                      : globalDecoration.copyWith(hintText: 'Enter First Name'),
+                                          enabledBorder:
+                                              const OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                      color: Colors.red)),
+                                          suffixIcon: const Icon(Icons.clear,
+                                              color: Colors.red),
+                                          hintText: 'Enter First Name')
+                                      : globalDecoration.copyWith(
+                                          hintText: 'Enter First Name'),
                                   style: const TextStyle(
                                     fontSize: 20,
                                     color: Colors.black,
@@ -624,8 +620,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                   onChanged: (firstName) {
                                     if (firstName.isEmpty) {
                                       setState(() => unfilledFirstName = true);
-                                    }
-                                    else {
+                                    } else {
                                       unfilledFirstName = false;
                                     }
                                   },
@@ -654,20 +649,23 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                     vertical: 5, horizontal: 5),
                                 decoration: const BoxDecoration(
                                   color: mainScheme,
-                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(10)),
                                 ),
                                 child: TextField(
                                   maxLines: 1,
                                   controller: _lastName,
                                   decoration: unfilledLastName
                                       ? globalDecoration.copyWith(
-                                      enabledBorder: const OutlineInputBorder(
-                                          borderSide:
-                                          BorderSide(color: Colors.red)),
-                                      suffixIcon: const Icon(Icons.clear,
-                                          color: Colors.red),
-                                      hintText: 'Enter Last Name')
-                                      : globalDecoration.copyWith(hintText: 'Enter Last Name'),
+                                          enabledBorder:
+                                              const OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                      color: Colors.red)),
+                                          suffixIcon: const Icon(Icons.clear,
+                                              color: Colors.red),
+                                          hintText: 'Enter Last Name')
+                                      : globalDecoration.copyWith(
+                                          hintText: 'Enter Last Name'),
                                   style: const TextStyle(
                                     fontSize: 20,
                                     color: Colors.black,
@@ -677,8 +675,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                   onChanged: (lastName) {
                                     if (lastName.isEmpty) {
                                       setState(() => unfilledLastName = true);
-                                    }
-                                    else {
+                                    } else {
                                       unfilledLastName = false;
                                     }
                                   },
@@ -708,20 +705,21 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                             decoration: const BoxDecoration(
                               color: mainScheme,
                               borderRadius:
-                              BorderRadius.all(Radius.circular(10)),
+                                  BorderRadius.all(Radius.circular(10)),
                             ),
                             child: TextField(
                               maxLines: 1,
                               controller: _email,
                               decoration: unfilledEmail
                                   ? globalDecoration.copyWith(
-                                  enabledBorder: const OutlineInputBorder(
-                                      borderSide:
-                                      BorderSide(color: Colors.red)),
-                                  suffixIcon: const Icon(Icons.clear,
-                                      color: Colors.red),
-                                  hintText: 'Enter Email')
-                                  : globalDecoration.copyWith(hintText: 'Enter Email'),
+                                      enabledBorder: const OutlineInputBorder(
+                                          borderSide:
+                                              BorderSide(color: Colors.red)),
+                                      suffixIcon: const Icon(Icons.clear,
+                                          color: Colors.red),
+                                      hintText: 'Enter Email')
+                                  : globalDecoration.copyWith(
+                                      hintText: 'Enter Email'),
                               style: const TextStyle(
                                 fontSize: 20,
                                 color: Colors.black,
@@ -731,8 +729,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                 if (!isEmail(email)) {
                                   errorMessage = 'Email must be in valid form';
                                   setState(() => unfilledEmail = true);
-                                }
-                                else {
+                                } else {
                                   errorMessage = '';
                                   setState(() => unfilledEmail = false);
                                 }
@@ -763,7 +760,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                             decoration: const BoxDecoration(
                               color: mainScheme,
                               borderRadius:
-                              BorderRadius.all(Radius.circular(10)),
+                                  BorderRadius.all(Radius.circular(10)),
                             ),
                             child: TextField(
                               maxLines: 1,
@@ -771,13 +768,14 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                               obscureText: true,
                               decoration: unfilledPassword
                                   ? globalDecoration.copyWith(
-                                  enabledBorder: const OutlineInputBorder(
-                                      borderSide:
-                                      BorderSide(color: Colors.red)),
-                                  suffixIcon: const Icon(Icons.clear,
-                                      color: Colors.red),
-                                  hintText: 'Enter Password')
-                                  : globalDecoration.copyWith(hintText: 'Enter Password'),
+                                      enabledBorder: const OutlineInputBorder(
+                                          borderSide:
+                                              BorderSide(color: Colors.red)),
+                                      suffixIcon: const Icon(Icons.clear,
+                                          color: Colors.red),
+                                      hintText: 'Enter Password')
+                                  : globalDecoration.copyWith(
+                                      hintText: 'Enter Password'),
                               style: const TextStyle(
                                 fontSize: 20,
                                 color: Colors.black,
@@ -787,8 +785,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                               onChanged: (password) {
                                 if (password.isEmpty) {
                                   setState(() => unfilledPassword = true);
-                                }
-                                else {
+                                } else {
                                   setState(() => unfilledPassword = false);
                                 }
                               },
@@ -801,7 +798,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                             decoration: const BoxDecoration(
                               color: mainScheme,
                               borderRadius:
-                              BorderRadius.all(Radius.circular(10)),
+                                  BorderRadius.all(Radius.circular(10)),
                             ),
                             child: TextField(
                               maxLines: 1,
@@ -809,13 +806,14 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                               obscureText: true,
                               decoration: unfilledConfirmPassword
                                   ? globalDecoration.copyWith(
-                                  enabledBorder: const OutlineInputBorder(
-                                      borderSide:
-                                      BorderSide(color: Colors.red)),
-                                  suffixIcon: const Icon(Icons.clear,
-                                      color: Colors.red),
-                                  hintText: 'Confirm Password')
-                                  : globalDecoration.copyWith(hintText: 'Confirm Password'),
+                                      enabledBorder: const OutlineInputBorder(
+                                          borderSide:
+                                              BorderSide(color: Colors.red)),
+                                      suffixIcon: const Icon(Icons.clear,
+                                          color: Colors.red),
+                                      hintText: 'Confirm Password')
+                                  : globalDecoration.copyWith(
+                                      hintText: 'Confirm Password'),
                               style: const TextStyle(
                                 fontSize: 20,
                                 color: Colors.black,
@@ -823,19 +821,13 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                               textAlign: TextAlign.left,
                               textInputAction: TextInputAction.done,
                               onChanged: (password) {
-                                if (password.isEmpty) {
-                                  setState(() => unfilledConfirmPassword = true);
+                                if (validatePassword(password)) {
+                                  unfilledConfirmPassword = false;
+                                } else {
+                                  errorMessage = 'Passwords must match!';
+                                  unfilledConfirmPassword = true;
                                 }
-                                else {
-                                  if (_password.value.text.isEmpty) {
-                                    errorMessage = 'Passwords must match!';
-                                  }
-                                  else if (passwordsMatch()) {
-                                    errorMessage = '';
-                                    unfilledConfirmPassword = false;
-                                  }
-                                  setState(() {});
-                                }
+                                setState(() {});
                               },
                             ),
                           ),
@@ -843,44 +835,62 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                             margin: const EdgeInsets.only(bottom: 20),
                             child: Text(
                               errorMessage,
-                              style: const TextStyle(fontSize: 14, color: Colors.red),
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.red),
                               textAlign: TextAlign.center,
                             ),
                           ),
                           Container(
                             width: 180,
-                            //padding: EdgeInsets.all(15),
                             child: ElevatedButton(
                               onPressed: () async {
-                                if (areFieldsValid()) {
+                                if (allEditProfileFieldsValid()) {
                                   if (passwordsMatch()) {
-                                    String firstName = _firstName.value.text.trim();
-                                    String lastName = _lastName.value.text.trim();
-                                    String username = _email.value.text.trim();
-                                    String changes = '{"firstname": "$firstName","lastname": "$lastName","lastSeen": ${user
-                                        .lastSeen}"username": "$username","password": "${user
-                                        .password}"}';
+
+                                    Map<String, dynamic> changes = {
+                                      'firstName': _firstName.value.text.trim(),
+                                      'lastName': _lastName.value.text.trim(),
+                                      'username': _email.value.text.trim(),
+                                      'password': user.password,
+                                    };
+
                                     try {
-                                      final response = await User.updateUser(changes);
-                                      if (await status(response)) {
-                                        user.firstName = firstName;
-                                        user.email = username;
-                                        user.lastName = lastName;
+                                      final res =
+                                          await User.updateUser(changes);
+                                      if (res.statusCode == 200) {
+                                        user.firstName = _firstName.value.text.trim();
+                                        user.lastName = _lastName.value.text.trim();
+                                        user.email = _email.value.text.trim();
+
+                                        errorMessage ==
+                                            'Successfully updated your profile!';
+                                        await Future.delayed(Duration(seconds: 1));
+
+                                        clearFields();
                                         Navigator.pop(context);
+                                      } else {
+                                        errorMessage = await getUpdateProfileError(res.statusCode);
+                                        if (errorMessage ==
+                                            'Successfully updated your profile!') {
+                                          user.firstName = _firstName.value.text.trim();
+                                          user.lastName = _lastName.value.text.trim();
+                                          user.email = _email.value.text.trim();
+
+                                          await Future.delayed(Duration(seconds: 1));
+
+                                          clearFields();
+                                          Navigator.pop(context);
+                                        } else {
+                                          errorDialog(context);
+                                        }
                                       }
-                                    }
-                                    catch(e) {
+                                    } catch (e) {
                                       print('Could not connect to server');
                                     }
+                                  } else {
+                                    setState(() {});
                                   }
-                                  else {
-                                    setState(() {
-                                      unfilledConfirmPassword = true;
-                                      unfilledPassword = true;
-                                    });
-                                  }
-                                }
-                                else {
+                                } else {
                                   setState(() {});
                                 }
                               },
@@ -889,7 +899,6 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 backgroundColor: mainScheme,
-                                //padding: const EdgeInsets.all(2),
                                 shadowColor: Colors.black,
                               ),
                               child: const Text(
@@ -940,8 +949,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                         ),
                         const Text(
                           'Ingredients',
-                          style:
-                          TextStyle(fontSize: 12, color: bottomRowIcon),
+                          style: TextStyle(fontSize: 12, color: bottomRowIcon),
                           textAlign: TextAlign.center,
                         )
                       ])),
@@ -1013,7 +1021,20 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
     );
   }
 
-  bool areFieldsValid() {
+  bool validatePassword(String password) {
+    if (password.isEmpty) {
+      return false;
+    }
+    if (_password.value.text.isEmpty) {
+      return false;
+    }
+    if (passwordsMatch()) {
+      return true;
+    }
+    return false;
+  }
+
+  bool allEditProfileFieldsValid() {
     bool toReturn = true;
     if (_firstName.value.text.isEmpty) {
       toReturn = false;
@@ -1045,69 +1066,42 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
 
   bool passwordsMatch() {
     if (_password.value.text != user.password) {
-      errorMessage = 'Passwords do not match';
+      errorMessage = 'Password is incorrect';
       return false;
     }
     return true;
   }
 
   void clearFields() {
+    unfilledFirstName = false;
+    unfilledLastName = false;
     unfilledEmail = false;
     unfilledPassword = false;
+    unfilledConfirmPassword = false;
+    _firstName.clear();
+    _lastName.clear();
     _email.clear();
     _password.clear();
+    _confirmPassword.clear();
   }
 
-  Future<bool> status(http.Response res) async {
-    bool accepted = true;
-    while (accepted) {
-      switch (res.statusCode) {
-        case 200:
-          return true;
-        case 400:
-          print("Incorrect formatting!");
-          return false;
-        case 401:
-          errorMessage = 'Access token missing';
-          return false;
-        case 403:
-          final changeToken = await Authentication.refreshToken();
-          if (refreshTokenStatus(changeToken)) {
-            var tokens = json.decode(changeToken.body);
-            user.accessToken = tokens['accessToken'];
-            user.refreshToken = tokens['refreshToken'];
-          }
-          else {
-            print('something went wrong!');
-            return false;
-          }
-          break;
-        case 404:
-          errorMessage = 'User not found';
-          return false;
-        default:
-          print('Something in edit profile went wrong!');
-          return false;
-      }
-    }
-  }
-
-  bool refreshTokenStatus(http.Response changeToken) {
-    switch (changeToken.statusCode) {
-      case 200:
-        return true;
+  Future<String> getUpdateProfileError(int statusCode) async {
+    switch (statusCode) {
       case 400:
-        errorMessage = 'Could not refresh tokens';
-        return false;
+        return "Incorrect formatting!";
       case 401:
-        errorMessage = 'Token missing';
-        return false;
+        return 'Access token missing';
+      case 403:
+        errorMessage = 'Reconnecting...';
+        if (await tryTokenRefresh()) {
+          return 'Successfully changed password!';
+        } else {
+          return 'Cannot connect to server';
+        }
       case 404:
-        errorMessage = 'User not found';
-        return false;
+        return 'User not found';
       default:
-        print('Something went wrong!');
-        return false;
+        return 'Something in edit password went wrong!';
     }
   }
 }
@@ -1122,15 +1116,6 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
   void initState() {
     super.initState();
   }
-
-  final globalDecoration = InputDecoration(
-      contentPadding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
-      filled: true,
-      fillColor: textFieldBacking,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xff47A1E2)),
-      ));
 
   final _oldPassword = TextEditingController();
   bool unfilledOldPassword = false;
@@ -1168,14 +1153,8 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: SingleChildScrollView(
           child: Container(
-            width: MediaQuery
-                .of(context)
-                .size
-                .width,
-            height: MediaQuery
-                .of(context)
-                .size
-                .height,
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
             decoration: BoxDecoration(color: Colors.white),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -1206,27 +1185,27 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                             decoration: const BoxDecoration(
                               color: mainScheme,
                               borderRadius:
-                              BorderRadius.all(Radius.circular(10)),
+                                  BorderRadius.all(Radius.circular(10)),
                             ),
                             child: TextField(
                               maxLines: 1,
                               controller: _oldPassword,
                               decoration: unfilledOldPassword
                                   ? globalDecoration.copyWith(
-                                  enabledBorder: const OutlineInputBorder(
-                                      borderSide:
-                                      BorderSide(color: Colors.red)),
-                                  suffixIcon: const Icon(Icons.clear,
-                                      color: Colors.red),
-                                  hintText: 'Enter Old Password')
+                                      enabledBorder: const OutlineInputBorder(
+                                          borderSide:
+                                              BorderSide(color: Colors.red)),
+                                      suffixIcon: const Icon(Icons.clear,
+                                          color: Colors.red),
+                                      hintText: 'Enter Old Password')
                                   : globalDecoration.copyWith(
-                                  hintText: 'Enter Old Password'),
+                                      hintText: 'Enter Old Password'),
                               onChanged: (password) {
                                 if (_oldPassword.text.isEmpty) {
-                                  errorMessage = 'Old password required to change password';
+                                  errorMessage =
+                                      'Old password required to change password';
                                   setState(() => unfilledOldPassword = true);
-                                }
-                                else {
+                                } else {
                                   errorMessage = '';
                                   setState(() => unfilledOldPassword = false);
                                 }
@@ -1257,7 +1236,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                             decoration: BoxDecoration(
                               color: mainScheme,
                               borderRadius:
-                              BorderRadius.all(Radius.circular(10)),
+                                  BorderRadius.all(Radius.circular(10)),
                             ),
                             child: TextField(
                               maxLines: 1,
@@ -1265,19 +1244,18 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                               obscureText: true,
                               decoration: unfilledNewPassword
                                   ? globalDecoration.copyWith(
-                                  enabledBorder: const OutlineInputBorder(
-                                      borderSide:
-                                      BorderSide(color: Colors.red)),
-                                  suffixIcon: const Icon(Icons.clear,
-                                      color: Colors.red),
-                                  hintText: 'Enter Password')
+                                      enabledBorder: const OutlineInputBorder(
+                                          borderSide:
+                                              BorderSide(color: Colors.red)),
+                                      suffixIcon: const Icon(Icons.clear,
+                                          color: Colors.red),
+                                      hintText: 'Enter Password')
                                   : globalDecoration.copyWith(
-                                  hintText: 'Enter Password'),
+                                      hintText: 'Enter Password'),
                               onChanged: (password) {
                                 if (password.isEmpty) {
                                   setState(() => unfilledNewPassword = true);
-                                }
-                                else {
+                                } else {
                                   setState(() => unfilledNewPassword = false);
                                 }
                               },
@@ -1301,7 +1279,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                             decoration: BoxDecoration(
                               color: mainScheme,
                               borderRadius:
-                              BorderRadius.all(Radius.circular(10)),
+                                  BorderRadius.all(Radius.circular(10)),
                             ),
                             child: TextField(
                               maxLines: 1,
@@ -1309,28 +1287,18 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                               obscureText: true,
                               decoration: unfilledConfirmPassword
                                   ? globalDecoration.copyWith(
-                                  enabledBorder: const OutlineInputBorder(
-                                      borderSide:
-                                      BorderSide(color: Colors.red)),
-                                  suffixIcon: const Icon(Icons.clear,
-                                      color: Colors.red),
-                                  hintText: 'Confirm Password')
+                                      enabledBorder: const OutlineInputBorder(
+                                          borderSide:
+                                              BorderSide(color: Colors.red)),
+                                      suffixIcon: const Icon(Icons.clear,
+                                          color: Colors.red),
+                                      hintText: 'Confirm Password')
                                   : globalDecoration.copyWith(
-                                  hintText: 'Confirm Password'),
+                                      hintText: 'Confirm Password'),
                               onChanged: (password) {
-                                if (password.isEmpty) {
-                                  setState(() =>
-                                  unfilledConfirmPassword = true);
-                                }
-                                else {
-                                  if (_newPassword.value.text.isEmpty |
-                                  (_newPassword.value.text != password)) {
-                                    errorMessage = 'Passwords must match!';
-                                  }
-                                  else {
-                                    errorMessage = '';
-                                    setState(() => unfilledConfirmPassword = false);
-                                  }
+                                if (validateConfirmPassword()) {
+                                  setState(
+                                      () => unfilledConfirmPassword = false);
                                 }
                               },
                             ),
@@ -1349,85 +1317,51 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                             margin: EdgeInsets.only(top: 170),
                             child: ElevatedButton(
                               onPressed: () async {
-                                if (_oldPassword.value.text.isEmpty |
-                                _newPassword.value.text.isEmpty |
-                                _confirmPassword.value.text.isEmpty) {
-                                  if (_oldPassword.value.text.isEmpty) {
-                                    setState(() => unfilledOldPassword = true);
-                                  }
-                                  if (_newPassword.value.text.isEmpty) {
-                                    setState(() => unfilledNewPassword = true);
-                                  }
-                                  if (_confirmPassword.value.text.isEmpty) {
-                                    setState(() =>
-                                    unfilledConfirmPassword = true);
-                                  }
-                                } else {
-                                  if (_oldPassword.value.text !=
-                                      user.password) {
-                                    errorMessage = 'Old Password is incorrect';
-                                    setState(() {
-                                      unfilledConfirmPassword = true;
-                                    });
-                                  }
-                                  else {
-                                    String newPassword = _newPassword.value.text.trim();
-                                    String changes = '{"firstname": "${user.firstName}","lastname": "${user.lastName}","lastSeen": ${user
-                                        .lastSeen}"username": "${user.email}","password": "$newPassword"}';
-                                    try {
-                                      final response = await User.updateUser(changes);
+                                if (allEditPasswordFieldsValid()) {
+                                  if (validateConfirmPassword()) {
 
-                                      bool accepted = false;
-                                      while (!accepted) {
-                                        switch (response.statusCode) {
-                                          case 200:
-                                            accepted = true;
-                                            Navigator.pop(context);
-                                            break;
-                                          case 400:
-                                            print("Incorrect formatting!");
-                                            break;
-                                          case 401:
-                                            errorMessage =
-                                            'Access token missing';
-                                            break;
-                                          case 403:
-                                            final changeToken = await Authentication.refreshToken();
-                                            switch (changeToken.statusCode) {
-                                              case 200:
-                                                var tokens = json.decode(
-                                                    changeToken.body);
-                                                user.accessToken =
-                                                tokens['accessToken'];
-                                                user.refreshToken =
-                                                tokens['refreshToken'];
-                                                break;
-                                              case 400:
-                                                errorMessage =
-                                                'Could not refresh tokens';
-                                                break;
-                                              case 401:
-                                                errorMessage = 'Token missing';
-                                                break;
-                                              case 404:
-                                                errorMessage = 'User not found';
-                                                break;
-                                            }
-                                            break;
-                                          case 404:
-                                            errorMessage = 'User not found';
-                                            break;
-                                          default:
-                                            print(
-                                                'Something in edit profile went wrong!');
-                                            break;
+                                    Map<String, dynamic> changes = {
+                                      'firstName': user.firstName.trim(),
+                                      'lastName': user.lastName.trim(),
+                                      'username': user.email.trim(),
+                                      'password': _newPassword.value.text.trim(),
+                                    };
+
+                                    try {
+                                      final res =
+                                          await User.updateUser(changes);
+                                      if (res.statusCode == 200) {
+                                        user.password = _newPassword.value.text.trim();
+
+                                        errorMessage ==
+                                            'Successfully updated your password!';
+                                        await Future.delayed(Duration(seconds: 1));
+
+                                        clearFields();
+                                        Navigator.pop(context);
+                                      } else {
+                                        errorMessage =
+                                            await getChangePasswordError(
+                                                res.statusCode);
+                                        if (errorMessage ==
+                                            'Successfully changed password!') {
+                                          user.password = _newPassword.value.text.trim();
+                                          await Future.delayed(Duration(seconds: 1));
+
+                                          clearFields();
+                                          Navigator.pop(context);
+                                        } else {
+                                          errorDialog(context);
                                         }
                                       }
-                                    }
-                                    catch (e) {
+                                    } catch (e) {
                                       print('Could not connect to server');
                                     }
+                                  } else {
+                                    setState(() {});
                                   }
+                                } else {
+                                  setState(() {});
                                 }
                               },
                               style: ElevatedButton.styleFrom(
@@ -1435,7 +1369,6 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 backgroundColor: mainScheme,
-                                //padding: const EdgeInsets.all(2),
                                 shadowColor: Colors.black,
                               ),
                               child: const Text(
@@ -1462,10 +1395,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
       bottomNavigationBar: BottomAppBar(
         child: Container(
           height: 90,
-          width: MediaQuery
-              .of(context)
-              .size
-              .width,
+          width: MediaQuery.of(context).size.width,
           decoration: BoxDecoration(
             border: Border(
                 top: BorderSide(color: Colors.black.withOpacity(.2), width: 3)),
@@ -1475,10 +1405,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               SizedBox(
-                  width: MediaQuery
-                      .of(context)
-                      .size
-                      .width / 4,
+                  width: MediaQuery.of(context).size.width / 4,
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
@@ -1492,16 +1419,12 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                         ),
                         const Text(
                           'Ingredients',
-                          style:
-                          TextStyle(fontSize: 12, color: bottomRowIcon),
+                          style: TextStyle(fontSize: 12, color: bottomRowIcon),
                           textAlign: TextAlign.center,
                         )
                       ])),
               SizedBox(
-                width: MediaQuery
-                    .of(context)
-                    .size
-                    .width / 4,
+                width: MediaQuery.of(context).size.width / 4,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
@@ -1522,10 +1445,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                 ),
               ),
               SizedBox(
-                width: MediaQuery
-                    .of(context)
-                    .size
-                    .width / 4,
+                width: MediaQuery.of(context).size.width / 4,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
@@ -1546,10 +1466,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                 ),
               ),
               SizedBox(
-                width: MediaQuery
-                    .of(context)
-                    .size
-                    .width / 4,
+                width: MediaQuery.of(context).size.width / 4,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
@@ -1572,5 +1489,96 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
         ),
       ),
     );
+  }
+
+  bool validateConfirmPassword() {
+    bool toReturn = true;
+    if (_oldPassword.value.text.isEmpty) {
+      toReturn = false;
+      unfilledOldPassword = true;
+      errorMessage = 'Old Password required to change passwords';
+    }
+    if (_newPassword.value.text.isEmpty) {
+      toReturn = false;
+      unfilledNewPassword = true;
+      errorMessage = 'New passwords must match';
+    }
+    if (_confirmPassword.value.text.isEmpty) {
+      toReturn = false;
+      unfilledConfirmPassword = true;
+      errorMessage = 'New passwords must match';
+    }
+    if (!oldPasswordMatches()) {
+      toReturn = false;
+      unfilledOldPassword = true;
+    }
+    if (!newPasswordsMatches()) {
+      toReturn = false;
+      unfilledNewPassword = true;
+      unfilledConfirmPassword = true;
+    }
+    return toReturn;
+  }
+
+  bool allEditPasswordFieldsValid() {
+    bool toReturn = true;
+    if (_oldPassword.value.text.isEmpty) {
+      toReturn = false;
+      unfilledOldPassword = true;
+    }
+    if (_newPassword.value.text.isEmpty) {
+      toReturn = false;
+      unfilledNewPassword = true;
+    }
+    if (_confirmPassword.value.text.isEmpty) {
+      toReturn = false;
+      unfilledConfirmPassword = true;
+    }
+    return toReturn;
+  }
+
+  bool oldPasswordMatches() {
+    if (_oldPassword.value.text != user.password) {
+      errorMessage = 'Passwords do not match';
+      return false;
+    }
+    return true;
+  }
+
+  bool newPasswordsMatches() {
+    if (_newPassword.value.text != _confirmPassword.value.text) {
+      errorMessage = 'Passwords do not match';
+      return false;
+    }
+    return true;
+  }
+
+  void clearFields() {
+    unfilledOldPassword = false;
+    unfilledNewPassword = false;
+    unfilledConfirmPassword = false;
+    _oldPassword.clear();
+    _newPassword.clear();
+    _confirmPassword.clear();
+  }
+
+  Future<String> getChangePasswordError(int statusCode) async {
+    switch (statusCode) {
+      case 400:
+        return "Incorrect formatting!";
+      case 401:
+        return 'Access token missing';
+      case 403:
+        errorMessage = 'Reconnecting...';
+        if (await tryTokenRefresh()) {
+          return 'Successfully changed password!';
+        } else {
+          return 'Cannot connect to server';
+        }
+      case 404:
+        return 'User not found';
+      default:
+        return 'Something in edit password went wrong!';
+    }
   }
 }

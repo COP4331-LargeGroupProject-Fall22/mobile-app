@@ -1,8 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:smart_chef/utils/APIutils.dart';
-import 'package:smart_chef/utils/colors.dart';
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:smart_chef/utils/APIutils.dart';
+import 'package:smart_chef/utils/authAPI.dart';
+import 'package:smart_chef/utils/colors.dart';
+import 'package:smart_chef/utils/globals.dart';
+import 'package:smart_chef/utils/userAPI.dart';
 
 class ShoppingCartScreen extends StatefulWidget {
   @override
@@ -43,6 +47,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
           centerTitle: true,
           backgroundColor: Colors.white,
           leading: IconButton(
+            // TODO(): Make search functionality
             onPressed: () {},
             icon: Icon(
               Icons.search,
@@ -57,6 +62,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
                 color: Colors.black,
               ),
               iconSize: 35,
+              // TODO(): Make sort functionality
               onPressed: () {},
             ),
           ]),
@@ -67,6 +73,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
             decoration: BoxDecoration(color: Colors.white),
+            // TODO(): Make Shopping Cart Screen UI
             child: Text("To be changed"),
           ),
         ),
@@ -93,13 +100,12 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
                             Navigator.pushReplacementNamed(context, '/food');
                           },
                           icon: Icon(Icons.egg),
-                          iconSize: 55,
+                          iconSize: bottomIconSize,
                           color: bottomRowIcon,
                         ),
                         const Text(
                           'Ingredients',
-                          style:
-                          TextStyle(fontSize: 12, color: bottomRowIcon),
+                          style: TextStyle(fontSize: 12, color: bottomRowIcon),
                           textAlign: TextAlign.center,
                         )
                       ])),
@@ -114,7 +120,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
                       },
                       icon: Icon(Icons.restaurant),
                       color: bottomRowIcon,
-                      iconSize: 55,
+                      iconSize: bottomIconSize,
                     ),
                     const Text(
                       'Recipes',
@@ -132,7 +138,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
                     IconButton(
                       onPressed: () {},
                       icon: Icon(Icons.shopping_cart),
-                      iconSize: 55,
+                      iconSize: bottomIconSize,
                       color: mainScheme,
                     ),
                     const Text(
@@ -153,7 +159,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
                         Navigator.pushReplacementNamed(context, '/user');
                       },
                       icon: Icon(Icons.person),
-                      iconSize: 55,
+                      iconSize: bottomIconSize,
                       color: bottomRowIcon,
                     ),
                     const Text(
