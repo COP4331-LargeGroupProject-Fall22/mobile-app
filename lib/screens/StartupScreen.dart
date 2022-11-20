@@ -1,11 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:convert';
-import 'package:smart_chef/utils/APIutils.dart';
-import 'package:smart_chef/utils/colors.dart';
-import 'package:smart_chef/utils/userData.dart';
-import 'package:smart_chef/utils/authAPI.dart';
 import 'package:http/http.dart' as http;
+import 'package:smart_chef/utils/APIutils.dart';
+import 'package:smart_chef/utils/authAPI.dart';
+import 'package:smart_chef/utils/colors.dart';
+import 'package:smart_chef/utils/globals.dart';
+import 'package:smart_chef/utils/userAPI.dart';
+import 'package:smart_chef/utils/userData.dart';
 
 class StartupScreen extends StatefulWidget {
   @override
@@ -169,12 +172,12 @@ class _StartPageState extends State<StartPage> {
   }
 }
 
-class SignInPage extends StatefulWidget {
+class LogInPage extends StatefulWidget {
   @override
-  _SignInPageState createState() => _SignInPageState();
+  _LogInPageState createState() => _LogInPageState();
 }
 
-class _SignInPageState extends State<SignInPage> {
+class _LogInPageState extends State<LogInPage> {
   @override
   void initState() {
     super.initState();
@@ -185,19 +188,9 @@ class _SignInPageState extends State<SignInPage> {
     if (state == 1) {
       return buildForgot();
     } else {
-      return buildSignIn();
+      return buildLogIn();
     }
   }
-
-  final generalDecoration = InputDecoration(
-    contentPadding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
-    filled: true,
-    fillColor: const Color(0xffD1D1D1),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: Color(0xff47A1E2)),
-    ),
-  );
 
   final _email = TextEditingController();
   bool unfilledEmail = false;
@@ -260,7 +253,7 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-  Widget buildSignIn() {
+  Widget buildLogIn() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
@@ -284,7 +277,7 @@ class _SignInPageState extends State<SignInPage> {
                       style: TextButton.styleFrom(
                         textStyle: const TextStyle(
                           fontSize: 18,
-                          color: Color(0xff47A1E2),
+                          color: startScreenTextBacking,
                           decoration: TextDecoration.underline,
                         ),
                       ),
@@ -329,7 +322,7 @@ class _SignInPageState extends State<SignInPage> {
                             maxLines: 1,
                             controller: _email,
                             decoration: unfilledEmail
-                                ? generalDecoration.copyWith(
+                                ? globalDecoration.copyWith(
                                     enabledBorder: const OutlineInputBorder(
                                         borderSide:
                                             BorderSide(color: Colors.red)),
@@ -337,15 +330,19 @@ class _SignInPageState extends State<SignInPage> {
                                         color: Colors.red),
                                     hintText: 'Enter Email',
                                   )
-                                : generalDecoration.copyWith(hintText: 'Enter Email'),
+                                : globalDecoration.copyWith(
+                                    hintText: 'Enter Email'),
                             onChanged: (email) {
                               if (!isEmail(email)) {
                                 errorMessage = 'Email must be in valid form';
                                 setState(() => unfilledEmail = true);
-                              }
-                              else {
-                                errorMessage = '';
-                                setState(() => unfilledEmail = false);
+                              } else {
+                                if (email.isEmpty) {
+                                  setState(() => unfilledEmail = true);
+                                } else {
+                                  errorMessage = '';
+                                  setState(() => unfilledEmail = false);
+                                }
                               }
                             },
                             textInputAction: TextInputAction.next,
@@ -379,16 +376,22 @@ class _SignInPageState extends State<SignInPage> {
                             controller: _password,
                             obscureText: true,
                             decoration: unfilledPassword
-                                ? generalDecoration.copyWith(
+                                ? globalDecoration.copyWith(
                                     enabledBorder: const OutlineInputBorder(
                                         borderSide:
                                             BorderSide(color: Colors.red)),
                                     suffixIcon: const Icon(Icons.clear,
                                         color: Colors.red),
-                                      hintText: 'Enter Email')
-                                : generalDecoration.copyWith(hintText: 'Enter Email'),
+                                    hintText: 'Enter Email')
+                                : globalDecoration.copyWith(
+                                    hintText: 'Enter Email'),
                             onChanged: (password) {
-                              setState(() => unfilledPassword = false);
+                              if (password.isEmpty) {
+                                setState(() => unfilledPassword = true);
+                              } else {
+                                errorMessage = '';
+                                setState(() => unfilledPassword = false);
+                              }
                             },
                             textInputAction: TextInputAction.done,
                           ),
@@ -414,28 +417,29 @@ class _SignInPageState extends State<SignInPage> {
                           width: 85,
                           child: ElevatedButton(
                             onPressed: () async {
-                              if (areFieldsValid(true)) {
+                              /*if (allLoginFieldsValid(true)) {
                                 String username = _email.value.text.trim();
                                 String password = _password.value.text.trim();
 
                                 try {
                                   String payload = '{"username": "$username","password": "$password"}';
                                   final ret = await Authentication.login(payload);
-                                  if (status(ret)) {
+                                  if (ret.statusCode == 200) {
                                     setState(() => clearFields());
-                                    var data = json.decode(ret.body);
-                                    user = UserData(
-                                      firstName: data['userInfo']['firstName'],
-                                      lastName: data['userInfo']['lastName'],
-                                      email: data['userInfo']['username'],
-                                      lastSeen: data['userInfo']['lastSeen'],
-                                      accessToken: data["accessToken"],
-                                      refreshToken: data["refreshToken"],
-                                      password: password,
-                                    );
+                                    var tokens = json.decode(ret.body);
+                                    user = UserData.defineTokens(tokens);
 
-                                    Navigator.pushNamedAndRemoveUntil(context,
+                                    final res = await User.getUser();
+                                    if (res.statusCode == 200) {
+                                      var data = json.decode(res.body);
+                                      user.defineUserData(data);
+                                      Navigator.pushNamedAndRemoveUntil(context,
                                         '/food', ((Route<dynamic> route) => false));
+                                    } else {
+                                      errorMessage = getDataRetrieveError(res.statusCode);
+                                    }
+                                  } else {
+                                    errorMessage = getLogInError(ret.statusCode);
                                   }
                                 }
                                 catch(e) {
@@ -445,7 +449,9 @@ class _SignInPageState extends State<SignInPage> {
                               }
                               else {
                                 setState(() {});
-                              }
+                              }*/
+                              Navigator.pushNamedAndRemoveUntil(context,
+                                  '/food', ((Route<dynamic> route) => false));
                             },
                             style: ElevatedButton.styleFrom(
                               shape: RoundedRectangleBorder(
@@ -474,7 +480,7 @@ class _SignInPageState extends State<SignInPage> {
                       style: TextButton.styleFrom(
                         textStyle: const TextStyle(
                           fontSize: 14,
-                          color: Color(0xff47A1E2),
+                          color: startScreenTextBacking,
                           fontStyle: FontStyle.italic,
                           decoration: TextDecoration.underline,
                         ),
@@ -508,7 +514,7 @@ class _SignInPageState extends State<SignInPage> {
             style: TextButton.styleFrom(
               textStyle: const TextStyle(
                 fontSize: 18,
-                color: Color(0xff47A1E2),
+                color: startScreenTextBacking,
                 decoration: TextDecoration.underline,
               ),
             ),
@@ -580,14 +586,24 @@ class _SignInPageState extends State<SignInPage> {
                     maxLines: 1,
                     obscureText: false,
                     decoration: unfilledEmail
-                        ? generalDecoration.copyWith(
+                        ? globalDecoration.copyWith(
                             enabledBorder: const OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.red)),
                             suffixIcon:
                                 const Icon(Icons.clear, color: Colors.red))
-                        : generalDecoration,
+                        : globalDecoration,
                     onChanged: (email) {
-                      setState(() => unfilledEmail = false);
+                      if (email.isEmpty) {
+                        setState(() => unfilledEmail = true);
+                      } else {
+                        if (!isEmail(email)) {
+                          errorMessage = 'Email must be in valid form!';
+                          setState(() => unfilledEmail = true);
+                        } else {
+                          errorMessage = '';
+                          setState(() => unfilledEmail = false);
+                        }
+                      }
                     },
                   ))
             ],
@@ -607,7 +623,7 @@ class _SignInPageState extends State<SignInPage> {
           child: ElevatedButton(
             onPressed: () {
               setState(() {
-                if (areFieldsValid(false)) {
+                if (allLoginFieldsValid(false)) {
                   //TODO Add support for reseting password
                   setState(() {
                     _email.clear();
@@ -635,7 +651,7 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-  bool areFieldsValid(bool hasPassword) {
+  bool allLoginFieldsValid(bool hasPassword) {
     bool toReturn = true;
     if (_email.value.text.isEmpty) {
       toReturn = false;
@@ -660,26 +676,33 @@ class _SignInPageState extends State<SignInPage> {
     _password.clear();
   }
 
-  bool status(http.Response res) {
-    switch (res.statusCode) {
-      case 200:
-        return true;
+  String getLogInError(int statusCode) {
+    switch (statusCode) {
       case 400:
-        print("Incorrect formatting!");
-        return false;
+        return "Incorrect formatting!";
       case 401:
-        errorMessage = 'Account not verified';
-        return false;
+        return 'Account not verified';
       case 403:
-        errorMessage = 'Email/password incorrect';
         setState(() {
           unfilledPassword = true;
           unfilledEmail = true;
         });
-        return false;
+        return 'Email/password incorrect';
       default:
-        print('Something in auth went wrong!');
-        return false;
+        return 'Something in auth went wrong!';
+    }
+  }
+
+  String getDataRetrieveError(int statusCode) {
+    switch (statusCode) {
+      case 400:
+        return "Incorrect formatting!";
+      case 401:
+        return 'Token is invalid';
+      case 404:
+        return 'User Not Found';
+      default:
+        return 'Something in auth went wrong!';
     }
   }
 }
@@ -703,15 +726,6 @@ class _RegisterPageState extends State<RegisterPage> {
       return buildRegister();
     }
   }
-
-  final globalDecoration = InputDecoration(
-      contentPadding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
-      filled: true,
-      fillColor: const Color(0xffD1D1D1),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xff47A1E2)),
-      ));
 
   final _email = TextEditingController();
   bool unfilledEmail = false;
@@ -761,8 +775,7 @@ class _RegisterPageState extends State<RegisterPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         Container(
-          margin: EdgeInsets.only(
-              top: 5, bottom: 50),
+          margin: EdgeInsets.only(top: 5, bottom: 50),
           padding: const EdgeInsets.all(8),
           width: MediaQuery.of(context).size.width,
           decoration: BoxDecoration(
@@ -795,7 +808,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       style: TextButton.styleFrom(
                         textStyle: const TextStyle(
                           fontSize: 18,
-                          color: Color(0xff47A1E2),
+                          color: startScreenTextBacking,
                           decoration: TextDecoration.underline,
                         ),
                       ),
@@ -843,18 +856,18 @@ class _RegisterPageState extends State<RegisterPage> {
                           obscureText: false,
                           decoration: unfilledFirstName
                               ? globalDecoration.copyWith(
-                              enabledBorder: const OutlineInputBorder(
-                                  borderSide:
-                                  BorderSide(color: Colors.red)),
-                              suffixIcon: const Icon(Icons.clear,
-                                  color: Colors.red),
-                              hintText: 'Enter First Name')
-                              : globalDecoration.copyWith(hintText: 'Enter First Name'),
+                                  enabledBorder: const OutlineInputBorder(
+                                      borderSide:
+                                          BorderSide(color: Colors.red)),
+                                  suffixIcon: const Icon(Icons.clear,
+                                      color: Colors.red),
+                                  hintText: 'Enter First Name')
+                              : globalDecoration.copyWith(
+                                  hintText: 'Enter First Name'),
                           onChanged: (firstName) {
                             if (firstName.isEmpty) {
                               setState(() => unfilledFirstName = true);
-                            }
-                            else {
+                            } else {
                               unfilledFirstName = false;
                             }
                           },
@@ -889,18 +902,18 @@ class _RegisterPageState extends State<RegisterPage> {
                               obscureText: false,
                               decoration: unfilledLastName
                                   ? globalDecoration.copyWith(
-                                  enabledBorder: const OutlineInputBorder(
-                                      borderSide:
-                                      BorderSide(color: Colors.red)),
-                                  suffixIcon: const Icon(Icons.clear,
-                                      color: Colors.red),
-                                  hintText: 'Enter Last Name')
-                                  : globalDecoration.copyWith(hintText: 'Enter Last Name'),
+                                      enabledBorder: const OutlineInputBorder(
+                                          borderSide:
+                                              BorderSide(color: Colors.red)),
+                                      suffixIcon: const Icon(Icons.clear,
+                                          color: Colors.red),
+                                      hintText: 'Enter Last Name')
+                                  : globalDecoration.copyWith(
+                                      hintText: 'Enter Last Name'),
                               onChanged: (lastName) {
                                 if (lastName.isEmpty) {
                                   setState(() => unfilledLastName = true);
-                                }
-                                else {
+                                } else {
                                   unfilledLastName = false;
                                 }
                               },
@@ -935,19 +948,19 @@ class _RegisterPageState extends State<RegisterPage> {
                             obscureText: false,
                             decoration: unfilledEmail
                                 ? globalDecoration.copyWith(
-                                enabledBorder: const OutlineInputBorder(
-                                    borderSide:
-                                    BorderSide(color: Colors.red)),
-                                suffixIcon: const Icon(Icons.clear,
-                                    color: Colors.red),
-                                hintText: 'Enter Email')
-                                : globalDecoration.copyWith(hintText: 'Enter Email'),
+                                    enabledBorder: const OutlineInputBorder(
+                                        borderSide:
+                                            BorderSide(color: Colors.red)),
+                                    suffixIcon: const Icon(Icons.clear,
+                                        color: Colors.red),
+                                    hintText: 'Enter Email')
+                                : globalDecoration.copyWith(
+                                    hintText: 'Enter Email'),
                             onChanged: (email) {
                               if (!isEmail(email)) {
                                 errorMessage = 'Email must be in valid form';
                                 setState(() => unfilledEmail = true);
-                              }
-                              else {
+                              } else {
                                 setState(() => unfilledEmail = false);
                                 errorMessage = '';
                               }
@@ -985,13 +998,14 @@ class _RegisterPageState extends State<RegisterPage> {
                             obscureText: true,
                             decoration: unfilledPassword
                                 ? globalDecoration.copyWith(
-                                enabledBorder: const OutlineInputBorder(
-                                    borderSide:
-                                    BorderSide(color: Colors.red)),
-                                suffixIcon: const Icon(Icons.clear,
-                                    color: Colors.red),
-                                hintText: 'Enter Password')
-                                : globalDecoration.copyWith(hintText: 'Enter Password'),
+                                    enabledBorder: const OutlineInputBorder(
+                                        borderSide:
+                                            BorderSide(color: Colors.red)),
+                                    suffixIcon: const Icon(Icons.clear,
+                                        color: Colors.red),
+                                    hintText: 'Enter Password')
+                                : globalDecoration.copyWith(
+                                    hintText: 'Enter Password'),
                             onChanged: (password) {
                               setState(() => unfilledPassword = false);
                             },
@@ -1020,43 +1034,39 @@ class _RegisterPageState extends State<RegisterPage> {
                           height: 36,
                           child: ElevatedButton(
                             onPressed: () async {
-                              if (areFieldsValid()) {
-                                String username = _email.value.text.trim();
-                                String password = _password.value.text.trim();
-                                String firstName = _firstName.value.text.trim();
-                                String lastName = _lastName.value.text.trim();
-
+                              if (allRegisterFieldsValid()) {
                                 try {
+                                  Map<String, dynamic> payload = {
+                                    'firstName': _firstName.value.text.trim(),
+                                    'lastName': _lastName.value.text.trim(),
+                                    'username': _email.value.text.trim(),
+                                    'password': _password.value.text.trim(),
+                                  };
 
-                                  String payload = '{"firstName": "$firstName","lastName": "$lastName","username": "$username","password": "$password"}';
-                                  final ret = await Authentication.register(payload);
-                                  if (status(ret)) {
-                                    var data = json.decode(ret.body);
-                                    user = UserData(
-                                      firstName: data['userInfo']['firstName'],
-                                      lastName: data['userInfo']['lastName'],
-                                      email: data['userInfo']['username'],
-                                      lastSeen: data['userInfo']['lastSeen'],
-                                      accessToken: data["accessToken"],
-                                      refreshToken: data["refreshToken"],
-                                      password: password,
-                                    );
-
+                                  final ret =
+                                      await Authentication.register(payload);
+                                  if (ret.statusCode == 200) {
+                                    errorMessage = '';
+                                    Map<String, dynamic> package = {
+                                      'username': _email.value.text.trim(),
+                                    };
+                                    final res =
+                                        await Authentication.sendCode(package);
+                                    if (res.statusCode == 200) {
                                       errorMessage = '';
-                                      clearFields();
-                                      //TODO Add support for verifying registered email
-                                      /*setState(() {
+                                      _code.clear();
+                                      setState(() {
                                         state = 1;
-                                      });*/
-                                      Navigator.pushNamedAndRemoveUntil(context,
-                                          '/food', ((Route<dynamic> route) => false));
+                                      });
+                                    }
+                                  } else {
+                                    errorMessage =
+                                        getErrorString(ret.statusCode);
                                   }
-                                }
-                                catch (e) {
+                                } catch (e) {
                                   print('Could not connect to server');
                                 }
-                              }
-                              else {
+                              } else {
                                 setState(() {});
                               }
                             },
@@ -1088,7 +1098,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       style: TextButton.styleFrom(
                         textStyle: const TextStyle(
                           fontSize: 14,
-                          color: Color(0xff47A1E2),
+                          color: startScreenTextBacking,
                           fontStyle: FontStyle.italic,
                           decoration: TextDecoration.underline,
                         ),
@@ -1103,7 +1113,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         children: <Widget>[
                           Flexible(
                             child: Text(
-                                'Already a user? Click here to sign in instead'),
+                                'Already have an account? Click here to sign in instead'),
                           ),
                         ],
                       ),
@@ -1128,7 +1138,7 @@ class _RegisterPageState extends State<RegisterPage> {
             style: TextButton.styleFrom(
               textStyle: const TextStyle(
                 fontSize: 18,
-                color: Color(0xff47A1E2),
+                color: startScreenTextBacking,
                 decoration: TextDecoration.underline,
               ),
             ),
@@ -1191,12 +1201,11 @@ class _RegisterPageState extends State<RegisterPage> {
                     ],
                     decoration: unfilledCode
                         ? globalDecoration.copyWith(
-                        enabledBorder: const OutlineInputBorder(
-                            borderSide:
-                            BorderSide(color: Colors.red)),
-                        suffixIcon: const Icon(Icons.clear,
-                            color: Colors.red),
-                        hintText: 'Enter Code')
+                            enabledBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.red)),
+                            suffixIcon:
+                                const Icon(Icons.clear, color: Colors.red),
+                            hintText: 'Enter Code')
                         : globalDecoration.copyWith(hintText: 'Enter Code'),
                     onChanged: (code) {
                       setState(() => unfilledCode = false);
@@ -1209,18 +1218,33 @@ class _RegisterPageState extends State<RegisterPage> {
           width: 100,
           height: 36,
           child: ElevatedButton(
-            onPressed: () {
-              setState(() {
-                if (_code.value.text.isEmpty) {
-                  setState(() => unfilledCode = true);
-                } else {
-                  _code.clear();
-                  setState(() {
+            onPressed: () async {
+              if (_code.value.text.isEmpty) {
+                errorMessage = 'Code cannot be left blank!';
+                setState(() => unfilledCode = true);
+              } else {
+                Map<String, dynamic> payload = {
+                  'username': _email.value.text.trim(),
+                  'code': _code.value.text.trim()
+                };
+
+                try {
+                  final res = await Authentication.verifyCode(payload);
+
+                  if (res.statusCode == 200) {
+                    var data = json.decode(res.body);
+                    user.defineUserData(data);
+                    clearFields();
+
                     Navigator.pushNamedAndRemoveUntil(
                         context, '/food', (Route<dynamic> route) => false);
-                  });
+                  } else {
+                    errorMessage = verifyCodeErrorString(res.statusCode);
+                  }
+                } catch (e) {
+                  print('Could not connect to server');
                 }
-              });
+              }
             },
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
@@ -1242,7 +1266,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  bool areFieldsValid() {
+  bool allRegisterFieldsValid() {
     bool toReturn = true;
     if (_firstName.value.text.isEmpty) {
       toReturn = false;
@@ -1279,22 +1303,21 @@ class _RegisterPageState extends State<RegisterPage> {
     _lastName.clear();
   }
 
-  bool status(http.Response res) {
-    switch (res.statusCode) {
-      case 200:
-        return true;
+  String getErrorString(int statusCode) {
+    switch (statusCode) {
       case 400:
-        print("Incorrect formatting!");
-        return false;
-      case 401:
-        errorMessage = 'Access token is missing or invalid';
-        return false;
-      case 404:
-        errorMessage = 'Email/password incorrect';
-        return false;
+        return "Email already exists!";
       default:
-        errorMessage = 'Something went wrong!';
-        return false;
+        return 'Something went wrong!';
+    }
+  }
+
+  String verifyCodeErrorString(int statusCode) {
+    switch (statusCode) {
+      case 400:
+        return "Verification code is invalid!";
+      default:
+        return 'Something went wrong!';
     }
   }
 }
