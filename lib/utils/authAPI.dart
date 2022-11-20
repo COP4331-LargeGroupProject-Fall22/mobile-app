@@ -11,10 +11,10 @@ class Authentication {
 
     try {
       response = await http.post(Uri.parse('$API_PREFIX$apiRoute/login?includeInfo=true'),
-          body: payload,
+          body: json.encode(payload),
           headers: baseHeader);
     } catch (e) {
-      print("Could not connect!");
+      print(e.toString());
       throw Exception('Could not connect to server');
     }
 
@@ -27,7 +27,7 @@ class Authentication {
     try {
       Map<String, dynamic> tokenBody = {'refreshToken': user.refreshToken};
       response = await http.put(Uri.parse('$API_PREFIX$apiRoute/refreshJWT'),
-          body: tokenBody,
+          body: json.encode(tokenBody),
           headers: baseHeader);
     } catch (e) {
       print(e.toString());
@@ -42,7 +42,7 @@ class Authentication {
 
     try {
       response = await http.post(Uri.parse('$API_PREFIX$apiRoute/register'),
-          body: payload,
+          body: json.encode(payload),
           headers: baseHeader);
     } catch (e) {
       print(e.toString());
@@ -75,7 +75,7 @@ class Authentication {
 
     try {
       response = await http.post(Uri.parse('$API_PREFIX$apiRoute/send-verification-code'),
-          body: payload,
+          body: json.encode(payload),
           headers: baseHeader);
     } catch (e) {
       print(e.toString());
@@ -90,7 +90,7 @@ class Authentication {
 
     try {
       response = await http.post(Uri.parse('$API_PREFIX$apiRoute/confirm-verification-code'),
-          body: payload,
+          body: json.encode(payload),
           headers: baseHeader);
     } catch (e) {
       print(e.toString());

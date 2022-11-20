@@ -406,7 +406,7 @@ class _LogInPageState extends State<LogInPage> {
                           width: 85,
                           child: ElevatedButton(
                             onPressed: () async {
-                              if (allLoginFieldsValid(true)) {
+                              if (allLoginFieldsValid(/*hasPassword=*/true)) {
 
                                 Map<String, dynamic> payload = {
                                   'username': _email.value.text.trim(),
@@ -437,12 +437,11 @@ class _LogInPageState extends State<LogInPage> {
                                   errorMessage = 'Could not connect to server';
                                   print('Could not connect to /auth/user');
                                 }
+                                setState(() {});
                               }
                               else {
                                 setState(() {});
                               }
-                              Navigator.pushNamedAndRemoveUntil(context,
-                                  '/food', ((Route<dynamic> route) => false));
                             },
                             style: ElevatedButton.styleFrom(
                               shape: RoundedRectangleBorder(
@@ -612,7 +611,7 @@ class _LogInPageState extends State<LogInPage> {
           child: ElevatedButton(
             onPressed: () {
               setState(() {
-                if (allLoginFieldsValid(false)) {
+                if (allLoginFieldsValid(/*hasPassword=*/false)) {
                   //TODO Add support for reseting password
                   setState(() {
                     _email.clear();
@@ -677,6 +676,8 @@ class _LogInPageState extends State<LogInPage> {
           unfilledEmail = true;
         });
         return 'Email/password incorrect';
+      case 404:
+        return 'User not found';
       default:
         return 'Something in auth went wrong!';
     }
@@ -1014,6 +1015,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                                   final ret =
                                       await Authentication.register(payload);
+                                  print(ret.statusCode);
                                   if (ret.statusCode == 200) {
                                     errorMessage = '';
                                     Map<String, dynamic> package = {
@@ -1023,7 +1025,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                         await Authentication.sendCode(package);
                                     if (res.statusCode == 200) {
                                       errorMessage = '';
-                                      _code.clear();
+                                      clearFields();
                                       setState(() {
                                         state = 1;
                                       });
@@ -1035,9 +1037,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                 } catch (e) {
                                   print('Could not connect to server');
                                 }
-                              } else {
-                                setState(() {});
                               }
+                              setState(() {});
                             },
                             style: ElevatedButton.styleFrom(
                               shape: RoundedRectangleBorder(
@@ -1197,12 +1198,11 @@ class _RegisterPageState extends State<RegisterPage> {
                   final res = await Authentication.verifyCode(payload);
 
                   if (res.statusCode == 200) {
-                    var data = json.decode(res.body);
-                    user.defineUserData(data);
+                    errorMessage = 'Account successfully created!';
+                    await Future.delayed(Duration(seconds: 1));
                     clearFields();
 
-                    Navigator.pushNamedAndRemoveUntil(
-                        context, '/food', (Route<dynamic> route) => false);
+                    Navigator.pushReplacementNamed(context, '/login');
                   } else {
                     errorMessage = verifyCodeErrorString(res.statusCode);
                   }
@@ -1262,16 +1262,18 @@ class _RegisterPageState extends State<RegisterPage> {
     unfilledPassword = false;
     unfilledFirstName = false;
     unfilledLastName = false;
+    unfilledCode = false;
     _email.clear();
     _password.clear();
     _firstName.clear();
     _lastName.clear();
+    _code.clear();
   }
 
   String getErrorString(int statusCode) {
     switch (statusCode) {
       case 400:
-        return "Email already exists!";
+        return 'Username already in use';
       default:
         return 'Something went wrong!';
     }
