@@ -35,7 +35,7 @@ class User {
 
     try {
       response = await http.put(Uri.parse('$API_PREFIX$apiRoute'),
-          body: changes,
+          body: json.encode(changes),
           headers: headers);
     } catch (e) {
       print(e.toString());
