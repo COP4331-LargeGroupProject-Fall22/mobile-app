@@ -115,7 +115,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                         ),
                         textInputAction: TextInputAction.done,
                         onChanged: (query) {
-                          // TODO(): Dynamic search
+                          // TODO(15): Dynamic search
                         },
                       ),
                     ),
@@ -341,7 +341,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
     );
   }
 
-  //todo function to get ingredients from api. Will also handle sorting
+  //TODO(17): function to get ingredients from api. Will also handle sorting
   /*Future<List> GrabIngredients(int sortBy) {
     return;
   }*/
@@ -376,7 +376,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
     return ingreds;
   }
 
-  //TODO integrate API into making ingredients
+  //TODO(18): integrate API into making ingredients
   Widget IngredientTile() {
     double tileHeight = 200;
 
@@ -611,7 +611,7 @@ class _IngredientPageState extends State<IngredientPage> {
     );
   }
 
-  //TODO Attach API to get specified ingredient information
+  //TODO(17): Attach API to get specified ingredient information
   //
   // List fetchIngredient(int ID) {
   //   ingredientInfo = a json of some sort;
