@@ -603,13 +603,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                   maxLines: 1,
                                   controller: _firstName,
                                   decoration: unfilledFirstName
-                                      ? globalDecoration.copyWith(
-                                          enabledBorder:
-                                              const OutlineInputBorder(
-                                                  borderSide: BorderSide(
-                                                      color: Colors.red)),
-                                          suffixIcon: const Icon(Icons.clear,
-                                              color: Colors.red),
+                                      ? invalidTextField.copyWith(
                                           hintText: 'Enter First Name')
                                       : globalDecoration.copyWith(
                                           hintText: 'Enter First Name'),
@@ -656,13 +650,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                   maxLines: 1,
                                   controller: _lastName,
                                   decoration: unfilledLastName
-                                      ? globalDecoration.copyWith(
-                                          enabledBorder:
-                                              const OutlineInputBorder(
-                                                  borderSide: BorderSide(
-                                                      color: Colors.red)),
-                                          suffixIcon: const Icon(Icons.clear,
-                                              color: Colors.red),
+                                      ? invalidTextField.copyWith(
                                           hintText: 'Enter Last Name')
                                       : globalDecoration.copyWith(
                                           hintText: 'Enter Last Name'),
@@ -711,13 +699,8 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                               maxLines: 1,
                               controller: _email,
                               decoration: unfilledEmail
-                                  ? globalDecoration.copyWith(
-                                      enabledBorder: const OutlineInputBorder(
-                                          borderSide:
-                                              BorderSide(color: Colors.red)),
-                                      suffixIcon: const Icon(Icons.clear,
-                                          color: Colors.red),
-                                      hintText: 'Enter Email')
+                                  ? invalidTextField.copyWith(
+                                  hintText: 'Enter Email')
                                   : globalDecoration.copyWith(
                                       hintText: 'Enter Email'),
                               style: const TextStyle(
@@ -767,12 +750,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                               controller: _password,
                               obscureText: true,
                               decoration: unfilledPassword
-                                  ? globalDecoration.copyWith(
-                                      enabledBorder: const OutlineInputBorder(
-                                          borderSide:
-                                              BorderSide(color: Colors.red)),
-                                      suffixIcon: const Icon(Icons.clear,
-                                          color: Colors.red),
+                                  ? invalidTextField.copyWith(
                                       hintText: 'Enter Password')
                                   : globalDecoration.copyWith(
                                       hintText: 'Enter Password'),
@@ -805,12 +783,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                               controller: _confirmPassword,
                               obscureText: true,
                               decoration: unfilledConfirmPassword
-                                  ? globalDecoration.copyWith(
-                                      enabledBorder: const OutlineInputBorder(
-                                          borderSide:
-                                              BorderSide(color: Colors.red)),
-                                      suffixIcon: const Icon(Icons.clear,
-                                          color: Colors.red),
+                                  ? invalidTextField.copyWith(
                                       hintText: 'Confirm Password')
                                   : globalDecoration.copyWith(
                                       hintText: 'Confirm Password'),
@@ -1191,12 +1164,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                               maxLines: 1,
                               controller: _oldPassword,
                               decoration: unfilledOldPassword
-                                  ? globalDecoration.copyWith(
-                                      enabledBorder: const OutlineInputBorder(
-                                          borderSide:
-                                              BorderSide(color: Colors.red)),
-                                      suffixIcon: const Icon(Icons.clear,
-                                          color: Colors.red),
+                                  ? invalidTextField.copyWith(
                                       hintText: 'Enter Old Password')
                                   : globalDecoration.copyWith(
                                       hintText: 'Enter Old Password'),
@@ -1243,12 +1211,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                               controller: _newPassword,
                               obscureText: true,
                               decoration: unfilledNewPassword
-                                  ? globalDecoration.copyWith(
-                                      enabledBorder: const OutlineInputBorder(
-                                          borderSide:
-                                              BorderSide(color: Colors.red)),
-                                      suffixIcon: const Icon(Icons.clear,
-                                          color: Colors.red),
+                                  ? invalidTextField.copyWith(
                                       hintText: 'Enter Password')
                                   : globalDecoration.copyWith(
                                       hintText: 'Enter Password'),
@@ -1286,12 +1249,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                               controller: _confirmPassword,
                               obscureText: true,
                               decoration: unfilledConfirmPassword
-                                  ? globalDecoration.copyWith(
-                                      enabledBorder: const OutlineInputBorder(
-                                          borderSide:
-                                              BorderSide(color: Colors.red)),
-                                      suffixIcon: const Icon(Icons.clear,
-                                          color: Colors.red),
+                                  ? invalidTextField.copyWith(
                                       hintText: 'Confirm Password')
                                   : globalDecoration.copyWith(
                                       hintText: 'Confirm Password'),
@@ -1317,48 +1275,44 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                             margin: EdgeInsets.only(top: 170),
                             child: ElevatedButton(
                               onPressed: () async {
-                                if (allEditPasswordFieldsValid()) {
-                                  if (validateConfirmPassword()) {
+                                if (validateConfirmPassword()) {
 
-                                    Map<String, dynamic> changes = {
-                                      'firstName': user.firstName.trim(),
-                                      'lastName': user.lastName.trim(),
-                                      'username': user.email.trim(),
-                                      'password': _newPassword.value.text.trim(),
-                                    };
+                                  Map<String, dynamic> changes = {
+                                    'firstName': user.firstName.trim(),
+                                    'lastName': user.lastName.trim(),
+                                    'username': user.email.trim(),
+                                    'password': _newPassword.value.text.trim(),
+                                  };
 
-                                    try {
-                                      final res =
-                                          await User.updateUser(changes);
-                                      if (res.statusCode == 200) {
+                                  try {
+                                    final res =
+                                        await User.updateUser(changes);
+                                    if (res.statusCode == 200) {
+                                      user.password = _newPassword.value.text.trim();
+
+                                      errorMessage ==
+                                          'Successfully updated your password!';
+                                      await Future.delayed(Duration(seconds: 1));
+
+                                      clearFields();
+                                      Navigator.pop(context);
+                                    } else {
+                                      errorMessage =
+                                          await getChangePasswordError(
+                                              res.statusCode);
+                                      if (errorMessage ==
+                                          'Successfully changed password!') {
                                         user.password = _newPassword.value.text.trim();
-
-                                        errorMessage ==
-                                            'Successfully updated your password!';
                                         await Future.delayed(Duration(seconds: 1));
 
                                         clearFields();
                                         Navigator.pop(context);
                                       } else {
-                                        errorMessage =
-                                            await getChangePasswordError(
-                                                res.statusCode);
-                                        if (errorMessage ==
-                                            'Successfully changed password!') {
-                                          user.password = _newPassword.value.text.trim();
-                                          await Future.delayed(Duration(seconds: 1));
-
-                                          clearFields();
-                                          Navigator.pop(context);
-                                        } else {
-                                          errorDialog(context);
-                                        }
+                                        errorDialog(context);
                                       }
-                                    } catch (e) {
-                                      print('Could not connect to server');
                                     }
-                                  } else {
-                                    setState(() {});
+                                  } catch (e) {
+                                    print('Could not connect to server');
                                   }
                                 } else {
                                   setState(() {});
@@ -1511,28 +1465,13 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
     if (!oldPasswordMatches()) {
       toReturn = false;
       unfilledOldPassword = true;
+      errorMessage = 'Old password incorrect';
     }
     if (!newPasswordsMatches()) {
       toReturn = false;
       unfilledNewPassword = true;
       unfilledConfirmPassword = true;
-    }
-    return toReturn;
-  }
-
-  bool allEditPasswordFieldsValid() {
-    bool toReturn = true;
-    if (_oldPassword.value.text.isEmpty) {
-      toReturn = false;
-      unfilledOldPassword = true;
-    }
-    if (_newPassword.value.text.isEmpty) {
-      toReturn = false;
-      unfilledNewPassword = true;
-    }
-    if (_confirmPassword.value.text.isEmpty) {
-      toReturn = false;
-      unfilledConfirmPassword = true;
+      errorMessage = 'New passwords must match';
     }
     return toReturn;
   }
