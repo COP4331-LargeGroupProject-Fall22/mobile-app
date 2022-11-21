@@ -5,6 +5,7 @@ class UserData {
 
   String firstName;
   String lastName;
+  String username;
   String email;
   String password;
   String accessToken;
@@ -13,13 +14,18 @@ class UserData {
   //static late bool hasProfileImage;
   //static late String profileImage;
 
-  UserData(this.firstName, this.lastName, this.email, this.password, this.accessToken, this.refreshToken);
+  UserData(this.firstName, this.lastName, this.username, this.email, this.password, this.accessToken, this.refreshToken);
 
-  static toNull(_) => null;
+  static final UserData origin = UserData('', '', '', '', '', '', '');
+
+  factory UserData.create() {
+    return origin;
+  }
 
   void defineUserData(Map<String, dynamic> json) {
     firstName = json['firstName'];
     lastName = json['lastName'];
+    username = json['username'];
     email = json['username'];
     password = json['password'];
   }

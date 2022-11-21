@@ -184,16 +184,16 @@ class _LogInPageState extends State<LogInPage> {
   }
 
   int state = 0;
-  Widget detectState() {
-    if (state == 1) {
-      return buildForgot();
-    } else {
-      return buildLogIn();
-    }
-  }
+  // Widget detectState() {
+  //   if (state == 1) {
+  //     return buildForgot();
+  //   } else {
+  //     return buildLogIn();
+  //   }
+  // }
 
-  final _email = TextEditingController();
-  bool unfilledEmail = false;
+  final _username = TextEditingController();
+  bool unfilledUsername = false;
 
   final _password = TextEditingController();
   bool unfilledPassword = false;
@@ -243,7 +243,8 @@ class _LogInPageState extends State<LogInPage> {
                       ),
                     ),
                   ),
-                  detectState(),
+                  //detectState(),
+                  buildLogIn()
                 ],
               ),
             ),
@@ -302,7 +303,7 @@ class _LogInPageState extends State<LogInPage> {
                     width: 210,
                     padding: const EdgeInsets.only(top: 15),
                     child: const Text(
-                      'Email',
+                      'Username',
                       style: TextStyle(
                           fontSize: 12,
                           color: Colors.white,
@@ -320,23 +321,17 @@ class _LogInPageState extends State<LogInPage> {
                           height: 40,
                           child: TextField(
                             maxLines: 1,
-                            controller: _email,
-                            decoration: unfilledEmail
+                            controller: _username,
+                            decoration: unfilledUsername
                                 ? invalidTextField.copyWith(
-                                hintText: 'Enter Email')
+                                    hintText: 'Enter Username')
                                 : globalDecoration.copyWith(
-                                    hintText: 'Enter Email'),
-                            onChanged: (email) {
-                              if (!isEmail(email)) {
-                                errorMessage = 'Email must be in valid form';
-                                setState(() => unfilledEmail = true);
+                                    hintText: 'Enter Username'),
+                            onChanged: (username) {
+                              if (username.isEmpty) {
+                                setState(() => unfilledUsername = true);
                               } else {
-                                if (email.isEmpty) {
-                                  setState(() => unfilledEmail = true);
-                                } else {
-                                  errorMessage = '';
-                                  setState(() => unfilledEmail = false);
-                                }
+                                setState(() => unfilledUsername = false);
                               }
                             },
                             textInputAction: TextInputAction.next,
@@ -371,7 +366,7 @@ class _LogInPageState extends State<LogInPage> {
                             obscureText: true,
                             decoration: unfilledPassword
                                 ? invalidTextField.copyWith(
-                                hintText: 'Enter Password')
+                                    hintText: 'Enter Password')
                                 : globalDecoration.copyWith(
                                     hintText: 'Enter Password'),
                             onChanged: (password) {
@@ -406,15 +401,16 @@ class _LogInPageState extends State<LogInPage> {
                           width: 85,
                           child: ElevatedButton(
                             onPressed: () async {
-                              if (allLoginFieldsValid(/*hasPassword=*/true)) {
-
+                              if (allLoginFieldsValid(/*hasPassword=*/ true)) {
                                 Map<String, dynamic> payload = {
-                                  'username': _email.value.text.trim(),
-                                  'password': _password.value.text.trim(),
+                                  'username': _username.value.text.trim(),
+                                  'password': _password.value.text.trim()
                                 };
 
                                 try {
-                                  final ret = await Authentication.login(payload);
+                                  final ret =
+                                      await Authentication.login(payload);
+                                  print(ret.statusCode);
                                   if (ret.statusCode == 200) {
                                     setState(() => clearFields());
                                     var tokens = json.decode(ret.body);
@@ -424,22 +420,67 @@ class _LogInPageState extends State<LogInPage> {
                                     if (res.statusCode == 200) {
                                       var data = json.decode(res.body);
                                       user.defineUserData(data);
-                                      Navigator.pushNamedAndRemoveUntil(context,
-                                        '/food', ((Route<dynamic> route) => false));
+                                      Navigator.pushNamedAndRemoveUntil(
+                                          context,
+                                          '/food',
+                                          ((Route<dynamic> route) => false));
                                     } else {
-                                      errorMessage = getDataRetrieveError(res.statusCode);
+                                      errorMessage =
+                                          getDataRetrieveError(res.statusCode);
                                     }
                                   } else {
-                                    errorMessage = getLogInError(ret.statusCode);
+                                    // errorMessage =
+                                    //     getLogInError(ret.statusCode);
+                                    if (ret.statusCode == 403) {
+                                      user.username =
+                                          _username.value.text.trim();
+                                      showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return AlertDialog(
+                                              title: const Text(
+                                                  'Account not verified'),
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                  BorderRadius.circular(
+                                                      10)),
+                                              elevation: 15,
+                                              actions: <Widget>[
+                                                TextButton(
+                                                  onPressed: () {
+                                                    user.username =
+                                                        _username.value.text;
+                                                    Navigator
+                                                        .pushReplacementNamed(
+                                                        context,
+                                                        '/verification');
+                                                  },
+                                                  child: const Text(
+                                                    'OK',
+                                                    style: TextStyle(
+                                                        color: Colors.red,
+                                                        fontSize: 18),
+                                                  ),
+                                                )
+                                              ],
+                                              content: Column(
+                                                  mainAxisSize:
+                                                  MainAxisSize.min,
+                                                  children: const <Widget>[
+                                                    Flexible(
+                                                        child: Text(
+                                                            'Your account is not verified!\nPress OK to be taken to the verification page')),
+                                                  ]),
+                                            );
+                                          });
+                                    }
                                   }
-                                }
-                                catch(e) {
+                                } catch (e) {
                                   errorMessage = 'Could not connect to server';
                                   print('Could not connect to /auth/user');
                                 }
                                 setState(() {});
-                              }
-                              else {
+                              } else {
                                 setState(() {});
                               }
                             },
@@ -494,173 +535,166 @@ class _LogInPageState extends State<LogInPage> {
     );
   }
 
-  Widget buildForgot() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget>[
-        SizedBox(
-          width: MediaQuery.of(context).size.width,
-          child: TextButton(
-            style: TextButton.styleFrom(
-              textStyle: const TextStyle(
-                fontSize: 18,
-                color: startScreenTextBacking,
-                decoration: TextDecoration.underline,
-              ),
-            ),
-            onPressed: () {
-              topMessage = "Welcome\nBack!";
-              setState(
-                () {
-                  state = 0;
-                },
-              );
-            },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const <Widget>[
-                Icon(
-                  Icons.navigate_before,
-                ),
-                Text('Go Back'),
-              ],
-            ),
-          ),
-        ),
-        Container(
-          width: MediaQuery.of(context).size.width,
-          padding: const EdgeInsets.only(top: 15),
-          child: Row(
-            children: <Widget>[
-              Flexible(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.all(Radius.circular(35)),
-                    color: Colors.black.withOpacity(.45),
-                  ),
-                  child: const Text(
-                    'Please enter your email.\nA reset password link will be sent to it if an account is attached to it',
-                    style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                        fontFamily: 'EagleLake'),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          width: 210,
-          padding: const EdgeInsets.only(top: 15),
-          child: const Text(
-            'Email',
-            style: TextStyle(
-                fontSize: 12, color: Colors.white, fontFamily: 'EagleLake'),
-            textAlign: TextAlign.left,
-          ),
-        ),
-        Container(
-          width: MediaQuery.of(context).size.width,
-          padding: const EdgeInsets.only(bottom: 15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              SizedBox(
-                  width: 210,
-                  height: 40,
-                  child: TextField(
-                    controller: _email,
-                    maxLines: 1,
-                    obscureText: false,
-                    decoration: unfilledEmail
-                        ? invalidTextField.copyWith(
-                        hintText: 'Enter Email')
-                        : globalDecoration.copyWith(
-                        hintText: 'Enter Email'),
-                    onChanged: (email) {
-                      if (email.isEmpty) {
-                        setState(() => unfilledEmail = true);
-                      } else {
-                        if (!isEmail(email)) {
-                          errorMessage = 'Email must be in valid form!';
-                          setState(() => unfilledEmail = true);
-                        } else {
-                          errorMessage = '';
-                          setState(() => unfilledEmail = false);
-                        }
-                      }
-                    },
-                  ))
-            ],
-          ),
-        ),
-        SizedBox(
-          width: MediaQuery.of(context).size.width,
-          child: Text(
-            errorMessage,
-            style: const TextStyle(fontSize: 14, color: Colors.red),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        SizedBox(
-          width: 100,
-          height: 36,
-          child: ElevatedButton(
-            onPressed: () {
-              setState(() {
-                if (allLoginFieldsValid(/*hasPassword=*/false)) {
-                  //TODO Add support for reseting password
-                  setState(() {
-                    _email.clear();
-                  });
-                }
-              });
-            },
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              backgroundColor: mainScheme,
-              padding: const EdgeInsets.all(2),
-              shadowColor: Colors.black,
-            ),
-            child: const Text(
-              'Send Code',
-              style: TextStyle(
-                  fontSize: 14, color: Colors.white, fontFamily: 'EagleLake'),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        )
-      ],
-    );
-  }
+  // Widget buildForgot() {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.center,
+  //     children: <Widget>[
+  //       SizedBox(
+  //         width: MediaQuery.of(context).size.width,
+  //         child: TextButton(
+  //           style: TextButton.styleFrom(
+  //             textStyle: const TextStyle(
+  //               fontSize: 18,
+  //               color: startScreenTextBacking,
+  //               decoration: TextDecoration.underline,
+  //             ),
+  //           ),
+  //           onPressed: () {
+  //             topMessage = "Welcome\nBack!";
+  //             setState(
+  //               () {
+  //                 state = 0;
+  //               },
+  //             );
+  //           },
+  //           child: Row(
+  //             mainAxisAlignment: MainAxisAlignment.center,
+  //             children: const <Widget>[
+  //               Icon(
+  //                 Icons.navigate_before,
+  //               ),
+  //               Text('Go Back'),
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //       Container(
+  //         width: MediaQuery.of(context).size.width,
+  //         padding: const EdgeInsets.only(top: 15),
+  //         child: Row(
+  //           children: <Widget>[
+  //             Flexible(
+  //               child: Container(
+  //                 margin: const EdgeInsets.symmetric(vertical: 10),
+  //                 decoration: BoxDecoration(
+  //                   borderRadius: const BorderRadius.all(Radius.circular(35)),
+  //                   color: Colors.black.withOpacity(.45),
+  //                 ),
+  //                 child: const Text(
+  //                   'Please enter your email.\nA reset password link will be sent to it if an account is attached to it',
+  //                   style: TextStyle(
+  //                       fontSize: 16,
+  //                       color: Colors.white,
+  //                       fontFamily: 'EagleLake'),
+  //                   textAlign: TextAlign.center,
+  //                 ),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //       Container(
+  //         width: 210,
+  //         padding: const EdgeInsets.only(top: 15),
+  //         child: const Text(
+  //           'Email',
+  //           style: TextStyle(
+  //               fontSize: 12, color: Colors.white, fontFamily: 'EagleLake'),
+  //           textAlign: TextAlign.left,
+  //         ),
+  //       ),
+  //       Container(
+  //         width: MediaQuery.of(context).size.width,
+  //         padding: const EdgeInsets.only(bottom: 15),
+  //         child: Row(
+  //           mainAxisAlignment: MainAxisAlignment.center,
+  //           children: <Widget>[
+  //             SizedBox(
+  //                 width: 210,
+  //                 height: 40,
+  //                 child: TextField(
+  //                   controller: _email,
+  //                   maxLines: 1,
+  //                   obscureText: false,
+  //                   decoration: unfilledEmail
+  //                       ? invalidTextField.copyWith(hintText: 'Enter Email')
+  //                       : globalDecoration.copyWith(hintText: 'Enter Email'),
+  //                   onChanged: (email) {
+  //                     if (email.isEmpty) {
+  //                       setState(() => unfilledEmail = true);
+  //                     } else {
+  //                       if (!isEmail(email)) {
+  //                         errorMessage = 'Email must be in valid form!';
+  //                         setState(() => unfilledEmail = true);
+  //                       } else {
+  //                         errorMessage = '';
+  //                         setState(() => unfilledEmail = false);
+  //                       }
+  //                     }
+  //                   },
+  //                 ))
+  //           ],
+  //         ),
+  //       ),
+  //       SizedBox(
+  //         width: MediaQuery.of(context).size.width,
+  //         child: Text(
+  //           errorMessage,
+  //           style: const TextStyle(fontSize: 14, color: Colors.red),
+  //           textAlign: TextAlign.center,
+  //         ),
+  //       ),
+  //       SizedBox(
+  //         width: 100,
+  //         height: 36,
+  //         child: ElevatedButton(
+  //           onPressed: () {
+  //             setState(() {
+  //               if (allLoginFieldsValid(/*hasPassword=*/ false)) {
+  //                 //TODO Add support for reseting password
+  //                 setState(() {
+  //                   _email.clear();
+  //                 });
+  //               }
+  //             });
+  //           },
+  //           style: ElevatedButton.styleFrom(
+  //             shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(10),
+  //             ),
+  //             backgroundColor: mainScheme,
+  //             padding: const EdgeInsets.all(2),
+  //             shadowColor: Colors.black,
+  //           ),
+  //           child: const Text(
+  //             'Send Code',
+  //             style: TextStyle(
+  //                 fontSize: 14, color: Colors.white, fontFamily: 'EagleLake'),
+  //             textAlign: TextAlign.center,
+  //           ),
+  //         ),
+  //       )
+  //     ],
+  //   );
+  // }
 
   bool allLoginFieldsValid(bool hasPassword) {
     bool toReturn = true;
-    if (_email.value.text.isEmpty) {
+    if (_username.value.text.isEmpty) {
       toReturn = false;
-      setState(() => unfilledEmail = true);
+      setState(() => unfilledUsername = true);
     }
     if (hasPassword & _password.value.text.isEmpty) {
       toReturn = false;
       setState(() => unfilledPassword = true);
     }
-    if (!isEmail(_email.value.text)) {
-      toReturn = false;
-      errorMessage = 'Email must be in valid form';
-      setState(() => unfilledEmail = true);
-    }
     return toReturn;
   }
 
   void clearFields() {
-    unfilledEmail = false;
+    unfilledUsername = false;
     unfilledPassword = false;
-    _email.clear();
+    _username.clear();
     _password.clear();
   }
 
@@ -669,13 +703,13 @@ class _LogInPageState extends State<LogInPage> {
       case 400:
         return "Incorrect formatting!";
       case 401:
-        return 'Account not verified';
+        return 'Token is invalid';
       case 403:
         setState(() {
           unfilledPassword = true;
-          unfilledEmail = true;
+          unfilledUsername = true;
         });
-        return 'Email/password incorrect';
+        return 'Account not verified';
       case 404:
         return 'User not found';
       default:
@@ -708,14 +742,14 @@ class _RegisterPageState extends State<RegisterPage> {
     super.initState();
   }
 
-  int state = 0;
-  Widget detectState() {
-    if (state == 1) {
-      return buildVerification();
-    } else {
-      return buildRegister();
-    }
-  }
+  final _firstName = TextEditingController();
+  bool unfilledFirstName = false;
+
+  final _lastName = TextEditingController();
+  bool unfilledLastName = false;
+
+  final _username = TextEditingController();
+  bool unfilledUsername = false;
 
   final _email = TextEditingController();
   bool unfilledEmail = false;
@@ -723,14 +757,551 @@ class _RegisterPageState extends State<RegisterPage> {
   final _password = TextEditingController();
   bool unfilledPassword = false;
 
-  final _firstName = TextEditingController();
-  bool unfilledFirstName = false;
-
-  final _lastName = TextEditingController();
-  bool unfilledLastName = false;
-
+  String emailError = '';
   String errorMessage = '';
   String topMessage = 'Welcome\nTo SmartChef!';
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/images/Background.png'),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.black.withOpacity(.35),
+        body: GestureDetector(
+          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+          child: SingleChildScrollView(
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Container(
+                    margin: EdgeInsets.only(top: 5, bottom: 50),
+                    padding: const EdgeInsets.all(8),
+                    width: MediaQuery.of(context).size.width,
+                    decoration: BoxDecoration(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(35)),
+                        color: Colors.black.withOpacity(.45)),
+                    child: Text(
+                      topMessage,
+                      style: const TextStyle(
+                          fontSize: 48,
+                          color: Colors.white,
+                          fontFamily: 'EagleLake'),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        width: MediaQuery.of(context).size.width / 1.6,
+                        height: MediaQuery.of(context).size.height / 1.5,
+                        decoration: BoxDecoration(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(35)),
+                          color: Colors.black.withOpacity(.45),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width,
+                              child: TextButton(
+                                style: TextButton.styleFrom(
+                                  textStyle: const TextStyle(
+                                    fontSize: 18,
+                                    color: startScreenTextBacking,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  clearFields();
+                                  setState(
+                                    () {
+                                      Navigator.pop(context);
+                                    },
+                                  );
+                                },
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const <Widget>[
+                                    Icon(
+                                      Icons.navigate_before,
+                                    ),
+                                    Text('Go Back'),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Container(
+                              width: 210,
+                              padding: const EdgeInsets.only(top: 5),
+                              child: const Text(
+                                'First Name',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                  fontFamily: 'EagleLake',
+                                ),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                SizedBox(
+                                  width: 210,
+                                  height: 40,
+                                  child: TextField(
+                                    maxLines: 1,
+                                    controller: _firstName,
+                                    obscureText: false,
+                                    decoration: unfilledFirstName
+                                        ? invalidTextField.copyWith(
+                                            hintText: 'Enter First Name')
+                                        : globalDecoration.copyWith(
+                                            hintText: 'Enter First Name'),
+                                    onChanged: (firstName) {
+                                      if (firstName.isEmpty) {
+                                        setState(
+                                            () => unfilledFirstName = true);
+                                      } else {
+                                        setState(
+                                            () => unfilledFirstName = false);
+                                      }
+                                    },
+                                    textInputAction: TextInputAction.next,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              width: 210,
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                unfilledFirstName
+                                    ? 'First Name cannot be left blank'
+                                    : '',
+                                style:
+                                    TextStyle(fontSize: 10, color: Colors.red),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                            Container(
+                              width: 210,
+                              padding: const EdgeInsets.only(top: 5),
+                              child: const Text(
+                                'Last Name',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                    fontFamily: 'EagleLake'),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  SizedBox(
+                                      width: 210,
+                                      height: 40,
+                                      child: TextField(
+                                        maxLines: 1,
+                                        controller: _lastName,
+                                        obscureText: false,
+                                        decoration: unfilledLastName
+                                            ? invalidTextField.copyWith(
+                                                hintText: 'Enter Last Name')
+                                            : globalDecoration.copyWith(
+                                                hintText: 'Enter Last Name'),
+                                        onChanged: (lastName) {
+                                          if (lastName.isEmpty) {
+                                            setState(
+                                                () => unfilledLastName = true);
+                                          } else {
+                                            setState(
+                                                () => unfilledLastName = false);
+                                          }
+                                        },
+                                        textInputAction: TextInputAction.next,
+                                      ))
+                                ],
+                              ),
+                            ),
+                            Container(
+                              width: 210,
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                unfilledLastName
+                                    ? 'Last Name cannot be left blank'
+                                    : '',
+                                style:
+                                    TextStyle(fontSize: 10, color: Colors.red),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                            Container(
+                              width: 210,
+                              padding: const EdgeInsets.only(top: 5),
+                              child: const Text(
+                                'Username',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                  fontFamily: 'EagleLake',
+                                ),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  SizedBox(
+                                    width: 210,
+                                    height: 40,
+                                    child: TextField(
+                                      maxLines: 1,
+                                      controller: _username,
+                                      obscureText: false,
+                                      decoration: unfilledUsername
+                                          ? invalidTextField.copyWith(
+                                              hintText: 'Enter username')
+                                          : globalDecoration.copyWith(
+                                              hintText: 'Enter username'),
+                                      onChanged: (username) {
+                                        if (username.isEmpty) {
+                                          setState(
+                                              () => unfilledUsername = true);
+                                        } else {
+                                          setState(
+                                              () => unfilledUsername = false);
+                                        }
+                                      },
+                                      textInputAction: TextInputAction.next,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              width: 210,
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                unfilledUsername
+                                    ? 'Username cannot be left blank'
+                                    : '',
+                                style:
+                                    TextStyle(fontSize: 10, color: Colors.red),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                            Container(
+                              width: 210,
+                              padding: const EdgeInsets.only(top: 5),
+                              child: const Text(
+                                'Email',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                    fontFamily: 'EagleLake'),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                SizedBox(
+                                  width: 210,
+                                  height: 40,
+                                  child: TextField(
+                                    controller: _email,
+                                    maxLines: 1,
+                                    obscureText: false,
+                                    decoration: unfilledEmail
+                                        ? invalidTextField.copyWith(
+                                            hintText: 'Enter Email')
+                                        : globalDecoration.copyWith(
+                                            hintText: 'Enter Email'),
+                                    onChanged: (email) {
+                                      if (!isEmail(email)) {
+                                        emailError =
+                                            'Email must be in valid form';
+                                        setState(() => unfilledEmail = true);
+                                      } else {
+                                        setState(() => unfilledEmail = false);
+                                        emailError = '';
+                                      }
+                                    },
+                                    textInputAction: TextInputAction.next,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              width: 210,
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                unfilledEmail ? emailError : '',
+                                style:
+                                    TextStyle(fontSize: 10, color: Colors.red),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                            Container(
+                              width: 210,
+                              padding: const EdgeInsets.only(top: 5),
+                              child: const Text(
+                                'Password',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                  fontFamily: 'EagleLake',
+                                ),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                SizedBox(
+                                  width: 210,
+                                  height: 40,
+                                  child: TextField(
+                                    controller: _password,
+                                    maxLines: 1,
+                                    obscureText: true,
+                                    decoration: unfilledPassword
+                                        ? invalidTextField.copyWith(
+                                            hintText: 'Enter Password')
+                                        : globalDecoration.copyWith(
+                                            hintText: 'Enter Password'),
+                                    onChanged: (password) {
+                                      setState(() => unfilledPassword = false);
+                                    },
+                                    textInputAction: TextInputAction.done,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              width: 210,
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                unfilledPassword
+                                    ? 'Password cannot be left blank'
+                                    : '',
+                                style:
+                                    TextStyle(fontSize: 10, color: Colors.red),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width,
+                              child: Text(
+                                errorMessage,
+                                style: const TextStyle(
+                                    fontSize: 14, color: Colors.red),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.only(top: 5, bottom: 5),
+                              width: MediaQuery.of(context).size.width,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  SizedBox(
+                                    width: 85,
+                                    height: 36,
+                                    child: ElevatedButton(
+                                      onPressed: () async {
+                                        if (allRegisterFieldsValid()) {
+                                          try {
+                                            Map<String, dynamic> payload = {
+                                              'firstName':
+                                                  _firstName.value.text.trim(),
+                                              'lastName':
+                                                  _lastName.value.text.trim(),
+                                              'username':
+                                                  _username.value.text.trim(),
+                                              'password':
+                                                  _password.value.text.trim(),
+                                              'email': _email.value.text.trim(),
+                                            };
+
+                                            final ret =
+                                                await Authentication.register(
+                                                    payload);
+                                            print(ret.statusCode);
+                                            if (ret.statusCode == 200) {
+                                              errorMessage = '';
+                                              Map<String, dynamic> package = {
+                                                'username':
+                                                    _email.value.text.trim(),
+                                              };
+                                              final res =
+                                                  await Authentication.sendCode(
+                                                      package);
+                                              if (res.statusCode == 200) {
+                                                errorMessage = '';
+                                                user.username =
+                                                    _email.value.text;
+                                                Navigator.pushNamed(
+                                                    context, '/verification');
+                                              }
+                                            } else {
+                                              errorMessage = getErrorString(
+                                                  ret.statusCode);
+                                            }
+                                          } catch (e) {
+                                            print(
+                                                'Could not connect to server');
+                                          }
+                                        }
+                                        setState(() {});
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        backgroundColor: mainScheme,
+                                        padding: const EdgeInsets.all(2),
+                                        shadowColor: Colors.black,
+                                      ),
+                                      child: const Text(
+                                        'Register',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.white,
+                                          fontFamily: 'EagleLake',
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width,
+                              child: TextButton(
+                                style: TextButton.styleFrom(
+                                  textStyle: const TextStyle(
+                                    fontSize: 14,
+                                    color: startScreenTextBacking,
+                                    fontStyle: FontStyle.italic,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  clearFields();
+                                  setState(() {
+                                    Navigator.pushReplacementNamed(
+                                        context, '/login');
+                                  });
+                                },
+                                child: Row(
+                                  children: <Widget>[
+                                    Flexible(
+                                      child: Text(
+                                          'Have an account? Click to sign in'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  bool allRegisterFieldsValid() {
+    bool toReturn = true;
+    if (_firstName.value.text.isEmpty) {
+      toReturn = false;
+      unfilledFirstName = true;
+    }
+    if (_lastName.value.text.isEmpty) {
+      toReturn = false;
+      unfilledLastName = true;
+    }
+    if (_username.value.text.isEmpty) {
+      toReturn = false;
+      unfilledUsername = true;
+    }
+    if (_email.value.text.isEmpty) {
+      toReturn = false;
+      emailError = 'Email cannot be left blank';
+      unfilledEmail = true;
+    }
+    if (_password.value.text.isEmpty) {
+      toReturn = false;
+      unfilledPassword = true;
+    }
+    if (!isEmail(_email.value.text)) {
+      toReturn = false;
+      emailError = 'Email must be in valid form';
+      unfilledEmail = true;
+    }
+    return toReturn;
+  }
+
+  void clearFields() {
+    unfilledEmail = false;
+    unfilledPassword = false;
+    unfilledFirstName = false;
+    unfilledLastName = false;
+    _email.clear();
+    _password.clear();
+    _firstName.clear();
+    _lastName.clear();
+  }
+
+  String getErrorString(int statusCode) {
+    switch (statusCode) {
+      case 400:
+        return 'Username already in use';
+      default:
+        return 'Something went wrong!';
+    }
+  }
+}
+
+class VerificationPage extends StatefulWidget {
+  @override
+  _VerificationPageState createState() => _VerificationPageState();
+}
+
+class _VerificationPageState extends State<VerificationPage> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  String errorMessage = '';
 
   final _code = TextEditingController();
   bool unfilledCode = false;
@@ -752,44 +1323,8 @@ class _RegisterPageState extends State<RegisterPage> {
             child: SizedBox(
               width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.height,
-              child: detectState(),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildRegister() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Container(
-          margin: EdgeInsets.only(top: 5, bottom: 50),
-          padding: const EdgeInsets.all(8),
-          width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(Radius.circular(35)),
-              color: Colors.black.withOpacity(.45)),
-          child: Text(
-            topMessage,
-            style: const TextStyle(
-                fontSize: 48, color: Colors.white, fontFamily: 'EagleLake'),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Container(
-              padding: const EdgeInsets.all(10),
-              width: MediaQuery.of(context).size.width / 1.6,
-              height: MediaQuery.of(context).size.height / 1.95,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.all(Radius.circular(35)),
-                color: Colors.black.withOpacity(.45),
-              ),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   SizedBox(
@@ -803,12 +1338,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ),
                       onPressed: () {
-                        clearFields();
-                        setState(
-                          () {
-                            Navigator.pop(context);
-                          },
-                        );
+                        Navigator.pop(context);
                       },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -822,125 +1352,18 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                   Container(
-                    width: 210,
-                    padding: const EdgeInsets.only(top: 5),
-                    child: const Text(
-                      'First Name',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white,
-                        fontFamily: 'EagleLake',
-                      ),
-                      textAlign: TextAlign.left,
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      SizedBox(
-                        width: 210,
-                        height: 40,
-                        child: TextField(
-                          maxLines: 1,
-                          controller: _firstName,
-                          obscureText: false,
-                          decoration: unfilledFirstName
-                              ? invalidTextField.copyWith(
-                                  hintText: 'Enter First Name')
-                              : globalDecoration.copyWith(
-                                  hintText: 'Enter First Name'),
-                          onChanged: (firstName) {
-                            if (firstName.isEmpty) {
-                              setState(() => unfilledFirstName = true);
-                            } else {
-                              unfilledFirstName = false;
-                            }
-                          },
-                          textInputAction: TextInputAction.next,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    width: 210,
-                    padding: const EdgeInsets.only(top: 5),
-                    child: const Text(
-                      'Last Name',
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white,
-                          fontFamily: 'EagleLake'),
-                      textAlign: TextAlign.left,
-                    ),
-                  ),
-                  SizedBox(
                     width: MediaQuery.of(context).size.width,
+                    padding: const EdgeInsets.only(top: 15),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        SizedBox(
-                            width: 210,
-                            height: 40,
-                            child: TextField(
-                              maxLines: 1,
-                              controller: _lastName,
-                              obscureText: false,
-                              decoration: unfilledLastName
-                                  ? invalidTextField.copyWith(
-                                      hintText: 'Enter Last Name')
-                                  : globalDecoration.copyWith(
-                                      hintText: 'Enter Last Name'),
-                              onChanged: (lastName) {
-                                if (lastName.isEmpty) {
-                                  setState(() => unfilledLastName = true);
-                                } else {
-                                  unfilledLastName = false;
-                                }
-                              },
-                              textInputAction: TextInputAction.next,
-                            ))
-                      ],
-                    ),
-                  ),
-                  Container(
-                    width: 210,
-                    padding: const EdgeInsets.only(top: 5),
-                    child: const Text(
-                      'Email',
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white,
-                          fontFamily: 'EagleLake'),
-                      textAlign: TextAlign.left,
-                    ),
-                  ),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        SizedBox(
-                          width: 210,
-                          height: 40,
-                          child: TextField(
-                            controller: _email,
-                            maxLines: 1,
-                            obscureText: false,
-                            decoration: unfilledEmail
-                                ? invalidTextField.copyWith(
-                                    hintText: 'Enter Email')
-                                : globalDecoration.copyWith(
-                                    hintText: 'Enter Email'),
-                            onChanged: (email) {
-                              if (!isEmail(email)) {
-                                errorMessage = 'Email must be in valid form';
-                                setState(() => unfilledEmail = true);
-                              } else {
-                                setState(() => unfilledEmail = false);
-                                errorMessage = '';
-                              }
-                            },
-                            textInputAction: TextInputAction.next,
+                      children: const <Widget>[
+                        Flexible(
+                          child: Text(
+                            'Please check your email for your validation code and enter that code below:',
+                            style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontFamily: 'EagleLake'),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ],
@@ -948,19 +1371,19 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   Container(
                     width: 210,
-                    padding: const EdgeInsets.only(top: 5),
+                    padding: const EdgeInsets.only(top: 15),
                     child: const Text(
-                      'Password',
+                      'Code',
                       style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white,
-                        fontFamily: 'EagleLake',
-                      ),
+                          fontSize: 12,
+                          color: Colors.white,
+                          fontFamily: 'EagleLake'),
                       textAlign: TextAlign.left,
                     ),
                   ),
-                  SizedBox(
+                  Container(
                     width: MediaQuery.of(context).size.width,
+                    padding: const EdgeInsets.only(bottom: 15),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
@@ -968,18 +1391,22 @@ class _RegisterPageState extends State<RegisterPage> {
                           width: 210,
                           height: 40,
                           child: TextField(
-                            controller: _password,
                             maxLines: 1,
-                            obscureText: true,
-                            decoration: unfilledPassword
+                            controller: _code,
+                            obscureText: false,
+                            decoration: unfilledCode
                                 ? invalidTextField.copyWith(
-                                    hintText: 'Enter Password')
+                                    hintText: 'Enter Code')
                                 : globalDecoration.copyWith(
-                                    hintText: 'Enter Password'),
-                            onChanged: (password) {
-                              setState(() => unfilledPassword = false);
+                                    hintText: 'Enter Code'),
+                            onChanged: (code) {
+                              if (code.isEmpty) {
+                                setState(() => unfilledCode = true);
+                              } else {
+                                setState(() => unfilledCode = false);
+                              }
                             },
-                            textInputAction: TextInputAction.done,
+                            textInputAction: TextInputAction.next,
                           ),
                         ),
                       ],
@@ -993,290 +1420,83 @@ class _RegisterPageState extends State<RegisterPage> {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.only(top: 10, bottom: 5),
-                    width: MediaQuery.of(context).size.width,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        SizedBox(
-                          width: 85,
-                          height: 36,
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              if (allRegisterFieldsValid()) {
-                                try {
-                                  Map<String, dynamic> payload = {
-                                    'firstName': _firstName.value.text.trim(),
-                                    'lastName': _lastName.value.text.trim(),
-                                    'username': _email.value.text.trim(),
-                                    'password': _password.value.text.trim(),
-                                  };
-
-                                  final ret =
-                                      await Authentication.register(payload);
-                                  print(ret.statusCode);
-                                  if (ret.statusCode == 200) {
-                                    errorMessage = '';
-                                    Map<String, dynamic> package = {
-                                      'username': _email.value.text.trim(),
-                                    };
-                                    final res =
-                                        await Authentication.sendCode(package);
-                                    if (res.statusCode == 200) {
-                                      errorMessage = '';
-                                      clearFields();
-                                      setState(() {
-                                        state = 1;
-                                      });
-                                    }
-                                  } else {
-                                    errorMessage =
-                                        getErrorString(ret.statusCode);
-                                  }
-                                } catch (e) {
-                                  print('Could not connect to server');
-                                }
-                              }
-                              setState(() {});
-                            },
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              backgroundColor: mainScheme,
-                              padding: const EdgeInsets.all(2),
-                              shadowColor: Colors.black,
-                            ),
-                            child: const Text(
-                              'Register',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                                fontFamily: 'EagleLake',
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
                   SizedBox(
-                    width: MediaQuery.of(context).size.width,
-                    child: TextButton(
-                      style: TextButton.styleFrom(
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          color: startScreenTextBacking,
-                          fontStyle: FontStyle.italic,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                      onPressed: () {
-                        clearFields();
-                        setState(() {
-                          Navigator.pushReplacementNamed(context, '/signin');
-                        });
+                    width: 100,
+                    height: 36,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (_code.value.text.isEmpty) {
+                          errorMessage = 'Code cannot be left blank!';
+                          setState(() => unfilledCode = true);
+                        } else {
+                          Map<String, dynamic> payload = {
+                            'username': user.username,
+                            'code': _code.value.text.trim()
+                          };
+
+                          try {
+                            final res =
+                                await Authentication.verifyCode(payload);
+                            if (res.statusCode == 200) {
+                              errorMessage = 'Account successfully created!';
+                              await Future.delayed(Duration(seconds: 1));
+                              clearFields();
+
+                              Navigator.pushReplacementNamed(context, '/login');
+                            } else {
+                              Map<String, dynamic> name = {
+                                'username': user.username,
+                              };
+                              final ret = await Authentication.sendCode(name);
+                              print(ret.statusCode);
+                              errorMessage =
+                                  verifyCodeErrorString(res.statusCode);
+                            }
+                          } catch (e) {
+                            print('Could not connect to server');
+                          }
+                        }
+                        setState(() {});
                       },
-                      child: Row(
-                        children: <Widget>[
-                          Flexible(
-                            child: Text(
-                                'Already have an account? Click here to sign in instead'),
-                          ),
-                        ],
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        backgroundColor: mainScheme,
+                        padding: const EdgeInsets.all(2),
+                        shadowColor: Colors.black,
+                      ),
+                      child: const Text(
+                        'Send Code',
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                            fontFamily: 'EagleLake'),
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                  ),
+                  )
                 ],
               ),
             ),
-          ],
+          ),
         ),
-      ],
+      ),
     );
   }
 
-  Widget buildVerification() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget>[
-        SizedBox(
-          width: MediaQuery.of(context).size.width,
-          child: TextButton(
-            style: TextButton.styleFrom(
-              textStyle: const TextStyle(
-                fontSize: 18,
-                color: startScreenTextBacking,
-                decoration: TextDecoration.underline,
-              ),
-            ),
-            onPressed: () {
-              setState(() => state = 0);
-            },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const <Widget>[
-                Icon(
-                  Icons.navigate_before,
-                ),
-                Text('Go Back'),
-              ],
-            ),
-          ),
-        ),
-        Container(
-          width: MediaQuery.of(context).size.width,
-          padding: const EdgeInsets.only(top: 15),
-          child: Row(
-            children: const <Widget>[
-              Flexible(
-                child: Text(
-                  'Please check your email for your validation code and enter that code below:',
-                  style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                      fontFamily: 'EagleLake'),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          width: 210,
-          padding: const EdgeInsets.only(top: 15),
-          child: const Text(
-            'Code',
-            style: TextStyle(
-                fontSize: 12, color: Colors.white, fontFamily: 'EagleLake'),
-            textAlign: TextAlign.left,
-          ),
-        ),
-        Container(
-          width: MediaQuery.of(context).size.width,
-          padding: const EdgeInsets.only(bottom: 15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              SizedBox(
-                  width: 210,
-                  height: 40,
-                  child: TextField(
-                    controller: _code,
-                    maxLines: 1,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r''))
-                    ],
-                    decoration: unfilledCode
-                        ? invalidTextField.copyWith(
-                            hintText: 'Enter Code')
-                        : globalDecoration.copyWith(hintText: 'Enter Code'),
-                    onChanged: (code) {
-                      setState(() => unfilledCode = false);
-                    },
-                  ))
-            ],
-          ),
-        ),
-        SizedBox(
-          width: 100,
-          height: 36,
-          child: ElevatedButton(
-            onPressed: () async {
-              if (_code.value.text.isEmpty) {
-                errorMessage = 'Code cannot be left blank!';
-                setState(() => unfilledCode = true);
-              } else {
-                Map<String, dynamic> payload = {
-                  'username': _email.value.text.trim(),
-                  'code': _code.value.text.trim()
-                };
-
-                try {
-                  final res = await Authentication.verifyCode(payload);
-
-                  if (res.statusCode == 200) {
-                    errorMessage = 'Account successfully created!';
-                    await Future.delayed(Duration(seconds: 1));
-                    clearFields();
-
-                    Navigator.pushReplacementNamed(context, '/login');
-                  } else {
-                    errorMessage = verifyCodeErrorString(res.statusCode);
-                  }
-                } catch (e) {
-                  print('Could not connect to server');
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              backgroundColor: mainScheme,
-              padding: const EdgeInsets.all(2),
-              shadowColor: Colors.black,
-            ),
-            child: const Text(
-              'Send Code',
-              style: TextStyle(
-                  fontSize: 14, color: Colors.white, fontFamily: 'EagleLake'),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        )
-      ],
-    );
-  }
-
-  bool allRegisterFieldsValid() {
-    bool toReturn = true;
-    if (_firstName.value.text.isEmpty) {
-      toReturn = false;
-      unfilledFirstName = true;
+  bool codeFieldsValid() {
+    if (_code.value.text.isEmpty) {
+      errorMessage = 'Code cannot be left blank';
+      unfilledCode = true;
+      return false;
     }
-    if (_lastName.value.text.isEmpty) {
-      toReturn = false;
-      unfilledLastName = true;
-    }
-    if (_email.value.text.isEmpty) {
-      toReturn = false;
-      unfilledEmail = true;
-    }
-    if (_password.value.text.isEmpty) {
-      toReturn = false;
-      unfilledPassword = true;
-    }
-    if (!isEmail(_email.value.text)) {
-      toReturn = false;
-      errorMessage = 'Email must be in valid form';
-      unfilledEmail = true;
-    }
-    return toReturn;
+    return true;
   }
 
   void clearFields() {
-    unfilledEmail = false;
-    unfilledPassword = false;
-    unfilledFirstName = false;
-    unfilledLastName = false;
     unfilledCode = false;
-    _email.clear();
-    _password.clear();
-    _firstName.clear();
-    _lastName.clear();
     _code.clear();
-  }
-
-  String getErrorString(int statusCode) {
-    switch (statusCode) {
-      case 400:
-        return 'Username already in use';
-      default:
-        return 'Something went wrong!';
-    }
   }
 
   String verifyCodeErrorString(int statusCode) {
@@ -1284,7 +1504,7 @@ class _RegisterPageState extends State<RegisterPage> {
       case 400:
         return "Verification code is invalid!";
       default:
-        return 'Something went wrong!';
+        return 'Verification code expired. Resending code.';
     }
   }
 }
