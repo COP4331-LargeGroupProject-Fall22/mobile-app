@@ -342,7 +342,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
   }
 
   //TODO(17): function to get ingredients from api. Will also handle sorting
-  /*Future<List> GrabIngredients(int sortBy) {
+  /*Future<List> getUserInventory(int sortBy) {
     return;
   }*/
 
@@ -450,7 +450,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                   children: <Widget>[
                     Expanded(
                       child: Text(
-                        'To Be Changed',
+                        'Ingredient',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -507,8 +507,154 @@ class _IngredientPageState extends State<IngredientPage> {
               Navigator.pop(context);
             },
           )),
-      body: SingleChildScrollView(
-        child: Text('To be changed'),
+      body: Container(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height,
+        margin: EdgeInsets.fromLTRB(5, 10, 5, 0),
+        child: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              Container(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height / 4,
+                padding: EdgeInsets.only(top: 10, left: 5, right: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Container(
+                      width: MediaQuery.of(context).size.width / 2.2,
+                      height: MediaQuery.of(context).size.width / 2.2,
+                      margin: EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black, width: 3),
+                        color: Colors.grey,
+                      ),
+                      child: const Text('Ingredient image'),
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: <Widget>[
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width / 2.2,
+                          height: MediaQuery.of(context).size.width / 8.8,
+                          child: Text(
+                            'Quantity: {amount}',
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.black,
+                            ),
+                            textAlign: TextAlign.left,
+                          ),
+                        ),
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width / 2.2,
+                          height: MediaQuery.of(context).size.width / 8.8,
+                          child: Text(
+                            'Food Group: {group}',
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.black,
+                            ),
+                            textAlign: TextAlign.left,
+                          ),
+                        ),
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width / 2.2,
+                          height: MediaQuery.of(context).size.width / 8.8,
+                          child: Text(
+                            'Location: {maybe}',
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.black,
+                            ),
+                            textAlign: TextAlign.left,
+                          ),
+                        ),
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width / 2.2,
+                          height: MediaQuery.of(context).size.width / 8.8,
+                          child: Text(
+                            'Expiration Date: {dates}',
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.black,
+                            ),
+                            textAlign: TextAlign.left,
+                          ),
+                        ),
+                      ]
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width,
+                margin: EdgeInsets.only(top: 20),
+                child: const Text(
+                  'Food Item',
+                  style: TextStyle(
+                    fontSize: 36,
+                    color: Colors.black,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width,
+                padding: EdgeInsets.fromLTRB(5, 20, 5, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      child: Text(
+                        'Nutrition Values: {amount}',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.black,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      child: Text(
+                        '\nBrands: {group}',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.black,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      child: Text(
+                        '\nTags: {maybe}',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.black,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      child: Text(
+                        '\nAllergens: {dates}',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.black,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       extendBody: false,
       extendBodyBehindAppBar: false,
