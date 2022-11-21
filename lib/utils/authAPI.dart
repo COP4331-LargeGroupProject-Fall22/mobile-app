@@ -10,7 +10,7 @@ class Authentication {
     http.Response response;
 
     try {
-      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/login?includeInfo=true'),
+      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/login'),
           body: json.encode(payload),
           headers: baseHeader);
     } catch (e) {

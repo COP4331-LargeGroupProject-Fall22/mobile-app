@@ -7,7 +7,7 @@ final globalDecoration = InputDecoration(
     filled: true,
     fillColor: textFieldBacking,
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(20),
       borderSide: const BorderSide(color: textFieldBorder),
     ));
 

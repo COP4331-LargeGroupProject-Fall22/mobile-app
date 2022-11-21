@@ -9,6 +9,7 @@ class Routes {
   static const String startupScreen = '/startup';
   static const String loginScreen = '/login';
   static const String registerScreen = '/register';
+  static const String verificationScreen = '/verification';
 
   static const String recipeScreen = '/recipe';
 
@@ -27,6 +28,7 @@ class Routes {
     startupScreen: (context) => StartupScreen(),
     loginScreen: (context) => LogInPage(),
     registerScreen: (context) => RegisterPage(),
+    verificationScreen: (context) => VerificationPage(),
 
     recipeScreen: (context) => RecipeScreen(),
 
