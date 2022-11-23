@@ -26,13 +26,16 @@ class UserData {
     firstName = json['firstName'];
     lastName = json['lastName'];
     username = json['username'];
-    email = json['username'];
-    password = json['password'];
+    email = json['email'];
   }
 
   void defineTokens(Map<String, dynamic> json) {
     accessToken = json['accessToken'];
     refreshToken = json['refreshToken'];
+  }
+
+  void setPassword(String pass) {
+    password = pass;
   }
 
   Map<String,dynamic> toJson() => {
