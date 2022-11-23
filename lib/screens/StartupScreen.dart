@@ -183,7 +183,7 @@ class _LogInPageState extends State<LogInPage> {
     super.initState();
   }
 
-  //TODO(): Reset Password Functionality
+  //TODO(30): Reset Password Functionality
   //int state = 0;
   // Widget detectState() {
   //   if (state == 1) {
@@ -279,7 +279,7 @@ class _LogInPageState extends State<LogInPage> {
                       style: TextButton.styleFrom(
                         textStyle: const TextStyle(
                           fontSize: 18,
-                          color: startScreenTextBacking,
+                          color: textFieldBorder,
                           decoration: TextDecoration.underline,
                         ),
                       ),
@@ -511,17 +511,18 @@ class _LogInPageState extends State<LogInPage> {
                       style: TextButton.styleFrom(
                         textStyle: const TextStyle(
                           fontSize: 14,
-                          color: startScreenTextBacking,
+                          color: textFieldBorder,
                           fontStyle: FontStyle.italic,
                           decoration: TextDecoration.underline,
                         ),
                       ),
                       onPressed: () {
-                        clearFields();
-                        topMessage = 'Forgot Your\nPassword?';
-                        setState(() {
-                          //state = 1;
-                        });
+                        // TODO(30): Resetting Password
+                        // clearFields();
+                        // topMessage = 'Forgot Your\nPassword?';
+                        // setState(() {
+                        //   state = 1;
+                        // });
                       },
                       child: const Text('Forgot Your Password?'),
                     ),
@@ -534,150 +535,6 @@ class _LogInPageState extends State<LogInPage> {
       ],
     );
   }
-
-  //TODO(): Add support for reseting password
-  // Widget buildForgot() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.center,
-  //     children: <Widget>[
-  //       SizedBox(
-  //         width: MediaQuery.of(context).size.width,
-  //         child: TextButton(
-  //           style: TextButton.styleFrom(
-  //             textStyle: const TextStyle(
-  //               fontSize: 18,
-  //               color: startScreenTextBacking,
-  //               decoration: TextDecoration.underline,
-  //             ),
-  //           ),
-  //           onPressed: () {
-  //             topMessage = "Welcome\nBack!";
-  //             setState(
-  //               () {
-  //                 state = 0;
-  //               },
-  //             );
-  //           },
-  //           child: Row(
-  //             mainAxisAlignment: MainAxisAlignment.center,
-  //             children: const <Widget>[
-  //               Icon(
-  //                 Icons.navigate_before,
-  //               ),
-  //               Text('Go Back'),
-  //             ],
-  //           ),
-  //         ),
-  //       ),
-  //       Container(
-  //         width: MediaQuery.of(context).size.width,
-  //         padding: const EdgeInsets.only(top: 15),
-  //         child: Row(
-  //           children: <Widget>[
-  //             Flexible(
-  //               child: Container(
-  //                 margin: const EdgeInsets.symmetric(vertical: 10),
-  //                 decoration: BoxDecoration(
-  //                   borderRadius: const BorderRadius.all(Radius.circular(35)),
-  //                   color: Colors.black.withOpacity(.45),
-  //                 ),
-  //                 child: const Text(
-  //                   'Please enter your email.\nA reset password link will be sent to it if an account is attached to it',
-  //                   style: TextStyle(
-  //                       fontSize: 16,
-  //                       color: Colors.white,
-  //                       fontFamily: 'EagleLake'),
-  //                   textAlign: TextAlign.center,
-  //                 ),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //       Container(
-  //         width: 210,
-  //         padding: const EdgeInsets.only(top: 15),
-  //         child: const Text(
-  //           'Email',
-  //           style: TextStyle(
-  //               fontSize: 12, color: Colors.white, fontFamily: 'EagleLake'),
-  //           textAlign: TextAlign.left,
-  //         ),
-  //       ),
-  //       Container(
-  //         width: MediaQuery.of(context).size.width,
-  //         padding: const EdgeInsets.only(bottom: 15),
-  //         child: Row(
-  //           mainAxisAlignment: MainAxisAlignment.center,
-  //           children: <Widget>[
-  //             SizedBox(
-  //                 width: 210,
-  //                 height: 40,
-  //                 child: TextField(
-  //                   controller: _email,
-  //                   maxLines: 1,
-  //                   obscureText: false,
-  //                   decoration: unfilledEmail
-  //                       ? invalidTextField.copyWith(hintText: 'Enter Email')
-  //                       : globalDecoration.copyWith(hintText: 'Enter Email'),
-  //                   onChanged: (email) {
-  //                     if (email.isEmpty) {
-  //                       setState(() => unfilledEmail = true);
-  //                     } else {
-  //                       if (!isEmail(email)) {
-  //                         errorMessage = 'Email must be in valid form!';
-  //                         setState(() => unfilledEmail = true);
-  //                       } else {
-  //                         errorMessage = '';
-  //                         setState(() => unfilledEmail = false);
-  //                       }
-  //                     }
-  //                   },
-  //                 ))
-  //           ],
-  //         ),
-  //       ),
-  //       SizedBox(
-  //         width: MediaQuery.of(context).size.width,
-  //         child: Text(
-  //           errorMessage,
-  //           style: const TextStyle(fontSize: 14, color: Colors.red),
-  //           textAlign: TextAlign.center,
-  //         ),
-  //       ),
-  //       SizedBox(
-  //         width: 100,
-  //         height: 36,
-  //         child: ElevatedButton(
-  //           onPressed: () {
-  //             setState(() {
-  //               if (allLoginFieldsValid(/*hasPassword=*/ false)) {
-  //
-  //                 setState(() {
-  //                   _email.clear();
-  //                 });
-  //               }
-  //             });
-  //           },
-  //           style: ElevatedButton.styleFrom(
-  //             shape: RoundedRectangleBorder(
-  //               borderRadius: BorderRadius.circular(10),
-  //             ),
-  //             backgroundColor: mainScheme,
-  //             padding: const EdgeInsets.all(2),
-  //             shadowColor: Colors.black,
-  //           ),
-  //           child: const Text(
-  //             'Send Code',
-  //             style: TextStyle(
-  //                 fontSize: 14, color: Colors.white, fontFamily: 'EagleLake'),
-  //             textAlign: TextAlign.center,
-  //           ),
-  //         ),
-  //       )
-  //     ],
-  //   );
-  // }
 
   bool allLoginFieldsValid(bool hasPassword) {
     bool toReturn = true;
@@ -820,7 +677,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 style: TextButton.styleFrom(
                                   textStyle: const TextStyle(
                                     fontSize: 18,
-                                    color: startScreenTextBacking,
+                                    color: textFieldBorder,
                                     decoration: TextDecoration.underline,
                                   ),
                                 ),
@@ -1203,7 +1060,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 style: TextButton.styleFrom(
                                   textStyle: const TextStyle(
                                     fontSize: 14,
-                                    color: startScreenTextBacking,
+                                    color: textFieldBorder,
                                     fontStyle: FontStyle.italic,
                                     decoration: TextDecoration.underline,
                                   ),
@@ -1334,7 +1191,7 @@ class _VerificationPageState extends State<VerificationPage> {
                       style: TextButton.styleFrom(
                         textStyle: const TextStyle(
                           fontSize: 18,
-                          color: startScreenTextBacking,
+                          color: textFieldBorder,
                           decoration: TextDecoration.underline,
                         ),
                       ),

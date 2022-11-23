@@ -23,35 +23,35 @@ class UserData {
   }
 
   void defineUserData(Map<String, dynamic> json) {
-    firstName = json['firstName'];
-    lastName = json['lastName'];
-    username = json['username'];
-    email = json['email'];
+    this.firstName = json['firstName'];
+    this.lastName = json['lastName'];
+    this.username = json['username'];
+    this.email = json['email'];
   }
 
   void defineTokens(Map<String, dynamic> json) {
-    accessToken = json['accessToken'];
-    refreshToken = json['refreshToken'];
+    this.accessToken = json['accessToken'];
+    this.refreshToken = json['refreshToken'];
   }
 
   void setPassword(String pass) {
-    password = pass;
+    this.password = pass;
   }
 
   Map<String,dynamic> toJson() => {
-    'firstName': firstName,
-    'lastName': lastName,
+    'firstName': this.firstName,
+    'lastName': this.lastName,
     'lastSeen': -1,
-    'username': email,
-    'password': password,
+    'username': this.email,
+    'password': this.password,
   };
 
   void clear() {
-    firstName = '';
-    lastName = '';
-    email = '';
-    password = '';
-    accessToken = '';
-    refreshToken = '';
+    this.firstName = '';
+    this.lastName = '';
+    this.email = '';
+    this.password = '';
+    this.accessToken = '';
+    this.refreshToken = '';
   }
 }
