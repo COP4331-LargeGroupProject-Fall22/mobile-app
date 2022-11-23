@@ -17,10 +17,10 @@ bool isEmail(email) {
   return emailValidation.hasMatch(email);
 }
 
-//Function that will go through the process of attempting to refresh the token
-//It will try three times to refresh the token
-//If it is unable to refresh the token, it will try to relog the user with the previously provided login information
-//If that also fails, then the user is shown an error dialog that will then redirect them to the start screen
+// Function that will go through the process of attempting to refresh the token
+// It will try three times to refresh the token
+// If it is unable to refresh the token, it will try to relog the user with the previously provided login information
+// If that also fails, then the user is shown an error dialog that will then redirect them to the start screen
 Future<bool> tryTokenRefresh() async {
   int tries = 0;
   while (tries < 3) {
@@ -30,12 +30,14 @@ Future<bool> tryTokenRefresh() async {
       tries++;
     }
   }
-  if (await relogUser()) {
+  if (await reauthenticateUser()) {
     return true;
   }
   return false;
 }
 
+// Function that refreshes the token
+// It will either return true if it was able to refresh or false if it was unable to
 Future<bool> refreshTokenStatus() async {
   final changeToken = await Authentication.refreshToken();
   switch (changeToken.statusCode) {
@@ -54,10 +56,10 @@ Future<bool> refreshTokenStatus() async {
   }
 }
 
-Future<bool> relogUser() async {
+Future<bool> reauthenticateUser() async {
 
   Map<String, dynamic> payload = {
-    'username': user.email,
+    'username': user.username,
     'password': user.password
   };
 

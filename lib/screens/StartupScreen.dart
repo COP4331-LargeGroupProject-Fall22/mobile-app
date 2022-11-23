@@ -183,7 +183,8 @@ class _LogInPageState extends State<LogInPage> {
     super.initState();
   }
 
-  int state = 0;
+  //TODO(30): Reset Password Functionality
+  //int state = 0;
   // Widget detectState() {
   //   if (state == 1) {
   //     return buildForgot();
@@ -278,7 +279,7 @@ class _LogInPageState extends State<LogInPage> {
                       style: TextButton.styleFrom(
                         textStyle: const TextStyle(
                           fontSize: 18,
-                          color: startScreenTextBacking,
+                          color: textFieldBorder,
                           decoration: TextDecoration.underline,
                         ),
                       ),
@@ -412,7 +413,6 @@ class _LogInPageState extends State<LogInPage> {
                                       await Authentication.login(payload);
                                   print(ret.statusCode);
                                   if (ret.statusCode == 200) {
-                                    setState(() => clearFields());
                                     var tokens = json.decode(ret.body);
                                     user.defineTokens(tokens);
 
@@ -420,6 +420,9 @@ class _LogInPageState extends State<LogInPage> {
                                     if (res.statusCode == 200) {
                                       var data = json.decode(res.body);
                                       user.defineUserData(data);
+                                      user.setPassword(_password.value.text.trim());
+
+                                      setState(() => clearFields());
                                       Navigator.pushNamedAndRemoveUntil(
                                           context,
                                           '/food',
@@ -429,8 +432,7 @@ class _LogInPageState extends State<LogInPage> {
                                           getDataRetrieveError(res.statusCode);
                                     }
                                   } else {
-                                    // errorMessage =
-                                    //     getLogInError(ret.statusCode);
+                                    errorMessage = getLogInError(ret.statusCode);
                                     if (ret.statusCode == 403) {
                                       user.username =
                                           _username.value.text.trim();
@@ -461,7 +463,7 @@ class _LogInPageState extends State<LogInPage> {
                                                         color: Colors.red,
                                                         fontSize: 18),
                                                   ),
-                                                )
+                                                ),
                                               ],
                                               content: Column(
                                                   mainAxisSize:
@@ -479,10 +481,8 @@ class _LogInPageState extends State<LogInPage> {
                                   errorMessage = 'Could not connect to server';
                                   print('Could not connect to /auth/user');
                                 }
-                                setState(() {});
-                              } else {
-                                setState(() {});
                               }
+                              setState(() {});
                             },
                             style: ElevatedButton.styleFrom(
                               shape: RoundedRectangleBorder(
@@ -511,17 +511,18 @@ class _LogInPageState extends State<LogInPage> {
                       style: TextButton.styleFrom(
                         textStyle: const TextStyle(
                           fontSize: 14,
-                          color: startScreenTextBacking,
+                          color: textFieldBorder,
                           fontStyle: FontStyle.italic,
                           decoration: TextDecoration.underline,
                         ),
                       ),
                       onPressed: () {
-                        clearFields();
-                        topMessage = 'Forgot Your\nPassword?';
-                        setState(() {
-                          state = 1;
-                        });
+                        // TODO(30): Resetting Password
+                        // clearFields();
+                        // topMessage = 'Forgot Your\nPassword?';
+                        // setState(() {
+                        //   state = 1;
+                        // });
                       },
                       child: const Text('Forgot Your Password?'),
                     ),
@@ -534,149 +535,6 @@ class _LogInPageState extends State<LogInPage> {
       ],
     );
   }
-
-  // Widget buildForgot() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.center,
-  //     children: <Widget>[
-  //       SizedBox(
-  //         width: MediaQuery.of(context).size.width,
-  //         child: TextButton(
-  //           style: TextButton.styleFrom(
-  //             textStyle: const TextStyle(
-  //               fontSize: 18,
-  //               color: startScreenTextBacking,
-  //               decoration: TextDecoration.underline,
-  //             ),
-  //           ),
-  //           onPressed: () {
-  //             topMessage = "Welcome\nBack!";
-  //             setState(
-  //               () {
-  //                 state = 0;
-  //               },
-  //             );
-  //           },
-  //           child: Row(
-  //             mainAxisAlignment: MainAxisAlignment.center,
-  //             children: const <Widget>[
-  //               Icon(
-  //                 Icons.navigate_before,
-  //               ),
-  //               Text('Go Back'),
-  //             ],
-  //           ),
-  //         ),
-  //       ),
-  //       Container(
-  //         width: MediaQuery.of(context).size.width,
-  //         padding: const EdgeInsets.only(top: 15),
-  //         child: Row(
-  //           children: <Widget>[
-  //             Flexible(
-  //               child: Container(
-  //                 margin: const EdgeInsets.symmetric(vertical: 10),
-  //                 decoration: BoxDecoration(
-  //                   borderRadius: const BorderRadius.all(Radius.circular(35)),
-  //                   color: Colors.black.withOpacity(.45),
-  //                 ),
-  //                 child: const Text(
-  //                   'Please enter your email.\nA reset password link will be sent to it if an account is attached to it',
-  //                   style: TextStyle(
-  //                       fontSize: 16,
-  //                       color: Colors.white,
-  //                       fontFamily: 'EagleLake'),
-  //                   textAlign: TextAlign.center,
-  //                 ),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //       Container(
-  //         width: 210,
-  //         padding: const EdgeInsets.only(top: 15),
-  //         child: const Text(
-  //           'Email',
-  //           style: TextStyle(
-  //               fontSize: 12, color: Colors.white, fontFamily: 'EagleLake'),
-  //           textAlign: TextAlign.left,
-  //         ),
-  //       ),
-  //       Container(
-  //         width: MediaQuery.of(context).size.width,
-  //         padding: const EdgeInsets.only(bottom: 15),
-  //         child: Row(
-  //           mainAxisAlignment: MainAxisAlignment.center,
-  //           children: <Widget>[
-  //             SizedBox(
-  //                 width: 210,
-  //                 height: 40,
-  //                 child: TextField(
-  //                   controller: _email,
-  //                   maxLines: 1,
-  //                   obscureText: false,
-  //                   decoration: unfilledEmail
-  //                       ? invalidTextField.copyWith(hintText: 'Enter Email')
-  //                       : globalDecoration.copyWith(hintText: 'Enter Email'),
-  //                   onChanged: (email) {
-  //                     if (email.isEmpty) {
-  //                       setState(() => unfilledEmail = true);
-  //                     } else {
-  //                       if (!isEmail(email)) {
-  //                         errorMessage = 'Email must be in valid form!';
-  //                         setState(() => unfilledEmail = true);
-  //                       } else {
-  //                         errorMessage = '';
-  //                         setState(() => unfilledEmail = false);
-  //                       }
-  //                     }
-  //                   },
-  //                 ))
-  //           ],
-  //         ),
-  //       ),
-  //       SizedBox(
-  //         width: MediaQuery.of(context).size.width,
-  //         child: Text(
-  //           errorMessage,
-  //           style: const TextStyle(fontSize: 14, color: Colors.red),
-  //           textAlign: TextAlign.center,
-  //         ),
-  //       ),
-  //       SizedBox(
-  //         width: 100,
-  //         height: 36,
-  //         child: ElevatedButton(
-  //           onPressed: () {
-  //             setState(() {
-  //               if (allLoginFieldsValid(/*hasPassword=*/ false)) {
-  //                 //TODO Add support for reseting password
-  //                 setState(() {
-  //                   _email.clear();
-  //                 });
-  //               }
-  //             });
-  //           },
-  //           style: ElevatedButton.styleFrom(
-  //             shape: RoundedRectangleBorder(
-  //               borderRadius: BorderRadius.circular(10),
-  //             ),
-  //             backgroundColor: mainScheme,
-  //             padding: const EdgeInsets.all(2),
-  //             shadowColor: Colors.black,
-  //           ),
-  //           child: const Text(
-  //             'Send Code',
-  //             style: TextStyle(
-  //                 fontSize: 14, color: Colors.white, fontFamily: 'EagleLake'),
-  //             textAlign: TextAlign.center,
-  //           ),
-  //         ),
-  //       )
-  //     ],
-  //   );
-  // }
 
   bool allLoginFieldsValid(bool hasPassword) {
     bool toReturn = true;
@@ -819,7 +677,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 style: TextButton.styleFrom(
                                   textStyle: const TextStyle(
                                     fontSize: 18,
-                                    color: startScreenTextBacking,
+                                    color: textFieldBorder,
                                     decoration: TextDecoration.underline,
                                   ),
                                 ),
@@ -1202,7 +1060,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 style: TextButton.styleFrom(
                                   textStyle: const TextStyle(
                                     fontSize: 14,
-                                    color: startScreenTextBacking,
+                                    color: textFieldBorder,
                                     fontStyle: FontStyle.italic,
                                     decoration: TextDecoration.underline,
                                   ),
@@ -1333,7 +1191,7 @@ class _VerificationPageState extends State<VerificationPage> {
                       style: TextButton.styleFrom(
                         textStyle: const TextStyle(
                           fontSize: 18,
-                          color: startScreenTextBacking,
+                          color: textFieldBorder,
                           decoration: TextDecoration.underline,
                         ),
                       ),
@@ -1430,13 +1288,14 @@ class _VerificationPageState extends State<VerificationPage> {
                           setState(() => unfilledCode = true);
                         } else {
                           Map<String, dynamic> payload = {
-                            'username': user.username,
-                            'code': _code.value.text.trim()
+                            'username': user.username.trim(),
+                            'verificationCode': int.parse(_code.value.text.trim())
                           };
 
                           try {
                             final res =
                                 await Authentication.verifyCode(payload);
+                            print(res.statusCode);
                             if (res.statusCode == 200) {
                               errorMessage = 'Account successfully created!';
                               await Future.delayed(Duration(seconds: 1));
@@ -1444,11 +1303,13 @@ class _VerificationPageState extends State<VerificationPage> {
 
                               Navigator.pushReplacementNamed(context, '/login');
                             } else {
-                              Map<String, dynamic> name = {
-                                'username': user.username,
-                              };
-                              final ret = await Authentication.sendCode(name);
-                              print(ret.statusCode);
+                              if (res.statusCode == 401) {
+                                Map<String, dynamic> name = {
+                                  'username': user.username,
+                                };
+                                final ret = await Authentication.sendCode(name);
+                                //print(ret.statusCode);
+                              }
                               errorMessage =
                                   verifyCodeErrorString(res.statusCode);
                             }
@@ -1503,8 +1364,10 @@ class _VerificationPageState extends State<VerificationPage> {
     switch (statusCode) {
       case 400:
         return "Verification code is invalid!";
+      case 401:
+        return "Verification code expired! Sending new one!";
       default:
-        return 'Verification code expired. Resending code.';
+        return 'Could not send code.';
     }
   }
 }

@@ -47,7 +47,7 @@ class _RecipePageState extends State<RecipePage> {
           centerTitle: true,
           backgroundColor: Colors.white,
           leading: IconButton(
-            // TODO(): Make search functionality
+            // TODO(15): Make search functionality
             onPressed: () {},
             icon: Icon(
               Icons.search,
@@ -62,7 +62,7 @@ class _RecipePageState extends State<RecipePage> {
                 color: Colors.black,
               ),
               iconSize: 35,
-              // TODO(): Make sort functionality
+              // TODO(25): Make sort functionality
               onPressed: () {},
             ),
           ]),
@@ -120,9 +120,9 @@ class _RecipePageState extends State<RecipePage> {
                       color: mainScheme,
                       iconSize: bottomIconSize,
                     ),
-                    const Text(
+                    Text(
                       'Recipes',
-                      style: TextStyle(fontSize: 12, color: mainScheme),
+                      style: bottomRowOnScreenTextStyle,
                       textAlign: TextAlign.right,
                     ),
                   ],

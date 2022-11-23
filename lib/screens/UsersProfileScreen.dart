@@ -78,48 +78,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         actions: <Widget>[
           IconButton(
             onPressed: () async {
-              bool delete = false;
-              showDialog(
-                context: context,
-                barrierDismissible: true,
-                builder: (context) {
-                  return AlertDialog(
-                    title: const Text('Deleting your account?'),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    elevation: 15,
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () {
-                          delete = true;
-                          Navigator.pop(context, 'Cancel');
-                        },
-                        child: const Text(
-                          'Cancel',
-                          style: TextStyle(color: Colors.red, fontSize: 18),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          delete = true;
-                          Navigator.pop(context, 'delete');
-                        },
-                        child: const Text(
-                          'Delete my account',
-                          style: TextStyle(color: Colors.red, fontSize: 18),
-                        ),
-                      )
-                    ],
-                    content: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const <Widget>[
-                          Flexible(
-                              child: Text(
-                                  'Are you sure you want to delete your account?')),
-                        ]),
-                  );
-                },
-              );
+              bool delete = deleteDialog(context);
 
               if (!delete) {
                 return;
@@ -1262,7 +1221,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                             ),
                           ),
                           Container(
-                            margin: EdgeInsets.only(bottom: 100),
+                            margin: const EdgeInsets.only(bottom: 100),
                             child: Text(
                               errorMessage,
                               style: const TextStyle(
@@ -1271,8 +1230,8 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                             ),
                           ),
                           Container(
-                            padding: EdgeInsets.all(15),
-                            margin: EdgeInsets.only(top: 170),
+                            padding: const EdgeInsets.all(15),
+                            margin: const EdgeInsets.only(top: 170),
                             child: ElevatedButton(
                               onPressed: () async {
                                 if (validateConfirmPassword()) {
@@ -1290,27 +1249,21 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                                     if (res.statusCode == 200) {
                                       user.password = _newPassword.value.text.trim();
 
-                                      errorMessage ==
-                                          'Successfully updated your password!';
-                                      await Future.delayed(Duration(seconds: 1));
+                                      errorMessage = 'Successfully updated your password!';
+                                      await Future.delayed(const Duration(seconds: 1));
 
                                       clearFields();
                                       Navigator.pop(context);
-                                    } else {
-                                      errorMessage =
-                                          await getChangePasswordError(
-                                              res.statusCode);
-                                      if (errorMessage ==
-                                          'Successfully changed password!') {
-                                        user.password = _newPassword.value.text.trim();
-                                        await Future.delayed(Duration(seconds: 1));
-
-                                        clearFields();
-                                        Navigator.pop(context);
-                                      } else {
-                                        errorDialog(context);
-                                      }
                                     }
+                                    errorMessage = await getChangePasswordError(res.statusCode);
+                                    if (errorMessage == 'Successfully updated your password!') {
+                                      user.password = _newPassword.value.text.trim();
+                                      await Future.delayed(const Duration(seconds: 1));
+
+                                      clearFields();
+                                      Navigator.pop(context);
+                                    }
+                                    errorDialog(context);
                                   } catch (e) {
                                     print('Could not connect to server');
                                   }
@@ -1367,7 +1320,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                           onPressed: () {
                             Navigator.pushReplacementNamed(context, '/food');
                           },
-                          icon: Icon(Icons.egg),
+                          icon: const Icon(Icons.egg),
                           iconSize: 55,
                           color: bottomRowIcon,
                         ),
@@ -1386,7 +1339,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                       onPressed: () {
                         Navigator.pushReplacementNamed(context, '/recipe');
                       },
-                      icon: Icon(Icons.restaurant),
+                      icon: const Icon(Icons.restaurant),
                       color: bottomRowIcon,
                       iconSize: 55,
                     ),
@@ -1407,7 +1360,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                       onPressed: () {
                         Navigator.pushReplacementNamed(context, '/cart');
                       },
-                      icon: Icon(Icons.shopping_cart),
+                      icon: const Icon(Icons.shopping_cart),
                       iconSize: 55,
                       color: bottomRowIcon,
                     ),
@@ -1426,7 +1379,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {},
-                      icon: Icon(Icons.person),
+                      icon: const Icon(Icons.person),
                       iconSize: 55,
                       color: mainScheme,
                     ),
@@ -1510,7 +1463,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
       case 403:
         errorMessage = 'Reconnecting...';
         if (await tryTokenRefresh()) {
-          return 'Successfully changed password!';
+          return 'Successfully updated your password!';
         } else {
           return 'Cannot connect to server';
         }

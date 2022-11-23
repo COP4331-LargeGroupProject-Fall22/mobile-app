@@ -14,7 +14,8 @@ class Routes {
   static const String recipeScreen = '/recipe';
 
   static const String ingredientsScreen = '/food';
-  static const String ingredientScreen = '/food/food';
+  static const String individualIngredientScreen = '/food/food';
+  static const String addIngredientScreen = '/food/add';
 
   static const String shoppingCartScreen = '/cart';
 
@@ -33,7 +34,8 @@ class Routes {
     recipeScreen: (context) => RecipeScreen(),
 
     ingredientsScreen: (context) => IngredientsScreen(),
-    ingredientScreen: (context) => IngredientPage(),
+    individualIngredientScreen: (context) => IngredientPage(),
+    addIngredientScreen: (context) => AddIngredientPage(),
 
     shoppingCartScreen: (context) => ShoppingCartScreen(),
 

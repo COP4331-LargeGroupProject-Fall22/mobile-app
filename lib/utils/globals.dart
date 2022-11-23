@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smart_chef/utils/colors.dart';
 
 const double bottomIconSize = 55;
+const double bottomRowHeight = 90;
 final globalDecoration = InputDecoration(
     contentPadding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
     filled: true,
@@ -10,6 +11,28 @@ final globalDecoration = InputDecoration(
       borderRadius: BorderRadius.circular(20),
       borderSide: const BorderSide(color: textFieldBorder),
     ));
+
+final bottomRowIconTextStyle = TextStyle(fontSize: 12, color: bottomRowIcon);
+final bottomRowOnScreenTextStyle = TextStyle(fontSize: 12, color: mainScheme);
+
+final searchField = TextField(
+  maxLines: 1,
+  decoration: const InputDecoration.collapsed(
+    hintText: 'Search...',
+    hintStyle: TextStyle(
+      color: searchFieldText,
+      fontSize: 18,
+    ),
+  ),
+  style: const TextStyle(
+    color: searchFieldText,
+    fontSize: 18,
+  ),
+  textInputAction: TextInputAction.done,
+  onChanged: (query) {
+    // TODO(15): Dynamic search
+  },
+);
 
 void errorDialog(BuildContext context) {
   showDialog(
@@ -41,6 +64,51 @@ void errorDialog(BuildContext context) {
       );
     },
   );
+}
+bool deleteDialog(BuildContext context) {
+  bool delete = false;
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('Deleting your account?'),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10)),
+        elevation: 15,
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              delete = true;
+              Navigator.pop(context, 'Cancel');
+            },
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.red, fontSize: 18),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              delete = true;
+              Navigator.pop(context, 'delete');
+            },
+            child: const Text(
+              'Delete my account',
+              style: TextStyle(color: Colors.red, fontSize: 18),
+            ),
+          )
+        ],
+        content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const <Widget>[
+              Flexible(
+                  child: Text(
+                      'Are you sure you want to delete your account?')),
+            ]),
+      );
+    },
+  );
+  return delete;
 }
 
 final invalidTextField = globalDecoration.copyWith(

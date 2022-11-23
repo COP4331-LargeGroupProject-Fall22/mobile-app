@@ -47,7 +47,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
           centerTitle: true,
           backgroundColor: Colors.white,
           leading: IconButton(
-            // TODO(): Make search functionality
+            // TODO(27): Make search functionality
             onPressed: () {},
             icon: Icon(
               Icons.search,
@@ -62,7 +62,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
                 color: Colors.black,
               ),
               iconSize: 35,
-              // TODO(): Make sort functionality
+              // TODO(28): Make sort functionality
               onPressed: () {},
             ),
           ]),
@@ -73,7 +73,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
             decoration: BoxDecoration(color: Colors.white),
-            // TODO(): Make Shopping Cart Screen UI
+            // TODO(29): Make Shopping Cart Screen UI
             child: Text("To be changed"),
           ),
         ),
@@ -103,9 +103,9 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
                           iconSize: bottomIconSize,
                           color: bottomRowIcon,
                         ),
-                        const Text(
+                        Text(
                           'Ingredients',
-                          style: TextStyle(fontSize: 12, color: bottomRowIcon),
+                          style: bottomRowIconTextStyle,
                           textAlign: TextAlign.center,
                         )
                       ])),
@@ -122,9 +122,9 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
                       color: bottomRowIcon,
                       iconSize: bottomIconSize,
                     ),
-                    const Text(
+                    Text(
                       'Recipes',
-                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
+                      style: bottomRowIconTextStyle,
                       textAlign: TextAlign.right,
                     ),
                   ],
@@ -141,9 +141,9 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
                       iconSize: bottomIconSize,
                       color: mainScheme,
                     ),
-                    const Text(
+                    Text(
                       'Shopping Cart',
-                      style: TextStyle(fontSize: 12, color: mainScheme),
+                      style: bottomRowOnScreenTextStyle,
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -162,9 +162,9 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
                       iconSize: bottomIconSize,
                       color: bottomRowIcon,
                     ),
-                    const Text(
+                    Text(
                       'User Profile',
-                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
+                      style: bottomRowIconTextStyle,
                       textAlign: TextAlign.center,
                     )
                   ],
