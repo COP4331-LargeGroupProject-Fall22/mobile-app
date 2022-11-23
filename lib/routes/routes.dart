@@ -3,22 +3,44 @@ import 'package:smart_chef/screens/StartupScreen.dart';
 import 'package:smart_chef/screens/RecipeScreen.dart';
 import 'package:smart_chef/screens/IngredientScreen.dart';
 import 'package:smart_chef/screens/ShoppingCartScreen.dart';
-import 'package:smart_chef/screens/UserProfileScreen.dart';
+import 'package:smart_chef/screens/UsersProfileScreen.dart';
 
 class Routes {
   static const String startupScreen = '/startup';
+  static const String loginScreen = '/login';
+  static const String registerScreen = '/register';
+  static const String verificationScreen = '/verification';
+
   static const String recipeScreen = '/recipe';
-  static const String ingredientScreen = '/food';
+
+  static const String ingredientsScreen = '/food';
+  static const String individualIngredientScreen = '/food/food';
+  static const String addIngredientScreen = '/food/add';
+
   static const String shoppingCartScreen = '/cart';
+
   static const String userProfileScreen = '/user';
+  static const String editUserProfileScreen = '/user/edit';
+  static const String editPasswordScreen = '/user/changePassword';
 
   // routes of pages in the app
   static Map<String, Widget Function(BuildContext)> get getroutes => {
     '/': (context) => StartupScreen(),
     startupScreen: (context) => StartupScreen(),
+    loginScreen: (context) => LogInPage(),
+    registerScreen: (context) => RegisterPage(),
+    verificationScreen: (context) => VerificationPage(),
+
     recipeScreen: (context) => RecipeScreen(),
-    ingredientScreen: (context) => IngredientsScreen(),
+
+    ingredientsScreen: (context) => IngredientsScreen(),
+    individualIngredientScreen: (context) => IngredientPage(),
+    addIngredientScreen: (context) => AddIngredientPage(),
+
     shoppingCartScreen: (context) => ShoppingCartScreen(),
+
     userProfileScreen: (context) => UserProfileScreen(),
+    editUserProfileScreen: (context) => EditUserProfilePage(),
+    editPasswordScreen: (context) => EditPasswordPage(),
   };
 }
