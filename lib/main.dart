@@ -12,6 +12,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: '',
       debugShowCheckedModeBanner: false,
+      restorationScopeId: 'root',
       theme: ThemeData(),
       routes: Routes.getroutes,
     );

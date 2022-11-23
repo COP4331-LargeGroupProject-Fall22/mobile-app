@@ -103,7 +103,7 @@ class _StartPageState extends State<StartPage> {
                                 width: MediaQuery.of(context).size.width / 2,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    Navigator.pushNamed(context, '/login');
+                                    Navigator.restorablePushNamed(context, '/login');
                                   },
                                   style: ElevatedButton.styleFrom(
                                     shape: RoundedRectangleBorder(
@@ -136,7 +136,7 @@ class _StartPageState extends State<StartPage> {
                                 width: MediaQuery.of(context).size.width / 2,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    Navigator.pushNamed(context, '/register');
+                                    Navigator.restorablePushNamed(context, '/register');
                                   },
                                   style: ElevatedButton.styleFrom(
                                     shape: RoundedRectangleBorder(
@@ -411,7 +411,6 @@ class _LogInPageState extends State<LogInPage> {
                                 try {
                                   final ret =
                                       await Authentication.login(payload);
-                                  print(ret.statusCode);
                                   if (ret.statusCode == 200) {
                                     var tokens = json.decode(ret.body);
                                     user.defineTokens(tokens);
@@ -423,7 +422,7 @@ class _LogInPageState extends State<LogInPage> {
                                       user.setPassword(_password.value.text.trim());
 
                                       setState(() => clearFields());
-                                      Navigator.pushNamedAndRemoveUntil(
+                                      Navigator.restorablePushNamedAndRemoveUntil(
                                           context,
                                           '/food',
                                           ((Route<dynamic> route) => false));
@@ -453,7 +452,7 @@ class _LogInPageState extends State<LogInPage> {
                                                     user.username =
                                                         _username.value.text;
                                                     Navigator
-                                                        .pushReplacementNamed(
+                                                        .restorablePushReplacementNamed(
                                                         context,
                                                         '/verification');
                                                   },
@@ -1003,7 +1002,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                             final ret =
                                                 await Authentication.register(
                                                     payload);
-                                            print(ret.statusCode);
                                             if (ret.statusCode == 200) {
                                               errorMessage = '';
                                               Map<String, dynamic> package = {
@@ -1017,7 +1015,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                                 errorMessage = '';
                                                 user.username =
                                                     _email.value.text;
-                                                Navigator.pushNamed(
+                                                Navigator.restorablePushNamed(
                                                     context, '/verification');
                                               }
                                             } else {
@@ -1068,7 +1066,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 onPressed: () {
                                   clearFields();
                                   setState(() {
-                                    Navigator.pushReplacementNamed(
+                                    Navigator.restorablePushReplacementNamed(
                                         context, '/login');
                                   });
                                 },
@@ -1295,20 +1293,18 @@ class _VerificationPageState extends State<VerificationPage> {
                           try {
                             final res =
                                 await Authentication.verifyCode(payload);
-                            print(res.statusCode);
                             if (res.statusCode == 200) {
                               errorMessage = 'Account successfully created!';
                               await Future.delayed(Duration(seconds: 1));
                               clearFields();
 
-                              Navigator.pushReplacementNamed(context, '/login');
+                              Navigator.restorablePushReplacementNamed(context, '/login');
                             } else {
                               if (res.statusCode == 401) {
                                 Map<String, dynamic> name = {
                                   'username': user.username,
                                 };
                                 final ret = await Authentication.sendCode(name);
-                                //print(ret.statusCode);
                               }
                               errorMessage =
                                   verifyCodeErrorString(res.statusCode);

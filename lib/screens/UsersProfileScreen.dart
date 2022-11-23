@@ -262,7 +262,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                             child: ElevatedButton(
                               onPressed: () {
                                 setState(() {
-                                  Navigator.pushNamed(context, '/user/edit');
+                                  Navigator.restorablePushNamed(context, '/user/edit');
                                 });
                               },
                               style: ElevatedButton.styleFrom(
@@ -290,7 +290,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                             child: ElevatedButton(
                               onPressed: () {
                                 setState(() {
-                                  Navigator.pushNamed(
+                                  Navigator.restorablePushNamed(
                                       context, '/user/changePassword');
                                 });
                               },
@@ -342,7 +342,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       children: <Widget>[
                         IconButton(
                           onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/food');
+                            Navigator.restorablePushReplacementNamed(context, '/food');
                           },
                           icon: const Icon(Icons.egg),
                           iconSize: 55,
@@ -361,7 +361,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/recipe');
+                        Navigator.restorablePushReplacementNamed(context, '/recipe');
                       },
                       icon: const Icon(Icons.restaurant),
                       color: bottomRowIcon,
@@ -382,7 +382,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/cart');
+                        Navigator.restorablePushReplacementNamed(context, '/cart');
                       },
                       icon: const Icon(Icons.shopping_cart),
                       iconSize: 55,
@@ -873,7 +873,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                       children: <Widget>[
                         IconButton(
                           onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/food');
+                            Navigator.restorablePushReplacementNamed(context, '/food');
                           },
                           icon: Icon(Icons.egg),
                           iconSize: 55,
@@ -892,7 +892,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/recipe');
+                        Navigator.restorablePushReplacementNamed(context, '/recipe');
                       },
                       icon: Icon(Icons.restaurant),
                       color: bottomRowIcon,
@@ -913,7 +913,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/cart');
+                        Navigator.restorablePushReplacementNamed(context, '/cart');
                       },
                       icon: Icon(Icons.shopping_cart),
                       iconSize: 55,
@@ -1318,7 +1318,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                       children: <Widget>[
                         IconButton(
                           onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/food');
+                            Navigator.restorablePushReplacementNamed(context, '/food');
                           },
                           icon: const Icon(Icons.egg),
                           iconSize: 55,
@@ -1337,7 +1337,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/recipe');
+                        Navigator.restorablePushReplacementNamed(context, '/recipe');
                       },
                       icon: const Icon(Icons.restaurant),
                       color: bottomRowIcon,
@@ -1358,7 +1358,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/cart');
+                        Navigator.restorablePushReplacementNamed(context, '/cart');
                       },
                       icon: const Icon(Icons.shopping_cart),
                       iconSize: 55,

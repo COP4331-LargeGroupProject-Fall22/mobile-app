@@ -254,7 +254,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/recipe');
+                        Navigator.restorablePushReplacementNamed(context, '/recipe');
                       },
                       icon: Icon(Icons.restaurant),
                       color: bottomRowIcon,
@@ -275,7 +275,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/cart');
+                        Navigator.restorablePushReplacementNamed(context, '/cart');
                       },
                       icon: Icon(Icons.shopping_cart),
                       iconSize: bottomIconSize,
@@ -296,7 +296,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/user');
+                        Navigator.restorablePushReplacementNamed(context, '/user');
                       },
                       icon: Icon(Icons.person),
                       iconSize: bottomIconSize,
@@ -316,7 +316,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
       ),
       floatingActionButton: FloatingActionButton.large(
         onPressed: () {
-          Navigator.pushNamed(context, '/food/add');
+          Navigator.restorablePushNamed(context, '/food/add');
         },
         backgroundColor: mainScheme,
         foregroundColor: Colors.white,
@@ -343,7 +343,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
       ingredients.add(
         GestureDetector(
           onTap: () {
-            Navigator.pushNamed(context, '/food/food');
+            Navigator.restorablePushNamed(context, '/food/food');
           },
           child: IngredientTile(),
         ),
@@ -476,7 +476,9 @@ class _IngredientPageState extends State<IngredientPage> {
           backgroundColor: Colors.white,
           actions: [
             IconButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.restorablePushNamed(context, '/food/edit');
+              },
               icon: const Icon(Icons.edit, color: Colors.black),
               iconSize: 28,
             ),
@@ -510,7 +512,19 @@ class _IngredientPageState extends State<IngredientPage> {
                 ),
                 child: const Text('Ingredient image'),
               ),
-              Row (
+              Container(
+                width: MediaQuery.of(context).size.width,
+                margin: EdgeInsets.symmetric(vertical: 20),
+                child: const Text(
+                  'Food Item',
+                  style: TextStyle(
+                    fontSize: 36,
+                    color: Colors.black,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   Column(
@@ -569,83 +583,71 @@ class _IngredientPageState extends State<IngredientPage> {
                       ),
                     ],
                   ),
-                ]
+                ],
               ),
               const SizedBox(
                 height: 20,
               ),
-              Row (
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Column(
-                      children: <Widget>[
-                        Container(
-                          child: const Text(
-                            'Location',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.black,
-                            ),
-                            textAlign: TextAlign.center,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Column(
+                    children: <Widget>[
+                      Container(
+                        child: const Text(
+                          'Location',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.black,
                           ),
+                          textAlign: TextAlign.center,
                         ),
-                        Container(
-                          width: MediaQuery.of(context).size.width / 2.2,
-                          margin: const EdgeInsets.only(right: 10),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 5),
-                          child: Text(
-                            '{maybe}',
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.black,
-                            ),
-                            textAlign: TextAlign.left,
+                      ),
+                      Container(
+                        width: MediaQuery.of(context).size.width / 2.2,
+                        margin: const EdgeInsets.only(right: 10),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 5),
+                        child: Text(
+                          '{maybe}',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.black,
                           ),
+                          textAlign: TextAlign.left,
                         ),
-                      ],
-                    ),
-                    Column(
-                      children: <Widget>[
-                        Container(
-                          child: const Text(
-                            'Expiration Date',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.black,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        Container(
-                          width: MediaQuery.of(context).size.width / 2.2,
-                          margin: const EdgeInsets.only(right: 10),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 5),
-                          child: Text(
-                            '{dates}',
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.black,
-                            ),
-                            textAlign: TextAlign.left,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ]
-              ),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                margin: EdgeInsets.only(top: 20),
-                child: const Text(
-                  'Food Item',
-                  style: TextStyle(
-                    fontSize: 36,
-                    color: Colors.black,
+                      ),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
-                ),
+                  Column(
+                    children: <Widget>[
+                      Container(
+                        child: const Text(
+                          'Expiration Date(s)',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.black,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      Container(
+                        width: MediaQuery.of(context).size.width / 2.2,
+                        margin: const EdgeInsets.only(right: 10),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 5),
+                        child: Text(
+                          '{dates}',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.black,
+                          ),
+                          textAlign: TextAlign.left,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
               Container(
                 width: MediaQuery.of(context).size.width,
@@ -742,7 +744,7 @@ class _IngredientPageState extends State<IngredientPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/recipe');
+                        Navigator.restorablePushReplacementNamed(context, '/recipe');
                       },
                       icon: const Icon(Icons.restaurant),
                       color: bottomRowIcon,
@@ -763,7 +765,7 @@ class _IngredientPageState extends State<IngredientPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/cart');
+                        Navigator.restorablePushReplacementNamed(context, '/cart');
                       },
                       icon: const Icon(Icons.shopping_cart),
                       iconSize: bottomIconSize,
@@ -784,7 +786,7 @@ class _IngredientPageState extends State<IngredientPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/user');
+                        Navigator.restorablePushReplacementNamed(context, '/user');
                       },
                       icon: const Icon(Icons.person),
                       iconSize: bottomIconSize,
@@ -811,6 +813,448 @@ class _IngredientPageState extends State<IngredientPage> {
   //   ingredientInfo = a json of some sort;
   // }
   //
+}
+
+class EditIngredientPage extends StatefulWidget {
+  @override
+  _EditIngredientPageState createState() => _EditIngredientPageState();
+}
+
+class _EditIngredientPageState extends State<EditIngredientPage> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  final _quantity = TextEditingController();
+  bool unfilledQuantity = false;
+
+  final _location = TextEditingController();
+  bool unfilledLocation = false;
+
+  final _expirationDate = TextEditingController();
+  bool unfilledExpirationDate = false;
+
+  final _brands = TextEditingController();
+  bool unfilledBrands = false;
+
+  final _tags = TextEditingController();
+  bool unfilledTags = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+          backgroundColor: Colors.white,
+          actions: [
+            IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.check, color: Colors.red),
+              iconSize: 28,
+            ),
+          ],
+          leading: IconButton(
+            icon: const Icon(Icons.navigate_before, color: Colors.black),
+            iconSize: 35,
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          )),
+      body: GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Container(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height - bottomRowHeight,
+          margin: const EdgeInsets.fromLTRB(5, 10, 5, 0),
+          child: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                Container(
+                  width: MediaQuery.of(context).size.width / 2,
+                  height: MediaQuery.of(context).size.width / 2,
+                  margin: const EdgeInsets.symmetric(vertical: 20),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black, width: 3),
+                    color: Colors.grey,
+                  ),
+                  child: const Text('Ingredient image'),
+                ),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.symmetric(vertical: 20),
+                  child: const Text(
+                    'Food Item',
+                    style: TextStyle(
+                      fontSize: 36,
+                      color: Colors.black,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Column(
+                        children: <Widget>[
+                          Container(
+                            child: const Text(
+                              'Quantity',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          Container(
+                            width: MediaQuery.of(context).size.width / 2.2,
+                            margin: const EdgeInsets.only(right: 10),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 5, horizontal: 5),
+                            decoration: const BoxDecoration(
+                              color: mainScheme,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10)),
+                            ),
+                            child: TextField(
+                              maxLines: 1,
+                              controller: _quantity,
+                              decoration: unfilledQuantity
+                                  ? invalidTextField.copyWith(
+                                      hintText: 'Enter Quantity')
+                                  : globalDecoration.copyWith(
+                                      hintText: 'Enter Quantity'),
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.black,
+                              ),
+                              onChanged: (quantity) {
+                                if (quantity.isEmpty) {
+                                  setState(() => unfilledQuantity = true);
+                                } else {
+                                  unfilledQuantity = false;
+                                }
+                              },
+                              textAlign: TextAlign.left,
+                              textInputAction: TextInputAction.next,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        children: <Widget>[
+                          Container(
+                            child: const Text(
+                              'Food Group',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          Container(
+                            width: MediaQuery.of(context).size.width / 2.2,
+                            margin: const EdgeInsets.only(right: 10),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 10, horizontal: 5),
+                            child: Text(
+                              '{group}',
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Colors.black,
+                              ),
+                              textAlign: TextAlign.left,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ]),
+                const SizedBox(
+                  height: 20,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Expanded(
+                      flex: 5,
+                      child: Column(
+                        children: <Widget>[
+                          Container(
+                            child: const Text(
+                              'Location',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 5),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 5, horizontal: 5),
+                            decoration: const BoxDecoration(
+                              color: mainScheme,
+                              borderRadius:
+                              BorderRadius.all(Radius.circular(10)),
+                            ),
+                            child: TextField(
+                              maxLines: 1,
+                              controller: _location,
+                              decoration: globalDecoration.copyWith(
+                                  hintText: 'Enter Location'),
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.black,
+                              ),
+                              onChanged: (location) {},
+                              textAlign: TextAlign.left,
+                              textInputAction: TextInputAction.next,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      flex: 5,
+                      child: Column(
+                        children: <Widget>[
+                          Container(
+                            child: const Text(
+                              'Expiration Date(s)',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 5),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 5, horizontal: 5),
+                            decoration: const BoxDecoration(
+                              color: mainScheme,
+                              borderRadius:
+                              BorderRadius.all(Radius.circular(10)),
+                            ),
+                            child: TextField(
+                              maxLines: 1,
+                              controller: _expirationDate,
+                              decoration: unfilledExpirationDate
+                                  ? invalidTextField.copyWith(
+                                  hintText: 'Enter Expiration Date')
+                                  : globalDecoration.copyWith(
+                                  hintText: 'Enter Expiration Date'),
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.black,
+                              ),
+                              onChanged: (location) {},
+                              textAlign: TextAlign.left,
+                              textInputAction: TextInputAction.next,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  padding: EdgeInsets.fromLTRB(5, 20, 5, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width,
+                        child: Text(
+                          'Nutrition Values: {amount}',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.black,
+                          ),
+                          textAlign: TextAlign.left,
+                        ),
+                      ),
+                      Row(
+                        children: <Widget>[
+                          Text(
+                            '\nBrands: ',
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.black,
+                            ),
+                            textAlign: TextAlign.left,
+                          ),
+                          Expanded(
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 10),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 5, horizontal: 5),
+                              decoration: const BoxDecoration(
+                                color: mainScheme,
+                                borderRadius:
+                                BorderRadius.all(Radius.circular(10)),
+                              ),
+                              child: TextField(
+                                maxLines: 1,
+                                controller: _brands,
+                                decoration: unfilledBrands
+                                    ? invalidTextField.copyWith(
+                                    hintText: 'Enter Brands')
+                                    : globalDecoration.copyWith(
+                                    hintText: 'Enter Brands'),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black,
+                                ),
+                                onChanged: (location) {},
+                                textAlign: TextAlign.left,
+                                textInputAction: TextInputAction.next,
+                              ),
+                            ),
+                          ),
+                        ]
+                      ),
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width,
+                        child: Text(
+                          '\nTags: {maybe}',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.black,
+                          ),
+                          textAlign: TextAlign.left,
+                        ),
+                      ),
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width,
+                        child: Text(
+                          '\nAllergens: {dates}',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.black,
+                          ),
+                          textAlign: TextAlign.left,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      extendBody: false,
+      extendBodyBehindAppBar: false,
+      bottomNavigationBar: BottomAppBar(
+        child: Container(
+          height: bottomRowHeight,
+          width: MediaQuery.of(context).size.width,
+          decoration: BoxDecoration(
+            border: Border(
+                top: BorderSide(color: Colors.black.withOpacity(.2), width: 3)),
+            color: Colors.white,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              SizedBox(
+                  width: MediaQuery.of(context).size.width / 4,
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        IconButton(
+                          onPressed: () {},
+                          icon: const Icon(Icons.egg),
+                          iconSize: bottomIconSize,
+                          color: mainScheme,
+                        ),
+                        const Text(
+                          'Ingredients',
+                          style: TextStyle(fontSize: 12, color: mainScheme),
+                          textAlign: TextAlign.center,
+                        )
+                      ])),
+              SizedBox(
+                width: MediaQuery.of(context).size.width / 4,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    IconButton(
+                      onPressed: () {
+                        Navigator.restorablePushReplacementNamed(context, '/recipe');
+                      },
+                      icon: const Icon(Icons.restaurant),
+                      color: bottomRowIcon,
+                      iconSize: bottomIconSize,
+                    ),
+                    Text(
+                      'Recipes',
+                      style: bottomRowIconTextStyle,
+                      textAlign: TextAlign.right,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width / 4,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    IconButton(
+                      onPressed: () {
+                        Navigator.restorablePushReplacementNamed(context, '/cart');
+                      },
+                      icon: const Icon(Icons.shopping_cart),
+                      iconSize: bottomIconSize,
+                      color: bottomRowIcon,
+                    ),
+                    Text(
+                      'Shopping Cart',
+                      style: bottomRowIconTextStyle,
+                      textAlign: TextAlign.center,
+                    )
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width / 4,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    IconButton(
+                      onPressed: () {
+                        Navigator.restorablePushReplacementNamed(context, '/user');
+                      },
+                      icon: const Icon(Icons.person),
+                      iconSize: bottomIconSize,
+                      color: bottomRowIcon,
+                    ),
+                    Text(
+                      'User Profile',
+                      style: bottomRowIconTextStyle,
+                      textAlign: TextAlign.center,
+                    )
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+//TODO(17): Attach API to get specified ingredient information
+//
+// List fetchIngredient(int ID) {
+//   ingredientInfo = a json of some sort;
+// }
+//
 }
 
 class AddIngredientPage extends StatefulWidget {
@@ -976,7 +1420,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/recipe');
+                        Navigator.restorablePushReplacementNamed(context, '/recipe');
                       },
                       icon: const Icon(Icons.restaurant),
                       color: bottomRowIcon,
@@ -997,7 +1441,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/cart');
+                        Navigator.restorablePushReplacementNamed(context, '/cart');
                       },
                       icon: const Icon(Icons.shopping_cart),
                       iconSize: bottomIconSize,
@@ -1018,7 +1462,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/user');
+                        Navigator.restorablePushReplacementNamed(context, '/user');
                       },
                       icon: const Icon(Icons.person),
                       iconSize: bottomIconSize,
