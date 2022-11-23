@@ -183,7 +183,8 @@ class _LogInPageState extends State<LogInPage> {
     super.initState();
   }
 
-  int state = 0;
+  //TODO(): Reset Password Functionality
+  //int state = 0;
   // Widget detectState() {
   //   if (state == 1) {
   //     return buildForgot();
@@ -412,7 +413,6 @@ class _LogInPageState extends State<LogInPage> {
                                       await Authentication.login(payload);
                                   print(ret.statusCode);
                                   if (ret.statusCode == 200) {
-                                    setState(() => clearFields());
                                     var tokens = json.decode(ret.body);
                                     user.defineTokens(tokens);
 
@@ -420,6 +420,9 @@ class _LogInPageState extends State<LogInPage> {
                                     if (res.statusCode == 200) {
                                       var data = json.decode(res.body);
                                       user.defineUserData(data);
+                                      user.setPassword(_password.value.text.trim());
+
+                                      setState(() => clearFields());
                                       Navigator.pushNamedAndRemoveUntil(
                                           context,
                                           '/food',
@@ -429,8 +432,7 @@ class _LogInPageState extends State<LogInPage> {
                                           getDataRetrieveError(res.statusCode);
                                     }
                                   } else {
-                                    // errorMessage =
-                                    //     getLogInError(ret.statusCode);
+                                    errorMessage = getLogInError(ret.statusCode);
                                     if (ret.statusCode == 403) {
                                       user.username =
                                           _username.value.text.trim();
@@ -461,7 +463,7 @@ class _LogInPageState extends State<LogInPage> {
                                                         color: Colors.red,
                                                         fontSize: 18),
                                                   ),
-                                                )
+                                                ),
                                               ],
                                               content: Column(
                                                   mainAxisSize:
@@ -479,10 +481,8 @@ class _LogInPageState extends State<LogInPage> {
                                   errorMessage = 'Could not connect to server';
                                   print('Could not connect to /auth/user');
                                 }
-                                setState(() {});
-                              } else {
-                                setState(() {});
                               }
+                              setState(() {});
                             },
                             style: ElevatedButton.styleFrom(
                               shape: RoundedRectangleBorder(
@@ -520,7 +520,7 @@ class _LogInPageState extends State<LogInPage> {
                         clearFields();
                         topMessage = 'Forgot Your\nPassword?';
                         setState(() {
-                          state = 1;
+                          //state = 1;
                         });
                       },
                       child: const Text('Forgot Your Password?'),
@@ -535,6 +535,7 @@ class _LogInPageState extends State<LogInPage> {
     );
   }
 
+  //TODO(): Add support for reseting password
   // Widget buildForgot() {
   //   return Column(
   //     crossAxisAlignment: CrossAxisAlignment.center,
@@ -651,7 +652,7 @@ class _LogInPageState extends State<LogInPage> {
   //           onPressed: () {
   //             setState(() {
   //               if (allLoginFieldsValid(/*hasPassword=*/ false)) {
-  //                 //TODO Add support for reseting password
+  //
   //                 setState(() {
   //                   _email.clear();
   //                 });
@@ -1430,13 +1431,14 @@ class _VerificationPageState extends State<VerificationPage> {
                           setState(() => unfilledCode = true);
                         } else {
                           Map<String, dynamic> payload = {
-                            'username': user.username,
-                            'code': _code.value.text.trim()
+                            'username': user.username.trim(),
+                            'verificationCode': int.parse(_code.value.text.trim())
                           };
 
                           try {
                             final res =
                                 await Authentication.verifyCode(payload);
+                            print(res.statusCode);
                             if (res.statusCode == 200) {
                               errorMessage = 'Account successfully created!';
                               await Future.delayed(Duration(seconds: 1));
@@ -1444,11 +1446,13 @@ class _VerificationPageState extends State<VerificationPage> {
 
                               Navigator.pushReplacementNamed(context, '/login');
                             } else {
-                              Map<String, dynamic> name = {
-                                'username': user.username,
-                              };
-                              final ret = await Authentication.sendCode(name);
-                              print(ret.statusCode);
+                              if (res.statusCode == 401) {
+                                Map<String, dynamic> name = {
+                                  'username': user.username,
+                                };
+                                final ret = await Authentication.sendCode(name);
+                                //print(ret.statusCode);
+                              }
                               errorMessage =
                                   verifyCodeErrorString(res.statusCode);
                             }
@@ -1503,8 +1507,10 @@ class _VerificationPageState extends State<VerificationPage> {
     switch (statusCode) {
       case 400:
         return "Verification code is invalid!";
+      case 401:
+        return "Verification code expired! Sending new one!";
       default:
-        return 'Verification code expired. Resending code.';
+        return 'Could not send code.';
     }
   }
 }
