@@ -5,6 +5,8 @@ import 'package:smart_chef/utils/colors.dart';
 const double bottomIconSize = 55;
 const double bottomRowHeight = 90;
 const double topBarIconSize = 28;
+const double ingredientInfoFontSize = 18;
+const double addIngredientPageTextSize = 32;
 
 bool ingredientPage = true;
 bool recipePage = false;

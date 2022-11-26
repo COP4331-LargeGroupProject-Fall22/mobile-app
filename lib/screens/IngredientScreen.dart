@@ -163,7 +163,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                   title: Text(
                     checkListItems[index]["title"],
                     style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: ingredientInfoFontSize,
                       color: Colors.black,
                     ),
                   ),
@@ -304,7 +304,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
     );
   }
 
-  //TODO(17): function to get ingredients from api. Will also handle sorting
+  // TODO(17): function to get ingredients from api. Will also handle sorting
   /*Future<List> GrabIngredients(int sortBy) {
     return;
   }*/
@@ -374,14 +374,14 @@ class _IngredientsPageState extends State<IngredientsPage> {
                   ),
                   child: Text(sorted,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: ingredientInfoFontSize,
                         color: Colors.black,
                       ))),
               Expanded(child: ingreds)
             ])));
   }
 
-  //TODO(18): integrate API into making ingredients
+  // TODO(18): integrate API into making ingredients
   Widget IngredientTile() {
     double tileHeight = 200;
 
@@ -457,7 +457,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                       child: Text(
                         'To Be Changed',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: ingredientInfoFontSize,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
@@ -551,7 +551,7 @@ class _IngredientPageState extends State<IngredientPage> {
                       const Text(
                         'Quantity',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: ingredientInfoFontSize,
                           color: Colors.black,
                         ),
                         textAlign: TextAlign.center,
@@ -564,7 +564,7 @@ class _IngredientPageState extends State<IngredientPage> {
                         child: Text(
                           '{amount}',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: ingredientInfoFontSize,
                             color: Colors.black,
                           ),
                           textAlign: TextAlign.left,
@@ -577,7 +577,7 @@ class _IngredientPageState extends State<IngredientPage> {
                       const Text(
                         'Food Group',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: ingredientInfoFontSize,
                           color: Colors.black,
                         ),
                         textAlign: TextAlign.center,
@@ -590,7 +590,7 @@ class _IngredientPageState extends State<IngredientPage> {
                         child: Text(
                           '{group}',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: ingredientInfoFontSize,
                             color: Colors.black,
                           ),
                           textAlign: TextAlign.left,
@@ -611,7 +611,7 @@ class _IngredientPageState extends State<IngredientPage> {
                       const Text(
                         'Location',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: ingredientInfoFontSize,
                           color: Colors.black,
                         ),
                         textAlign: TextAlign.center,
@@ -624,7 +624,7 @@ class _IngredientPageState extends State<IngredientPage> {
                         child: Text(
                           '{maybe}',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: ingredientInfoFontSize,
                             color: Colors.black,
                           ),
                           textAlign: TextAlign.left,
@@ -637,7 +637,7 @@ class _IngredientPageState extends State<IngredientPage> {
                       const Text(
                         'Expiration Date(s)',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: ingredientInfoFontSize,
                           color: Colors.black,
                         ),
                         textAlign: TextAlign.center,
@@ -650,7 +650,7 @@ class _IngredientPageState extends State<IngredientPage> {
                         child: Text(
                           '{dates}',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: ingredientInfoFontSize,
                             color: Colors.black,
                           ),
                           textAlign: TextAlign.left,
@@ -671,7 +671,7 @@ class _IngredientPageState extends State<IngredientPage> {
                       child: Text(
                         'Nutrition Values: {amount}',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: ingredientInfoFontSize,
                           color: Colors.black,
                         ),
                         textAlign: TextAlign.left,
@@ -682,7 +682,7 @@ class _IngredientPageState extends State<IngredientPage> {
                       child: Text(
                         '\nBrands: {group}',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: ingredientInfoFontSize,
                           color: Colors.black,
                         ),
                         textAlign: TextAlign.left,
@@ -693,7 +693,7 @@ class _IngredientPageState extends State<IngredientPage> {
                       child: Text(
                         '\nTags: {maybe}',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: ingredientInfoFontSize,
                           color: Colors.black,
                         ),
                         textAlign: TextAlign.left,
@@ -704,7 +704,7 @@ class _IngredientPageState extends State<IngredientPage> {
                       child: Text(
                         '\nAllergens: {dates}',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: ingredientInfoFontSize,
                           color: Colors.black,
                         ),
                         textAlign: TextAlign.left,
@@ -823,7 +823,7 @@ class _IngredientPageState extends State<IngredientPage> {
     );
   }
 
-  //TODO(17): Attach API to get specified ingredient information
+  // TODO(17): Attach API to get specified ingredient information
   //
   // List fetchIngredient(int ID) {
   //   ingredientInfo = a json of some sort;
@@ -870,7 +870,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
           ],
           leading: IconButton(
             icon: const Icon(Icons.navigate_before, color: Colors.black),
-            iconSize: 35,
+            iconSize: topBarIconSize + 7,
             onPressed: () {
               Navigator.pop(context);
             },
@@ -917,7 +917,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                           const Text(
                             'Quantity',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: ingredientInfoFontSize,
                               color: Colors.black,
                             ),
                             textAlign: TextAlign.center,
@@ -940,14 +940,14 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                                   : globalDecoration.copyWith(
                                       hintText: 'Enter Quantity'),
                               style: const TextStyle(
-                                fontSize: 20,
+                                fontSize: ingredientInfoFontSize,
                                 color: Colors.black,
                               ),
                               onChanged: (quantity) {
                                 if (quantity.isEmpty) {
                                   setState(() => unfilledQuantity = true);
                                 } else {
-                                  unfilledQuantity = false;
+                                  setState(() => unfilledQuantity = false);
                                 }
                               },
                               textAlign: TextAlign.left,
@@ -964,7 +964,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                           const Text(
                             'Food Group',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: ingredientInfoFontSize,
                               color: Colors.black,
                             ),
                             textAlign: TextAlign.center,
@@ -977,7 +977,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                             child: Text(
                               '{group}',
                               style: TextStyle(
-                                fontSize: 20,
+                                fontSize: ingredientInfoFontSize,
                                 color: Colors.black,
                               ),
                               textAlign: TextAlign.left,
@@ -1001,7 +1001,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                           const Text(
                             'Location',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: ingredientInfoFontSize,
                               color: Colors.black,
                             ),
                             textAlign: TextAlign.center,
@@ -1021,7 +1021,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                               decoration: globalDecoration.copyWith(
                                   hintText: 'Enter Location'),
                               style: const TextStyle(
-                                fontSize: 20,
+                                fontSize: ingredientInfoFontSize,
                                 color: Colors.black,
                               ),
                               onChanged: (location) {},
@@ -1039,7 +1039,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                           const Text(
                             'Expiration Date(s)',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: ingredientInfoFontSize,
                               color: Colors.black,
                             ),
                             textAlign: TextAlign.center,
@@ -1062,7 +1062,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                                   : globalDecoration.copyWith(
                                       hintText: 'Enter Expiration Date'),
                               style: const TextStyle(
-                                fontSize: 20,
+                                fontSize: ingredientInfoFontSize,
                                 color: Colors.black,
                               ),
                               onChanged: (location) {},
@@ -1086,7 +1086,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                         child: Text(
                           'Nutrition Values: {amount}',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: ingredientInfoFontSize,
                             color: Colors.black,
                           ),
                           textAlign: TextAlign.left,
@@ -1096,7 +1096,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                         Text(
                           '\nBrands: ',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: ingredientInfoFontSize,
                             color: Colors.black,
                           ),
                           textAlign: TextAlign.left,
@@ -1135,7 +1135,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                         child: Text(
                           '\nTags: {maybe}',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: ingredientInfoFontSize,
                             color: Colors.black,
                           ),
                           textAlign: TextAlign.left,
@@ -1146,7 +1146,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                         child: Text(
                           '\nAllergens: {dates}',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: ingredientInfoFontSize,
                             color: Colors.black,
                           ),
                           textAlign: TextAlign.left,
@@ -1266,7 +1266,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
     );
   }
 
-//TODO(17): Attach API to get specified ingredient information
+// TODO(17): Attach API to get specified ingredient information
 //
 // List fetchIngredient(int ID) {
 //   ingredientInfo = a json of some sort;
@@ -1318,7 +1318,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                       child: Text(
                         'Search for an ingredient to get started',
                         style: TextStyle(
-                          fontSize: 32,
+                          fontSize: addIngredientPageTextSize,
                           color: Colors.black,
                           fontWeight: FontWeight.w400,
                         ),
@@ -1362,7 +1362,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                       child: Text(
                         'Or scan a barcode to automatically add it to your inventory',
                         style: TextStyle(
-                          fontSize: 32,
+                          fontSize: addIngredientPageTextSize,
                           color: Colors.black,
                           fontWeight: FontWeight.w400,
                         ),
@@ -1374,7 +1374,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  //TODO(31): Add ability to scan barcodes
+                  // TODO(31): Add ability to scan barcodes
                 },
                 style: ElevatedButton.styleFrom(
                   shape: RoundedRectangleBorder(
@@ -1505,5 +1505,5 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
     );
   }
 
-  //TODO(26): Allow searching of ingredients to add predefined things
+  // TODO(26): Allow searching of ingredients to add predefined things
 }
