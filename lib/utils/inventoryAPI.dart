@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:smart_chef/utils/APIutils.dart';
 
-class Ingredients {
+class Inventory {
   static const String apiRoute = 'user/inventory';
 
   static Future<http.Response> retrieveUserInventory(bool isReverse, bool sortByExpirationDate, bool sortByCategory, bool sortByLexicographicalOrder) async {

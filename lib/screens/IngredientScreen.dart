@@ -1,11 +1,14 @@
 import 'dart:convert';
 
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:smart_chef/utils/APIutils.dart';
 import 'package:smart_chef/utils/authAPI.dart';
 import 'package:smart_chef/utils/colors.dart';
 import 'package:smart_chef/utils/globals.dart';
+import 'package:smart_chef/utils/ingredientAPI.dart';
+import 'package:smart_chef/utils/inventoryAPI.dart';
 import 'package:smart_chef/utils/userAPI.dart';
 
 class IngredientsScreen extends StatefulWidget {
@@ -101,7 +104,24 @@ class _IngredientsPageState extends State<IngredientsPage> {
                     SizedBox(
                       width: 230,
                       height: MediaQuery.of(context).size.height,
-                      child: searchField,
+                      child: TextField(
+                        maxLines: 1,
+                        decoration: const InputDecoration.collapsed(
+                          hintText: 'Search...',
+                          hintStyle: TextStyle(
+                            color: searchFieldText,
+                            fontSize: 18,
+                          ),
+                        ),
+                        style: const TextStyle(
+                          color: searchFieldText,
+                          fontSize: 18,
+                        ),
+                        textInputAction: TextInputAction.done,
+                        onChanged: (query) {
+                          // TODO(15): Dynamic search
+                        },
+                      ),
                     ),
                     const Icon(
                       Icons.search,
@@ -1280,10 +1300,24 @@ class AddIngredientPage extends StatefulWidget {
 }
 
 class _AddIngredientPageState extends State<AddIngredientPage> {
+  ScrollController loading = ScrollController();
+  final searchController = TextEditingController();
+  List<DropdownMenuItem<String>> searches = [];
+
   @override
   void initState() {
     super.initState();
+    loading = ScrollController()..addListener(_scrollListener);
+    searches = [];
   }
+
+  @override
+  void dispose() {
+    loading.removeListener(_scrollListener);
+    super.dispose();
+  }
+
+  int pageCount = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -1337,19 +1371,37 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                 ),
                 child: LayoutBuilder(builder:
                     (BuildContext context, BoxConstraints constraints) {
-                  return Row(
-                    children: <Widget>[
-                      SizedBox(
-                        width: constraints.maxWidth - topBarIconSize,
-                        child: searchField,
-                      ),
-                      const Icon(
-                        Icons.search,
-                        color: Colors.black,
-                        size: topBarIconSize,
-                      ),
-                    ],
-                  );
+                  return DropdownButtonFormField2<String>(
+                          decoration: const InputDecoration.collapsed(
+                            hintText: 'Search...',
+                            hintStyle: TextStyle(
+                              color: searchFieldText,
+                              fontSize: 18,
+                            ),
+                          ),
+                          icon: const Icon(
+                            Icons.search,
+                            color: Colors.black,
+                            size: topBarIconSize,
+                          ),
+                          items: searches,
+                          onChanged: (String? newVal) {
+
+                          },
+                        );
+                        // child: TextField(
+                        //   maxLines: 1,
+                        //   decoration:
+                        //   style: const TextStyle(
+                        //     color: searchFieldText,
+                        //     fontSize: 18,
+                        //   ),
+                        //   textInputAction: TextInputAction.done,
+                        //   onChanged: (query) {
+                        //     pageCount = 0;
+                        //     // TODO(15): Dynamic search
+                        //   },
+                        // ),
                 }),
               ),
               Container(
@@ -1505,5 +1557,37 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
     );
   }
 
+  void _scrollListener() {
+    if (loading.position.extentAfter < 500) {
+      setState(() {
+        updateSearchList(searchController.text);
+      });
+    }
+  }
+
   //TODO(26): Allow searching of ingredients to add predefined things
+  void updateSearchList(String searchQuery) async {
+
+    int resultsPerPage = 20;
+
+    final res = await Ingredients.searchIngredients(searchQuery, resultsPerPage, pageCount++, '');
+    if (res.statusCode != 200) {
+      return null;
+    }
+
+    var data = json.decode(res.body);
+    for (var value in data) {
+      DropdownMenuItem<String> searchToAdd = DropdownMenuItem(
+        child: Text(
+            value['name'],
+          style: const TextStyle(
+            color: searchFieldText,
+            fontSize: 18,
+          ),
+        )
+      );
+      searches.add(searchToAdd);
+    }
+
+  }
 }

@@ -33,9 +33,6 @@ class UserProfilePage extends StatefulWidget {
 class _UserProfilePageState extends State<UserProfilePage> {
   @override
   void initState() {
-    setState(() {
-      shoppingCartPage = true;
-    });
     super.initState();
   }
 
