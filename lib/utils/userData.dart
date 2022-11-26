@@ -41,7 +41,7 @@ class UserData {
   Map<String,dynamic> toJson() => {
     'firstName': this.firstName,
     'lastName': this.lastName,
-    'lastSeen': -1,
+    'lastSeen': 1,
     'username': this.email,
     'password': this.password,
   };

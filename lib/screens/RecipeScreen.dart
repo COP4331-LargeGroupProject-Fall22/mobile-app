@@ -97,7 +97,7 @@ class _RecipePageState extends State<RecipePage> {
                       children: <Widget>[
                         IconButton(
                           onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/food');
+                            Navigator.restorablePushReplacementNamed(context, '/food');
                           },
                           icon: Icon(Icons.egg),
                           iconSize: bottomIconSize,
@@ -135,7 +135,7 @@ class _RecipePageState extends State<RecipePage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/cart');
+                        Navigator.restorablePushReplacementNamed(context, '/cart');
                       },
                       icon: Icon(Icons.shopping_cart),
                       iconSize: bottomIconSize,
@@ -156,7 +156,7 @@ class _RecipePageState extends State<RecipePage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/user');
+                        Navigator.restorablePushReplacementNamed(context, '/user');
                       },
                       icon: Icon(Icons.person),
                       iconSize: bottomIconSize,

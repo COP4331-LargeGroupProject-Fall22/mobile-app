@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:smart_chef/utils/colors.dart';
 
 const double bottomIconSize = 55;
 const double bottomRowHeight = 90;
+const double topBarIconSize = 28;
+const double ingredientInfoFontSize = 18;
+const double addIngredientPageTextSize = 32;
+
+bool ingredientPage = true;
+bool recipePage = false;
+bool shoppingCartPage = false;
+bool userProfilePage = false;
+const double roundedCorner = 15;
+
 final globalDecoration = InputDecoration(
     contentPadding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
     filled: true,
@@ -12,8 +23,23 @@ final globalDecoration = InputDecoration(
       borderSide: const BorderSide(color: textFieldBorder),
     ));
 
-final bottomRowIconTextStyle = TextStyle(fontSize: 12, color: bottomRowIcon);
-final bottomRowOnScreenTextStyle = TextStyle(fontSize: 12, color: mainScheme);
+TextStyle bottomRowIconTextStyle = const TextStyle(fontSize: 12, color: bottomRowIcon);
+TextStyle bottomRowOnScreenTextStyle = const TextStyle(fontSize: 12, color: mainScheme);
+
+final buttonStyle = ElevatedButton.styleFrom(
+  shape: RoundedRectangleBorder(
+    borderRadius:
+    BorderRadius.circular(roundedCorner),
+  ),
+  backgroundColor: mainScheme,
+  shadowColor: Colors.black,
+);
+
+TextStyle textFieldFontStyle = const TextStyle(
+  fontSize: 20,
+  color: Colors.black,
+);
+TextStyle errorTextStyle = const TextStyle(fontSize: 10, color: Colors.red);
 
 final searchField = TextField(
   maxLines: 1,

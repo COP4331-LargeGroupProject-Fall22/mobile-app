@@ -97,7 +97,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
                       children: <Widget>[
                         IconButton(
                           onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/food');
+                            Navigator.restorablePushReplacementNamed(context, '/food');
                           },
                           icon: Icon(Icons.egg),
                           iconSize: bottomIconSize,
@@ -116,7 +116,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/recipe');
+                        Navigator.restorablePushReplacementNamed(context, '/recipe');
                       },
                       icon: Icon(Icons.restaurant),
                       color: bottomRowIcon,
@@ -156,7 +156,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/user');
+                        Navigator.restorablePushReplacementNamed(context, '/user');
                       },
                       icon: Icon(Icons.person),
                       iconSize: bottomIconSize,

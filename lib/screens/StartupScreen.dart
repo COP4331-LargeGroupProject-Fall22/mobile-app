@@ -51,6 +51,7 @@ class _StartPageState extends State<StartPage> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.translucent,
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: SingleChildScrollView(
         child: SizedBox(
@@ -103,16 +104,10 @@ class _StartPageState extends State<StartPage> {
                                 width: MediaQuery.of(context).size.width / 2,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    Navigator.pushNamed(context, '/login');
+                                    Navigator.restorablePushNamed(
+                                        context, '/login');
                                   },
-                                  style: ElevatedButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    backgroundColor: mainScheme,
-                                    padding: const EdgeInsets.all(2),
-                                    shadowColor: Colors.black,
-                                  ),
+                                  style: buttonStyle,
                                   child: const Text(
                                     'Sign in',
                                     style: TextStyle(
@@ -136,16 +131,10 @@ class _StartPageState extends State<StartPage> {
                                 width: MediaQuery.of(context).size.width / 2,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    Navigator.pushNamed(context, '/register');
+                                    Navigator.restorablePushNamed(
+                                        context, '/register');
                                   },
-                                  style: ElevatedButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    backgroundColor: mainScheme,
-                                    padding: const EdgeInsets.all(2),
-                                    shadowColor: Colors.black,
-                                  ),
+                                  style: buttonStyle,
                                   child: const Text(
                                     'Register',
                                     style: TextStyle(
@@ -214,6 +203,7 @@ class _LogInPageState extends State<LogInPage> {
       child: Scaffold(
         backgroundColor: Colors.black.withOpacity(.35),
         body: GestureDetector(
+          behavior: HitTestBehavior.translucent,
           onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
           child: SingleChildScrollView(
             child: SizedBox(
@@ -328,6 +318,7 @@ class _LogInPageState extends State<LogInPage> {
                                     hintText: 'Enter Username')
                                 : globalDecoration.copyWith(
                                     hintText: 'Enter Username'),
+                            style: textFieldFontStyle,
                             onChanged: (username) {
                               if (username.isEmpty) {
                                 setState(() => unfilledUsername = true);
@@ -370,6 +361,7 @@ class _LogInPageState extends State<LogInPage> {
                                     hintText: 'Enter Password')
                                 : globalDecoration.copyWith(
                                     hintText: 'Enter Password'),
+                            style: textFieldFontStyle,
                             onChanged: (password) {
                               if (password.isEmpty) {
                                 setState(() => unfilledPassword = true);
@@ -398,110 +390,96 @@ class _LogInPageState extends State<LogInPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        SizedBox(
-                          width: 85,
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              if (allLoginFieldsValid(/*hasPassword=*/ true)) {
-                                Map<String, dynamic> payload = {
-                                  'username': _username.value.text.trim(),
-                                  'password': _password.value.text.trim()
-                                };
+                        ElevatedButton(
+                          onPressed: () async {
+                            if (allLoginFieldsValid(/*hasPassword=*/ true)) {
+                              Map<String, dynamic> payload = {
+                                'username': _username.value.text.trim(),
+                                'password': _password.value.text.trim()
+                              };
 
-                                try {
-                                  final ret =
-                                      await Authentication.login(payload);
-                                  print(ret.statusCode);
-                                  if (ret.statusCode == 200) {
-                                    var tokens = json.decode(ret.body);
-                                    user.defineTokens(tokens);
+                              try {
+                                final ret = await Authentication.login(payload);
+                                if (ret.statusCode == 200) {
+                                  var tokens = json.decode(ret.body);
+                                  user.defineTokens(tokens);
 
-                                    final res = await User.getUser();
-                                    if (res.statusCode == 200) {
-                                      var data = json.decode(res.body);
-                                      user.defineUserData(data);
-                                      user.setPassword(_password.value.text.trim());
+                                  final res = await User.getUser();
+                                  if (res.statusCode == 200) {
+                                    var data = json.decode(res.body);
+                                    user.defineUserData(data);
+                                    user.setPassword(
+                                        _password.value.text.trim());
 
-                                      setState(() => clearFields());
-                                      Navigator.pushNamedAndRemoveUntil(
-                                          context,
-                                          '/food',
-                                          ((Route<dynamic> route) => false));
-                                    } else {
-                                      errorMessage =
-                                          getDataRetrieveError(res.statusCode);
-                                    }
+                                    setState(() => clearFields());
+                                    Navigator.restorablePushNamedAndRemoveUntil(
+                                        context,
+                                        '/food',
+                                        ((Route<dynamic> route) => false));
                                   } else {
-                                    errorMessage = getLogInError(ret.statusCode);
-                                    if (ret.statusCode == 403) {
-                                      user.username =
-                                          _username.value.text.trim();
-                                      showDialog(
-                                          context: context,
-                                          builder: (context) {
-                                            return AlertDialog(
-                                              title: const Text(
-                                                  'Account not verified'),
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                  BorderRadius.circular(
-                                                      10)),
-                                              elevation: 15,
-                                              actions: <Widget>[
-                                                TextButton(
-                                                  onPressed: () {
-                                                    user.username =
-                                                        _username.value.text;
-                                                    Navigator
-                                                        .pushReplacementNamed(
-                                                        context,
-                                                        '/verification');
-                                                  },
-                                                  child: const Text(
-                                                    'OK',
-                                                    style: TextStyle(
-                                                        color: Colors.red,
-                                                        fontSize: 18),
-                                                  ),
-                                                ),
-                                              ],
-                                              content: Column(
-                                                  mainAxisSize:
-                                                  MainAxisSize.min,
-                                                  children: const <Widget>[
-                                                    Flexible(
-                                                        child: Text(
-                                                            'Your account is not verified!\nPress OK to be taken to the verification page')),
-                                                  ]),
-                                            );
-                                          });
-                                    }
+                                    errorMessage =
+                                        getDataRetrieveError(res.statusCode);
                                   }
-                                } catch (e) {
-                                  errorMessage = 'Could not connect to server';
-                                  print('Could not connect to /auth/user');
+                                } else {
+                                  errorMessage = getLogInError(ret.statusCode);
+                                  if (ret.statusCode == 403) {
+                                    user.username = _username.value.text.trim();
+                                    showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return AlertDialog(
+                                            title: const Text(
+                                                'Account not verified'),
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10)),
+                                            elevation: 15,
+                                            actions: <Widget>[
+                                              TextButton(
+                                                onPressed: () {
+                                                  user.username =
+                                                      _username.value.text;
+                                                  Navigator
+                                                      .restorablePushReplacementNamed(
+                                                          context,
+                                                          '/verification');
+                                                },
+                                                child: const Text(
+                                                  'OK',
+                                                  style: TextStyle(
+                                                      color: Colors.red,
+                                                      fontSize: 18),
+                                                ),
+                                              ),
+                                            ],
+                                            content: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: const <Widget>[
+                                                  Flexible(
+                                                      child: Text(
+                                                          'Your account is not verified!\nPress OK to be taken to the verification page')),
+                                                ]),
+                                          );
+                                        });
+                                  }
                                 }
+                              } catch (e) {
+                                errorMessage = 'Could not connect to server';
+                                print('Could not connect to /auth/user');
                               }
-                              setState(() {});
-                            },
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              backgroundColor: mainScheme,
-                              padding: const EdgeInsets.all(2),
-                              shadowColor: Colors.black,
-                            ),
-                            child: const Text(
-                              'Sign In',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                  fontFamily: 'EagleLake'),
-                              textAlign: TextAlign.center,
-                            ),
+                            }
+                            setState(() {});
+                          },
+                          style: buttonStyle,
+                          child: const Text(
+                            'Sign In',
+                            style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                                fontFamily: 'EagleLake'),
+                            textAlign: TextAlign.center,
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -561,12 +539,8 @@ class _LogInPageState extends State<LogInPage> {
       case 400:
         return "Incorrect formatting!";
       case 401:
-        return 'Token is invalid';
+        return 'Password is incorrect';
       case 403:
-        setState(() {
-          unfilledPassword = true;
-          unfilledUsername = true;
-        });
         return 'Account not verified';
       case 404:
         return 'User not found';
@@ -631,6 +605,7 @@ class _RegisterPageState extends State<RegisterPage> {
       child: Scaffold(
         backgroundColor: Colors.black.withOpacity(.35),
         body: GestureDetector(
+          behavior: HitTestBehavior.translucent,
           onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
           child: SingleChildScrollView(
             child: SizedBox(
@@ -640,7 +615,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   Container(
-                    margin: EdgeInsets.only(top: 5, bottom: 50),
+                    margin: const EdgeInsets.only(top: 5, bottom: 50),
                     padding: const EdgeInsets.all(8),
                     width: MediaQuery.of(context).size.width,
                     decoration: BoxDecoration(
@@ -728,6 +703,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                             hintText: 'Enter First Name')
                                         : globalDecoration.copyWith(
                                             hintText: 'Enter First Name'),
+                                    style: textFieldFontStyle,
                                     onChanged: (firstName) {
                                       if (firstName.isEmpty) {
                                         setState(
@@ -749,8 +725,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 unfilledFirstName
                                     ? 'First Name cannot be left blank'
                                     : '',
-                                style:
-                                    TextStyle(fontSize: 10, color: Colors.red),
+                                style: errorTextStyle,
                                 textAlign: TextAlign.left,
                               ),
                             ),
@@ -783,6 +758,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                                 hintText: 'Enter Last Name')
                                             : globalDecoration.copyWith(
                                                 hintText: 'Enter Last Name'),
+                                        style: textFieldFontStyle,
                                         onChanged: (lastName) {
                                           if (lastName.isEmpty) {
                                             setState(
@@ -804,8 +780,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 unfilledLastName
                                     ? 'Last Name cannot be left blank'
                                     : '',
-                                style:
-                                    TextStyle(fontSize: 10, color: Colors.red),
+                                style: errorTextStyle,
                                 textAlign: TextAlign.left,
                               ),
                             ),
@@ -839,6 +814,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                               hintText: 'Enter username')
                                           : globalDecoration.copyWith(
                                               hintText: 'Enter username'),
+                                      style: textFieldFontStyle,
                                       onChanged: (username) {
                                         if (username.isEmpty) {
                                           setState(
@@ -861,8 +837,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 unfilledUsername
                                     ? 'Username cannot be left blank'
                                     : '',
-                                style:
-                                    TextStyle(fontSize: 10, color: Colors.red),
+                                style: errorTextStyle,
                                 textAlign: TextAlign.left,
                               ),
                             ),
@@ -893,6 +868,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                             hintText: 'Enter Email')
                                         : globalDecoration.copyWith(
                                             hintText: 'Enter Email'),
+                                    style: textFieldFontStyle,
                                     onChanged: (email) {
                                       if (!isEmail(email)) {
                                         emailError =
@@ -913,8 +889,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               padding: const EdgeInsets.only(top: 2),
                               child: Text(
                                 unfilledEmail ? emailError : '',
-                                style:
-                                    TextStyle(fontSize: 10, color: Colors.red),
+                                style: errorTextStyle,
                                 textAlign: TextAlign.left,
                               ),
                             ),
@@ -946,6 +921,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                             hintText: 'Enter Password')
                                         : globalDecoration.copyWith(
                                             hintText: 'Enter Password'),
+                                    style: textFieldFontStyle,
                                     onChanged: (password) {
                                       setState(() => unfilledPassword = false);
                                     },
@@ -961,8 +937,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 unfilledPassword
                                     ? 'Password cannot be left blank'
                                     : '',
-                                style:
-                                    TextStyle(fontSize: 10, color: Colors.red),
+                                style: errorTextStyle,
                                 textAlign: TextAlign.left,
                               ),
                             ),
@@ -1003,7 +978,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                             final ret =
                                                 await Authentication.register(
                                                     payload);
-                                            print(ret.statusCode);
                                             if (ret.statusCode == 200) {
                                               errorMessage = '';
                                               Map<String, dynamic> package = {
@@ -1017,7 +991,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                                 errorMessage = '';
                                                 user.username =
                                                     _email.value.text;
-                                                Navigator.pushNamed(
+                                                Navigator.restorablePushNamed(
                                                     context, '/verification');
                                               }
                                             } else {
@@ -1031,15 +1005,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                         }
                                         setState(() {});
                                       },
-                                      style: ElevatedButton.styleFrom(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
-                                        backgroundColor: mainScheme,
-                                        padding: const EdgeInsets.all(2),
-                                        shadowColor: Colors.black,
-                                      ),
+                                      style: buttonStyle,
                                       child: const Text(
                                         'Register',
                                         style: TextStyle(
@@ -1068,12 +1034,12 @@ class _RegisterPageState extends State<RegisterPage> {
                                 onPressed: () {
                                   clearFields();
                                   setState(() {
-                                    Navigator.pushReplacementNamed(
+                                    Navigator.restorablePushReplacementNamed(
                                         context, '/login');
                                   });
                                 },
                                 child: Row(
-                                  children: <Widget>[
+                                  children: const <Widget>[
                                     Flexible(
                                       child: Text(
                                           'Have an account? Click to sign in'),
@@ -1176,6 +1142,7 @@ class _VerificationPageState extends State<VerificationPage> {
       child: Scaffold(
         backgroundColor: Colors.black.withOpacity(.35),
         body: GestureDetector(
+          behavior: HitTestBehavior.translucent,
           onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
           child: SingleChildScrollView(
             child: SizedBox(
@@ -1289,26 +1256,26 @@ class _VerificationPageState extends State<VerificationPage> {
                         } else {
                           Map<String, dynamic> payload = {
                             'username': user.username.trim(),
-                            'verificationCode': int.parse(_code.value.text.trim())
+                            'verificationCode':
+                                int.parse(_code.value.text.trim())
                           };
 
                           try {
                             final res =
                                 await Authentication.verifyCode(payload);
-                            print(res.statusCode);
                             if (res.statusCode == 200) {
                               errorMessage = 'Account successfully created!';
-                              await Future.delayed(Duration(seconds: 1));
+                              await Future.delayed(const Duration(seconds: 1));
                               clearFields();
 
-                              Navigator.pushReplacementNamed(context, '/login');
+                              Navigator.restorablePushReplacementNamed(
+                                  context, '/login');
                             } else {
                               if (res.statusCode == 401) {
                                 Map<String, dynamic> name = {
                                   'username': user.username,
                                 };
                                 final ret = await Authentication.sendCode(name);
-                                //print(ret.statusCode);
                               }
                               errorMessage =
                                   verifyCodeErrorString(res.statusCode);
@@ -1319,14 +1286,7 @@ class _VerificationPageState extends State<VerificationPage> {
                         }
                         setState(() {});
                       },
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        backgroundColor: mainScheme,
-                        padding: const EdgeInsets.all(2),
-                        shadowColor: Colors.black,
-                      ),
+                      style: buttonStyle,
                       child: const Text(
                         'Send Code',
                         style: TextStyle(
