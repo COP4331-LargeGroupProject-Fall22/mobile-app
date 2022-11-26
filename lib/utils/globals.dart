@@ -5,6 +5,13 @@ import 'package:smart_chef/utils/colors.dart';
 const double bottomIconSize = 55;
 const double bottomRowHeight = 90;
 const double topBarIconSize = 28;
+const double ingredientInfoFontSize = 18;
+const double addIngredientPageTextSize = 32;
+
+bool ingredientPage = true;
+bool recipePage = false;
+bool shoppingCartPage = false;
+bool userProfilePage = false;
 const double roundedCorner = 15;
 
 final globalDecoration = InputDecoration(
@@ -34,6 +41,24 @@ TextStyle textFieldFontStyle = const TextStyle(
 );
 TextStyle errorTextStyle = const TextStyle(fontSize: 10, color: Colors.red);
 
+final searchField = TextField(
+  maxLines: 1,
+  decoration: const InputDecoration.collapsed(
+    hintText: 'Search...',
+    hintStyle: TextStyle(
+      color: searchFieldText,
+      fontSize: 18,
+    ),
+  ),
+  style: const TextStyle(
+    color: searchFieldText,
+    fontSize: 18,
+  ),
+  textInputAction: TextInputAction.done,
+  onChanged: (query) {
+    // TODO(15): Dynamic search
+  },
+);
 
 void errorDialog(BuildContext context) {
   showDialog(
