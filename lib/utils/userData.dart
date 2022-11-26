@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
 class UserData {
 
   String firstName;
@@ -42,7 +39,8 @@ class UserData {
     'firstName': this.firstName,
     'lastName': this.lastName,
     'lastSeen': 1,
-    'username': this.email,
+    'username': this.username,
+    'email': this.email,
     'password': this.password,
   };
 

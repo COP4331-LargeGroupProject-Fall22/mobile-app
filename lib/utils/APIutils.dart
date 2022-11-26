@@ -7,6 +7,10 @@ import 'package:smart_chef/utils/userData.dart';
 
 const String API_PREFIX = "https://api-smart-chef.herokuapp.com/";
 final baseHeader = {HttpHeaders.contentTypeHeader: 'application/json'};
+final accessTokenHeader = {
+  HttpHeaders.contentTypeHeader: 'application/json',
+  HttpHeaders.authorizationHeader: user.accessToken
+};
 
 UserData user = UserData.create();
 
