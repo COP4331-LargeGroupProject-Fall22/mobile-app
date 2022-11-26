@@ -91,7 +91,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
               searchBar = Container(
                 width: 300,
                 height: 35,
-                padding: EdgeInsets.all(5),
+                padding: const EdgeInsets.all(5),
                 decoration: const BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(20)),
                   color: textFieldBacking,
@@ -103,10 +103,10 @@ class _IngredientsPageState extends State<IngredientsPage> {
                       height: MediaQuery.of(context).size.height,
                       child: searchField,
                     ),
-                    Icon(
+                    const Icon(
                       Icons.search,
                       color: Colors.black,
-                      size: 28,
+                      size: topBarIconSize,
                     ),
                   ],
                 ),
@@ -119,16 +119,16 @@ class _IngredientsPageState extends State<IngredientsPage> {
             setState(() {});
           },
           icon: leadingIcon,
-          iconSize: 35,
+          iconSize: topBarIconSize + 5,
         ),
         actions: <Widget>[
           Builder(builder: (BuildContext context) {
             return IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.manage_search,
                 color: Colors.black,
               ),
-              iconSize: 35,
+              iconSize: topBarIconSize + 10,
               onPressed: () => Scaffold.of(context).openEndDrawer(),
             );
           }),
@@ -140,7 +140,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
           padding: EdgeInsets.zero,
           children: <Widget>[
             Container(
-              padding: EdgeInsets.only(top: 15),
+              padding: const EdgeInsets.only(top: 15),
               decoration: BoxDecoration(
                   border: Border(
                       bottom: BorderSide(
@@ -181,40 +181,12 @@ class _IngredientsPageState extends State<IngredientsPage> {
           ],
         ),
       ),
-      body: SafeArea(
-        child: GestureDetector(
-          onTap: () {
-            FocusManager.instance.primaryFocus?.unfocus();
-            /*if (_search.value.text.isEmpty) {
-              leadingIcon = const Icon(Icons.search, color: Colors.black);
-              searchBar = const Text('SmartChef', style: TextStyle(fontSize: 24, color: mainScheme));
-            }*/
-          },
-          child: SingleChildScrollView(
-            child: Container(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height - 175,
-                decoration: const BoxDecoration(color: Colors.white),
-                child: Column(
-                  children: <Widget>[
-                    Container(
-                        margin: EdgeInsets.all(10),
-                        width: MediaQuery.of(context).size.width,
-                        decoration: const BoxDecoration(
-                          color: Colors.transparent,
-                        ),
-                        child: Text(sorted,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              color: Colors.black,
-                            ))),
-                    Expanded(
-                      child: BuildTiles(),
-                    ),
-                  ],
-                )),
-          ),
-        ),
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        child: BuildTiles(),
       ),
       extendBody: false,
       extendBodyBehindAppBar: false,
@@ -230,54 +202,58 @@ class _IngredientsPageState extends State<IngredientsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              SizedBox(
-                  width: MediaQuery.of(context).size.width / 4,
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        IconButton(
-                          onPressed: () {},
-                          icon: Icon(Icons.egg),
-                          iconSize: bottomIconSize,
-                          color: mainScheme,
-                        ),
-                        const Text(
-                          'Ingredients',
-                          style: TextStyle(fontSize: 12, color: mainScheme),
-                          textAlign: TextAlign.center,
-                        )
-                      ])),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.egg),
+                      iconSize: bottomIconSize,
+                      color: mainScheme,
+                    ),
+                    Text(
+                      'Ingredients',
+                      style: bottomRowOnScreenTextStyle,
+                      textAlign: TextAlign.center,
+                    )
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/recipe');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/recipe');
                       },
-                      icon: Icon(Icons.restaurant),
-                      color: bottomRowIcon,
+                      icon: const Icon(Icons.restaurant),
                       iconSize: bottomIconSize,
+                      color: bottomRowIcon,
                     ),
                     Text(
                       'Recipes',
                       style: bottomRowIconTextStyle,
-                      textAlign: TextAlign.right,
-                    ),
+                      textAlign: TextAlign.center,
+                    )
                   ],
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/cart');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/cart');
                       },
-                      icon: Icon(Icons.shopping_cart),
+                      icon: const Icon(Icons.shopping_cart),
                       iconSize: bottomIconSize,
                       color: bottomRowIcon,
                     ),
@@ -289,16 +265,17 @@ class _IngredientsPageState extends State<IngredientsPage> {
                   ],
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/user');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/user');
                       },
-                      icon: Icon(Icons.person),
+                      icon: const Icon(Icons.person),
                       iconSize: bottomIconSize,
                       color: bottomRowIcon,
                     ),
@@ -332,9 +309,32 @@ class _IngredientsPageState extends State<IngredientsPage> {
     return;
   }*/
 
-  GridView BuildTiles() {
-    int numIngreds = 10;
+  Widget BuildTiles() {
+    int numIngreds = 12;
     List<Widget> ingredients = [];
+
+    if (numIngreds == 0) {
+      return Container(
+        margin: const EdgeInsets.only(top:20),
+        child: Column(
+            children: <Widget>[
+              Flexible(
+                  child: Text(
+                    'You have no items in your inventory!\nPress the add button on the bottom right to start adding ingredients',
+                    style: TextStyle(
+                        fontSize: 24, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                    textAlign: TextAlign.center,
+                  )
+              )
+            ]
+        )
+      );
+    }
+
+    double bodyHeight = MediaQuery.of(context).size.height -
+        bottomRowHeight -
+        MediaQuery.of(context).padding.top -
+        AppBar().preferredSize.height;
 
     double itemWidth = MediaQuery.of(context).size.width / 2 - 20;
     double itemHeight = MediaQuery.of(context).size.height / 4 - 20;
@@ -342,6 +342,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
     for (int i = 0; i < numIngreds; i++) {
       ingredients.add(
         GestureDetector(
+          behavior: HitTestBehavior.translucent,
           onTap: () {
             Navigator.restorablePushNamed(context, '/food/food');
           },
@@ -359,7 +360,25 @@ class _IngredientsPageState extends State<IngredientsPage> {
         crossAxisSpacing: 20,
         mainAxisSpacing: 15,
         children: ingredients);
-    return ingreds;
+    return SingleChildScrollView(
+        child: Container(
+            width: MediaQuery.of(context).size.width,
+            height: bodyHeight,
+            decoration: const BoxDecoration(color: Colors.white),
+            child: Column(children: <Widget>[
+              Container(
+                  margin: const EdgeInsets.all(10),
+                  width: MediaQuery.of(context).size.width,
+                  decoration: const BoxDecoration(
+                    color: Colors.transparent,
+                  ),
+                  child: Text(sorted,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.black,
+                      ))),
+              Expanded(child: ingreds)
+            ])));
   }
 
   //TODO(18): integrate API into making ingredients
@@ -417,7 +436,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
             height: tileHeight - 40,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.all(Radius.circular(20)),
+              borderRadius: const BorderRadius.all(Radius.circular(20)),
               gradient: LinearGradient(
                 begin: FractionalOffset.topCenter,
                 end: FractionalOffset.bottomCenter,
@@ -431,7 +450,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
             child: Align(
               alignment: FractionalOffset.bottomLeft,
               child: Padding(
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
                 child: Row(
                   children: <Widget>[
                     Expanded(
@@ -480,12 +499,12 @@ class _IngredientPageState extends State<IngredientPage> {
                 Navigator.restorablePushNamed(context, '/food/edit');
               },
               icon: const Icon(Icons.edit, color: Colors.black),
-              iconSize: 28,
+              iconSize: topBarIconSize,
             ),
             IconButton(
               onPressed: () {},
               icon: const Icon(Icons.delete, color: Colors.red),
-              iconSize: 28,
+              iconSize: topBarIconSize,
             ),
           ],
           leading: IconButton(
@@ -514,7 +533,7 @@ class _IngredientPageState extends State<IngredientPage> {
               ),
               Container(
                 width: MediaQuery.of(context).size.width,
-                margin: EdgeInsets.symmetric(vertical: 20),
+                margin: const EdgeInsets.symmetric(vertical: 20),
                 child: const Text(
                   'Food Item',
                   style: TextStyle(
@@ -529,15 +548,13 @@ class _IngredientPageState extends State<IngredientPage> {
                 children: <Widget>[
                   Column(
                     children: <Widget>[
-                      Container(
-                        child: const Text(
-                          'Quantity',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.black,
-                          ),
-                          textAlign: TextAlign.center,
+                      const Text(
+                        'Quantity',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.black,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                       Container(
                         width: MediaQuery.of(context).size.width / 2.2,
@@ -557,15 +574,13 @@ class _IngredientPageState extends State<IngredientPage> {
                   ),
                   Column(
                     children: <Widget>[
-                      Container(
-                        child: const Text(
-                          'Food Group',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.black,
-                          ),
-                          textAlign: TextAlign.center,
+                      const Text(
+                        'Food Group',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.black,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                       Container(
                         width: MediaQuery.of(context).size.width / 2.2,
@@ -593,15 +608,13 @@ class _IngredientPageState extends State<IngredientPage> {
                 children: <Widget>[
                   Column(
                     children: <Widget>[
-                      Container(
-                        child: const Text(
-                          'Location',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.black,
-                          ),
-                          textAlign: TextAlign.center,
+                      const Text(
+                        'Location',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.black,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                       Container(
                         width: MediaQuery.of(context).size.width / 2.2,
@@ -621,15 +634,13 @@ class _IngredientPageState extends State<IngredientPage> {
                   ),
                   Column(
                     children: <Widget>[
-                      Container(
-                        child: const Text(
-                          'Expiration Date(s)',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.black,
-                          ),
-                          textAlign: TextAlign.center,
+                      const Text(
+                        'Expiration Date(s)',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.black,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                       Container(
                         width: MediaQuery.of(context).size.width / 2.2,
@@ -651,7 +662,7 @@ class _IngredientPageState extends State<IngredientPage> {
               ),
               Container(
                 width: MediaQuery.of(context).size.width,
-                padding: EdgeInsets.fromLTRB(5, 20, 5, 0),
+                padding: const EdgeInsets.fromLTRB(5, 20, 5, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
@@ -720,52 +731,56 @@ class _IngredientPageState extends State<IngredientPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              SizedBox(
-                  width: MediaQuery.of(context).size.width / 4,
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.egg),
-                          iconSize: bottomIconSize,
-                          color: mainScheme,
-                        ),
-                        const Text(
-                          'Ingredients',
-                          style: TextStyle(fontSize: 12, color: mainScheme),
-                          textAlign: TextAlign.center,
-                        )
-                      ])),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.egg),
+                      iconSize: bottomIconSize,
+                      color: mainScheme,
+                    ),
+                    Text(
+                      'Ingredients',
+                      style: bottomRowOnScreenTextStyle,
+                      textAlign: TextAlign.center,
+                    )
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/recipe');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/recipe');
                       },
                       icon: const Icon(Icons.restaurant),
-                      color: bottomRowIcon,
                       iconSize: bottomIconSize,
+                      color: bottomRowIcon,
                     ),
                     Text(
                       'Recipes',
                       style: bottomRowIconTextStyle,
-                      textAlign: TextAlign.right,
-                    ),
+                      textAlign: TextAlign.center,
+                    )
                   ],
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/cart');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/cart');
                       },
                       icon: const Icon(Icons.shopping_cart),
                       iconSize: bottomIconSize,
@@ -779,14 +794,15 @@ class _IngredientPageState extends State<IngredientPage> {
                   ],
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/user');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/user');
                       },
                       icon: const Icon(Icons.person),
                       iconSize: bottomIconSize,
@@ -838,9 +854,6 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
   final _brands = TextEditingController();
   bool unfilledBrands = false;
 
-  final _tags = TextEditingController();
-  bool unfilledTags = false;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -848,9 +861,11 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
           backgroundColor: Colors.white,
           actions: [
             IconButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.pop(context);
+              },
               icon: const Icon(Icons.check, color: Colors.red),
-              iconSize: 28,
+              iconSize: topBarIconSize,
             ),
           ],
           leading: IconButton(
@@ -861,6 +876,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
             },
           )),
       body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: Container(
           width: MediaQuery.of(context).size.width,
@@ -881,7 +897,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                 ),
                 Container(
                   width: MediaQuery.of(context).size.width,
-                  margin: EdgeInsets.symmetric(vertical: 20),
+                  margin: const EdgeInsets.symmetric(vertical: 20),
                   child: const Text(
                     'Food Item',
                     style: TextStyle(
@@ -892,23 +908,22 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                   ),
                 ),
                 Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Expanded(
+                      flex: 5,
+                      child: Column(
                         children: <Widget>[
-                          Container(
-                            child: const Text(
-                              'Quantity',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              textAlign: TextAlign.center,
+                          const Text(
+                            'Quantity',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black,
                             ),
+                            textAlign: TextAlign.center,
                           ),
                           Container(
-                            width: MediaQuery.of(context).size.width / 2.2,
-                            margin: const EdgeInsets.only(right: 10),
+                            margin: const EdgeInsets.symmetric(horizontal: 10),
                             padding: const EdgeInsets.symmetric(
                                 vertical: 5, horizontal: 5),
                             decoration: const BoxDecoration(
@@ -941,21 +956,22 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                           ),
                         ],
                       ),
-                      Column(
+                    ),
+                    Expanded(
+                      flex: 5,
+                      child: Column(
                         children: <Widget>[
-                          Container(
-                            child: const Text(
-                              'Food Group',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              textAlign: TextAlign.center,
+                          const Text(
+                            'Food Group',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black,
                             ),
+                            textAlign: TextAlign.center,
                           ),
                           Container(
-                            width: MediaQuery.of(context).size.width / 2.2,
-                            margin: const EdgeInsets.only(right: 10),
+                            width: MediaQuery.of(context).size.width,
+                            margin: const EdgeInsets.symmetric(horizontal: 5),
                             padding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 5),
                             child: Text(
@@ -969,7 +985,9 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                           ),
                         ],
                       ),
-                    ]),
+                    ),
+                  ],
+                ),
                 const SizedBox(
                   height: 20,
                 ),
@@ -980,15 +998,13 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                       flex: 5,
                       child: Column(
                         children: <Widget>[
-                          Container(
-                            child: const Text(
-                              'Location',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              textAlign: TextAlign.center,
+                          const Text(
+                            'Location',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black,
                             ),
+                            textAlign: TextAlign.center,
                           ),
                           Container(
                             margin: const EdgeInsets.symmetric(horizontal: 5),
@@ -997,7 +1013,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                             decoration: const BoxDecoration(
                               color: mainScheme,
                               borderRadius:
-                              BorderRadius.all(Radius.circular(10)),
+                                  BorderRadius.all(Radius.circular(10)),
                             ),
                             child: TextField(
                               maxLines: 1,
@@ -1020,15 +1036,13 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                       flex: 5,
                       child: Column(
                         children: <Widget>[
-                          Container(
-                            child: const Text(
-                              'Expiration Date(s)',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              textAlign: TextAlign.center,
+                          const Text(
+                            'Expiration Date(s)',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black,
                             ),
+                            textAlign: TextAlign.center,
                           ),
                           Container(
                             margin: const EdgeInsets.symmetric(horizontal: 5),
@@ -1037,16 +1051,16 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                             decoration: const BoxDecoration(
                               color: mainScheme,
                               borderRadius:
-                              BorderRadius.all(Radius.circular(10)),
+                                  BorderRadius.all(Radius.circular(10)),
                             ),
                             child: TextField(
                               maxLines: 1,
                               controller: _expirationDate,
                               decoration: unfilledExpirationDate
                                   ? invalidTextField.copyWith(
-                                  hintText: 'Enter Expiration Date')
+                                      hintText: 'Enter Expiration Date')
                                   : globalDecoration.copyWith(
-                                  hintText: 'Enter Expiration Date'),
+                                      hintText: 'Enter Expiration Date'),
                               style: const TextStyle(
                                 fontSize: 20,
                                 color: Colors.black,
@@ -1063,7 +1077,7 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                 ),
                 Container(
                   width: MediaQuery.of(context).size.width,
-                  padding: EdgeInsets.fromLTRB(5, 20, 5, 0),
+                  padding: const EdgeInsets.fromLTRB(5, 20, 5, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
@@ -1078,46 +1092,44 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                           textAlign: TextAlign.left,
                         ),
                       ),
-                      Row(
-                        children: <Widget>[
-                          Text(
-                            '\nBrands: ',
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.black,
-                            ),
-                            textAlign: TextAlign.left,
+                      Row(children: <Widget>[
+                        Text(
+                          '\nBrands: ',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.black,
                           ),
-                          Expanded(
-                            child: Container(
-                              margin: const EdgeInsets.only(right: 10),
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 5, horizontal: 5),
-                              decoration: const BoxDecoration(
-                                color: mainScheme,
-                                borderRadius:
-                                BorderRadius.all(Radius.circular(10)),
+                          textAlign: TextAlign.left,
+                        ),
+                        Expanded(
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 10),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 5, horizontal: 5),
+                            decoration: const BoxDecoration(
+                              color: mainScheme,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10)),
+                            ),
+                            child: TextField(
+                              maxLines: 1,
+                              controller: _brands,
+                              decoration: unfilledBrands
+                                  ? invalidTextField.copyWith(
+                                      hintText: 'Enter Brands')
+                                  : globalDecoration.copyWith(
+                                      hintText: 'Enter Brands'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.black,
                               ),
-                              child: TextField(
-                                maxLines: 1,
-                                controller: _brands,
-                                decoration: unfilledBrands
-                                    ? invalidTextField.copyWith(
-                                    hintText: 'Enter Brands')
-                                    : globalDecoration.copyWith(
-                                    hintText: 'Enter Brands'),
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black,
-                                ),
-                                onChanged: (location) {},
-                                textAlign: TextAlign.left,
-                                textInputAction: TextInputAction.next,
-                              ),
+                              onChanged: (location) {},
+                              textAlign: TextAlign.left,
+                              textInputAction: TextInputAction.next,
                             ),
                           ),
-                        ]
-                      ),
+                        ),
+                      ]),
                       SizedBox(
                         width: MediaQuery.of(context).size.width,
                         child: Text(
@@ -1162,52 +1174,56 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              SizedBox(
-                  width: MediaQuery.of(context).size.width / 4,
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.egg),
-                          iconSize: bottomIconSize,
-                          color: mainScheme,
-                        ),
-                        const Text(
-                          'Ingredients',
-                          style: TextStyle(fontSize: 12, color: mainScheme),
-                          textAlign: TextAlign.center,
-                        )
-                      ])),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.egg),
+                      iconSize: bottomIconSize,
+                      color: mainScheme,
+                    ),
+                    Text(
+                      'Ingredients',
+                      style: bottomRowOnScreenTextStyle,
+                      textAlign: TextAlign.center,
+                    )
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/recipe');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/recipe');
                       },
                       icon: const Icon(Icons.restaurant),
-                      color: bottomRowIcon,
                       iconSize: bottomIconSize,
+                      color: bottomRowIcon,
                     ),
                     Text(
                       'Recipes',
                       style: bottomRowIconTextStyle,
-                      textAlign: TextAlign.right,
-                    ),
+                      textAlign: TextAlign.center,
+                    )
                   ],
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/cart');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/cart');
                       },
                       icon: const Icon(Icons.shopping_cart),
                       iconSize: bottomIconSize,
@@ -1221,14 +1237,15 @@ class _EditIngredientPageState extends State<EditIngredientPage> {
                   ],
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/user');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/user');
                       },
                       icon: const Icon(Icons.person),
                       iconSize: bottomIconSize,
@@ -1280,19 +1297,21 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
               Navigator.pop(context);
             },
           )),
-      body: GestureDetector(
-        onTap: () {
-          FocusManager.instance.primaryFocus?.unfocus();
-        },
-        child: Container(
+      body:Container(
           width: MediaQuery.of(context).size.width,
           height: MediaQuery.of(context).size.height,
-          margin: EdgeInsets.fromLTRB(5, 10, 5, 0),
-          child: Column(
+          margin: const EdgeInsets.fromLTRB(5, 10, 5, 0),
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () {
+              FocusManager.instance.primaryFocus?.unfocus();
+            },
+            child: Column(
             children: <Widget>[
               Container(
                 width: MediaQuery.of(context).size.width,
-                margin: EdgeInsets.symmetric(vertical: 50, horizontal: 15),
+                margin:
+                    const EdgeInsets.symmetric(vertical: 50, horizontal: 15),
                 child: Row(
                   children: const <Widget>[
                     Flexible(
@@ -1321,13 +1340,13 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                   return Row(
                     children: <Widget>[
                       SizedBox(
-                        width: constraints.maxWidth - 28,
+                        width: constraints.maxWidth - topBarIconSize,
                         child: searchField,
                       ),
                       const Icon(
                         Icons.search,
                         color: Colors.black,
-                        size: 28,
+                        size: topBarIconSize,
                       ),
                     ],
                   );
@@ -1335,7 +1354,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
               ),
               Container(
                 width: MediaQuery.of(context).size.width,
-                margin: const EdgeInsets.only(
+                padding: const EdgeInsets.only(
                     top: 150, left: 15, right: 15, bottom: 50),
                 child: Row(
                   children: const <Widget>[
@@ -1394,8 +1413,8 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
@@ -1405,43 +1424,45 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                       iconSize: bottomIconSize,
                       color: mainScheme,
                     ),
-                    const Text(
+                    Text(
                       'Ingredients',
-                      style: TextStyle(fontSize: 12, color: mainScheme),
+                      style: bottomRowOnScreenTextStyle,
                       textAlign: TextAlign.center,
-                    ),
+                    )
                   ],
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/recipe');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/recipe');
                       },
                       icon: const Icon(Icons.restaurant),
-                      color: bottomRowIcon,
                       iconSize: bottomIconSize,
+                      color: bottomRowIcon,
                     ),
                     Text(
                       'Recipes',
                       style: bottomRowIconTextStyle,
-                      textAlign: TextAlign.right,
-                    ),
+                      textAlign: TextAlign.center,
+                    )
                   ],
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/cart');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/cart');
                       },
                       icon: const Icon(Icons.shopping_cart),
                       iconSize: bottomIconSize,
@@ -1455,14 +1476,15 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                   ],
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/user');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/user');
                       },
                       icon: const Icon(Icons.person),
                       iconSize: bottomIconSize,

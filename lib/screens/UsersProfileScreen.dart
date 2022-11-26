@@ -33,6 +33,9 @@ class UserProfilePage extends StatefulWidget {
 class _UserProfilePageState extends State<UserProfilePage> {
   @override
   void initState() {
+    setState(() {
+      shoppingCartPage = true;
+    });
     super.initState();
   }
 
@@ -83,7 +86,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
               if (!delete) {
                 return;
               }
-
               try {
                 final res = await User.deleteUser();
                 if (res.statusCode == 200) {
@@ -107,6 +109,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         ],
       ),
       body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: SingleChildScrollView(
           child: Container(
@@ -143,10 +146,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          Column(
-                            children: <Widget>[
-                              Container(
-                                child: const Text(
+                          Expanded(
+                            flex: 5,
+                            child: Column(
+                              children: <Widget>[
+                                const Text(
                                   'First Name',
                                   style: TextStyle(
                                     fontSize: 18,
@@ -154,32 +158,35 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
-                              ),
-                              Container(
-                                width: 150,
-                                margin: const EdgeInsets.only(right: 10),
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 10, horizontal: 5),
-                                decoration: const BoxDecoration(
-                                  color: mainScheme,
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(10)),
-                                ),
-                                child: Text(
-                                  user.firstName.isEmpty ? '' : user.firstName,
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.white,
+                                Container(
+                                  width: 150,
+                                  margin: const EdgeInsets.only(left: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 10, horizontal: 7),
+                                  decoration: const BoxDecoration(
+                                    color: mainScheme,
+                                    borderRadius: BorderRadius.all(
+                                        Radius.circular(roundedCorner)),
                                   ),
-                                  textAlign: TextAlign.left,
+                                  child: Text(
+                                    user.firstName.isEmpty
+                                        ? ''
+                                        : user.firstName,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.left,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                          Column(
-                            children: <Widget>[
-                              Container(
-                                child: const Text(
+                          Expanded(
+                            flex: 5,
+                            child: Column(
+                              children: <Widget>[
+                                const Text(
                                   'Last Name',
                                   style: TextStyle(
                                     fontSize: 18,
@@ -187,27 +194,27 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
-                              ),
-                              Container(
-                                width: 150,
-                                margin: const EdgeInsets.only(left: 10),
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 10, horizontal: 5),
-                                decoration: const BoxDecoration(
-                                  color: mainScheme,
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(10)),
-                                ),
-                                child: Text(
-                                  user.lastName.isEmpty ? '' : user.lastName,
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.white,
+                                Container(
+                                  width: 150,
+                                  margin: const EdgeInsets.only(right: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 10, horizontal: 5),
+                                  decoration: const BoxDecoration(
+                                    color: mainScheme,
+                                    borderRadius: BorderRadius.all(
+                                        Radius.circular(roundedCorner)),
                                   ),
-                                  textAlign: TextAlign.left,
+                                  child: Text(
+                                    user.lastName.isEmpty ? '' : user.lastName,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.left,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -225,14 +232,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                             ),
                           ),
                           Container(
-                            width: 320,
-                            margin: const EdgeInsets.only(bottom: 100),
+                            width: MediaQuery.of(context).size.width / 1.2,
                             padding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 5),
                             decoration: const BoxDecoration(
                               color: mainScheme,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
+                              borderRadius: BorderRadius.all(
+                                  Radius.circular(roundedCorner)),
                             ),
                             child: Text(
                               user.email.isEmpty ? '' : user.email,
@@ -245,71 +251,89 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           ),
                         ],
                       ),
-                      Container(
-                        child: Text(
-                          errorMessage,
-                          style:
-                              const TextStyle(fontSize: 20, color: Colors.red),
-                          textAlign: TextAlign.center,
-                        ),
+                      Column(
+                        children: <Widget>[
+                          Container(
+                            margin: const EdgeInsets.only(top: 20),
+                            child: const Text(
+                              'Username',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          Container(
+                            width: MediaQuery.of(context).size.width / 1.2,
+                            margin: const EdgeInsets.only(bottom: 20),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 10, horizontal: 5),
+                            decoration: const BoxDecoration(
+                              color: mainScheme,
+                              borderRadius: BorderRadius.all(
+                                  Radius.circular(roundedCorner)),
+                            ),
+                            child: Text(
+                              user.username.isEmpty ? '' : user.username,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.left,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        errorMessage,
+                        style: errorTextStyle.copyWith(fontSize: 20),
+                        textAlign: TextAlign.center,
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          Container(
-                            width: 180,
-                            padding: const EdgeInsets.all(15),
-                            child: ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  Navigator.restorablePushNamed(context, '/user/edit');
-                                });
-                              },
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                          Expanded(
+                            flex: 5,
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.restorablePushNamed(
+                                        context, '/user/edit');
+                                },
+                                style: buttonStyle,
+                                child: const Text(
+                                  'Edit Information',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                backgroundColor: mainScheme,
-                                padding: const EdgeInsets.all(2),
-                                shadowColor: Colors.black,
-                              ),
-                              child: const Text(
-                                'Edit Information',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w300,
-                                ),
-                                textAlign: TextAlign.center,
                               ),
                             ),
                           ),
-                          Container(
-                            width: 180,
-                            padding: const EdgeInsets.all(15),
-                            child: ElevatedButton(
-                              onPressed: () {
-                                setState(() {
+                          Expanded(
+                            flex: 5,
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              child: ElevatedButton(
+                                onPressed: () {
                                   Navigator.restorablePushNamed(
-                                      context, '/user/changePassword');
-                                });
-                              },
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                        context, '/user/changePassword');
+                                },
+                                style: buttonStyle,
+                                child: const Text(
+                                  'Change Password',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                backgroundColor: mainScheme,
-                                padding: const EdgeInsets.all(2),
-                                shadowColor: Colors.black,
-                              ),
-                              child: const Text(
-                                'Change Password',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w300,
-                                ),
-                                textAlign: TextAlign.center,
                               ),
                             ),
                           ),
@@ -335,27 +359,29 @@ class _UserProfilePageState extends State<UserProfilePage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              SizedBox(
-                  width: MediaQuery.of(context).size.width / 4,
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        IconButton(
-                          onPressed: () {
-                            Navigator.restorablePushReplacementNamed(context, '/food');
-                          },
-                          icon: const Icon(Icons.egg),
-                          iconSize: 55,
-                          color: bottomRowIcon,
-                        ),
-                        const Text(
-                          'Ingredients',
-                          style: TextStyle(fontSize: 12, color: bottomRowIcon),
-                          textAlign: TextAlign.center,
-                        )
-                      ])),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    IconButton(
+                      onPressed: () {
+                        Navigator.restorablePushReplacementNamed(context, '/food');
+                      },
+                      icon: const Icon(Icons.egg),
+                      iconSize: bottomIconSize,
+                      color: bottomRowIcon,
+                    ),
+                    Text(
+                      'Ingredients',
+                      style: bottomRowOnScreenTextStyle,
+                      textAlign: TextAlign.center,
+                    )
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
@@ -364,19 +390,19 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         Navigator.restorablePushReplacementNamed(context, '/recipe');
                       },
                       icon: const Icon(Icons.restaurant),
+                      iconSize: bottomIconSize,
                       color: bottomRowIcon,
-                      iconSize: 55,
                     ),
-                    const Text(
+                    Text(
                       'Recipes',
-                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
-                      textAlign: TextAlign.right,
-                    ),
+                      style: bottomRowIconTextStyle,
+                      textAlign: TextAlign.center,
+                    )
                   ],
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
@@ -385,31 +411,31 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         Navigator.restorablePushReplacementNamed(context, '/cart');
                       },
                       icon: const Icon(Icons.shopping_cart),
-                      iconSize: 55,
+                      iconSize: bottomIconSize,
                       color: bottomRowIcon,
                     ),
-                    const Text(
+                    Text(
                       'Shopping Cart',
-                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
+                      style: bottomRowIconTextStyle,
                       textAlign: TextAlign.center,
                     )
                   ],
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
                       onPressed: () {},
                       icon: const Icon(Icons.person),
-                      iconSize: 55,
+                      iconSize: bottomIconSize,
                       color: mainScheme,
                     ),
-                    const Text(
+                    Text(
                       'User Profile',
-                      style: TextStyle(fontSize: 12, color: mainScheme),
+                      style: bottomRowOnScreenTextStyle,
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -457,24 +483,24 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
   void initState() {
     _firstName.text = user.firstName;
     _lastName.text = user.lastName;
-    _email.text = user.email;
+    _username.text = user.username;
     super.initState();
   }
-
-  final _email = TextEditingController();
-  bool unfilledEmail = false;
-
-  final _password = TextEditingController();
-  bool unfilledPassword = false;
-
-  final _confirmPassword = TextEditingController();
-  bool unfilledConfirmPassword = false;
 
   final _firstName = TextEditingController();
   bool unfilledFirstName = false;
 
   final _lastName = TextEditingController();
   bool unfilledLastName = false;
+
+  final _username = TextEditingController();
+  bool unfilledUsername = false;
+
+  final _password = TextEditingController();
+  bool unfilledPassword = false;
+
+  final _confirmPassword = TextEditingController();
+  bool unfilledConfirmPassword = false;
 
   String errorMessage = '';
 
@@ -500,6 +526,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
         ),
       ),
       body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: Container(
           width: MediaQuery.of(context).size.width,
@@ -538,15 +565,13 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                         children: <Widget>[
                           Column(
                             children: <Widget>[
-                              Container(
-                                child: const Text(
-                                  'First Name',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.black,
-                                  ),
-                                  textAlign: TextAlign.center,
+                              const Text(
+                                'First Name',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.black,
                                 ),
+                                textAlign: TextAlign.center,
                               ),
                               Container(
                                 width: 150,
@@ -555,8 +580,8 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                     vertical: 5, horizontal: 5),
                                 decoration: const BoxDecoration(
                                   color: mainScheme,
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(10)),
+                                  borderRadius: BorderRadius.all(
+                                      Radius.circular(roundedCorner)),
                                 ),
                                 child: TextField(
                                   maxLines: 1,
@@ -566,15 +591,12 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                           hintText: 'Enter First Name')
                                       : globalDecoration.copyWith(
                                           hintText: 'Enter First Name'),
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.black,
-                                  ),
+                                  style: textFieldFontStyle,
                                   onChanged: (firstName) {
                                     if (firstName.isEmpty) {
                                       setState(() => unfilledFirstName = true);
                                     } else {
-                                      unfilledFirstName = false;
+                                      setState(() => unfilledFirstName = false);
                                     }
                                   },
                                   textAlign: TextAlign.left,
@@ -585,15 +607,13 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                           ),
                           Column(
                             children: <Widget>[
-                              Container(
-                                child: const Text(
-                                  'Last Name',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.black,
-                                  ),
-                                  textAlign: TextAlign.center,
+                              const Text(
+                                'Last Name',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.black,
                                 ),
+                                textAlign: TextAlign.center,
                               ),
                               Container(
                                 width: 150,
@@ -602,8 +622,8 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                     vertical: 5, horizontal: 5),
                                 decoration: const BoxDecoration(
                                   color: mainScheme,
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(10)),
+                                  borderRadius: BorderRadius.all(
+                                      Radius.circular(roundedCorner)),
                                 ),
                                 child: TextField(
                                   maxLines: 1,
@@ -613,17 +633,14 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                           hintText: 'Enter Last Name')
                                       : globalDecoration.copyWith(
                                           hintText: 'Enter Last Name'),
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.black,
-                                  ),
+                                  style: textFieldFontStyle,
                                   textAlign: TextAlign.left,
                                   textInputAction: TextInputAction.next,
                                   onChanged: (lastName) {
                                     if (lastName.isEmpty) {
                                       setState(() => unfilledLastName = true);
                                     } else {
-                                      unfilledLastName = false;
+                                      setState(() => unfilledLastName = false);
                                     }
                                   },
                                 ),
@@ -637,7 +654,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                           Container(
                             margin: const EdgeInsets.only(top: 15),
                             child: const Text(
-                              'Email',
+                              'Username',
                               style: TextStyle(
                                 fontSize: 18,
                                 color: Colors.black,
@@ -651,29 +668,24 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                 vertical: 5, horizontal: 5),
                             decoration: const BoxDecoration(
                               color: mainScheme,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
+                              borderRadius: BorderRadius.all(
+                                  Radius.circular(roundedCorner)),
                             ),
                             child: TextField(
                               maxLines: 1,
-                              controller: _email,
-                              decoration: unfilledEmail
+                              controller: _username,
+                              decoration: unfilledUsername
                                   ? invalidTextField.copyWith(
-                                  hintText: 'Enter Email')
+                                  hintText: 'Enter Username')
                                   : globalDecoration.copyWith(
-                                      hintText: 'Enter Email'),
-                              style: const TextStyle(
-                                fontSize: 20,
-                                color: Colors.black,
-                              ),
+                                  hintText: 'Enter Username'),
+                              style: textFieldFontStyle,
                               textAlign: TextAlign.left,
-                              onChanged: (email) {
-                                if (!isEmail(email)) {
-                                  errorMessage = 'Email must be in valid form';
-                                  setState(() => unfilledEmail = true);
+                              onChanged: (username) {
+                                if (username.isEmpty) {
+                                  setState(() => unfilledUsername = true);
                                 } else {
-                                  errorMessage = '';
-                                  setState(() => unfilledEmail = false);
+                                  setState(() => unfilledUsername = false);
                                 }
                               },
                               textInputAction: TextInputAction.next,
@@ -701,8 +713,8 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                 vertical: 5, horizontal: 5),
                             decoration: const BoxDecoration(
                               color: mainScheme,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
+                              borderRadius: BorderRadius.all(
+                                  Radius.circular(roundedCorner)),
                             ),
                             child: TextField(
                               maxLines: 1,
@@ -713,10 +725,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                       hintText: 'Enter Password')
                                   : globalDecoration.copyWith(
                                       hintText: 'Enter Password'),
-                              style: const TextStyle(
-                                fontSize: 20,
-                                color: Colors.black,
-                              ),
+                              style: textFieldFontStyle,
                               textAlign: TextAlign.left,
                               textInputAction: TextInputAction.next,
                               onChanged: (password) {
@@ -734,8 +743,8 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                 vertical: 5, horizontal: 5),
                             decoration: const BoxDecoration(
                               color: mainScheme,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
+                              borderRadius: BorderRadius.all(
+                                  Radius.circular(roundedCorner)),
                             ),
                             child: TextField(
                               maxLines: 1,
@@ -746,43 +755,41 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                       hintText: 'Confirm Password')
                                   : globalDecoration.copyWith(
                                       hintText: 'Confirm Password'),
-                              style: const TextStyle(
-                                fontSize: 20,
-                                color: Colors.black,
-                              ),
+                              style: textFieldFontStyle,
                               textAlign: TextAlign.left,
                               textInputAction: TextInputAction.done,
                               onChanged: (password) {
                                 if (validatePassword(password)) {
-                                  unfilledConfirmPassword = false;
+                                  errorMessage = '';
+                                  setState(() => unfilledConfirmPassword = false);
                                 } else {
                                   errorMessage = 'Passwords must match!';
-                                  unfilledConfirmPassword = true;
+                                  setState(() => unfilledConfirmPassword = true);
                                 }
                                 setState(() {});
                               },
                             ),
                           ),
                           Container(
-                            margin: const EdgeInsets.only(bottom: 20),
+                            margin: const EdgeInsets.only(bottom: 15),
                             child: Text(
                               errorMessage,
-                              style: const TextStyle(
-                                  fontSize: 14, color: Colors.red),
+                              style: errorTextStyle.copyWith(fontSize: 14),
                               textAlign: TextAlign.center,
                             ),
                           ),
                           Container(
-                            width: 180,
+                            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
                             child: ElevatedButton(
                               onPressed: () async {
                                 if (allEditProfileFieldsValid()) {
                                   if (passwordsMatch()) {
-
                                     Map<String, dynamic> changes = {
                                       'firstName': _firstName.value.text.trim(),
                                       'lastName': _lastName.value.text.trim(),
-                                      'username': _email.value.text.trim(),
+                                      'lastSeen' : 1,
+                                      'email' : user.email.trim(),
+                                      'username': _username.value.text.trim(),
                                       'password': user.password,
                                     };
 
@@ -790,25 +797,30 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                       final res =
                                           await User.updateUser(changes);
                                       if (res.statusCode == 200) {
-                                        user.firstName = _firstName.value.text.trim();
-                                        user.lastName = _lastName.value.text.trim();
-                                        user.email = _email.value.text.trim();
+                                        user.firstName =
+                                            _firstName.value.text.trim();
+                                        user.lastName =
+                                            _lastName.value.text.trim();
+                                        user.username = _username.value.text.trim();
 
                                         errorMessage ==
                                             'Successfully updated your profile!';
-                                        await Future.delayed(Duration(seconds: 1));
+                                        await Future.delayed(const Duration(seconds: 1));
 
                                         clearFields();
                                         Navigator.pop(context);
-                                      } else {
-                                        errorMessage = await getUpdateProfileError(res.statusCode);
+                                      }
+                                      errorMessage = await getUpdateProfileError(res.statusCode);
+                                      if (res.statusCode == 403) {
                                         if (errorMessage ==
                                             'Successfully updated your profile!') {
-                                          user.firstName = _firstName.value.text.trim();
-                                          user.lastName = _lastName.value.text.trim();
-                                          user.email = _email.value.text.trim();
+                                          user.firstName =
+                                              _firstName.value.text.trim();
+                                          user.lastName =
+                                              _lastName.value.text.trim();
+                                          user.username = _username.value.text.trim();
 
-                                          await Future.delayed(Duration(seconds: 1));
+                                          await Future.delayed(const Duration(seconds: 1));
 
                                           clearFields();
                                           Navigator.pop(context);
@@ -819,26 +831,17 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                     } catch (e) {
                                       print('Could not connect to server');
                                     }
-                                  } else {
-                                    setState(() {});
                                   }
-                                } else {
-                                  setState(() {});
                                 }
+                                setState(() {});
                               },
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                backgroundColor: mainScheme,
-                                shadowColor: Colors.black,
-                              ),
+                              style: buttonStyle,
                               child: const Text(
                                 'Confirm Changes',
                                 style: TextStyle(
                                   fontSize: 18,
                                   color: Colors.white,
-                                  fontWeight: FontWeight.w300,
+                                  fontWeight: FontWeight.w400,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -866,27 +869,29 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              SizedBox(
-                  width: MediaQuery.of(context).size.width / 4,
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        IconButton(
-                          onPressed: () {
-                            Navigator.restorablePushReplacementNamed(context, '/food');
-                          },
-                          icon: Icon(Icons.egg),
-                          iconSize: 55,
-                          color: bottomRowIcon,
-                        ),
-                        const Text(
-                          'Ingredients',
-                          style: TextStyle(fontSize: 12, color: bottomRowIcon),
-                          textAlign: TextAlign.center,
-                        )
-                      ])),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    IconButton(
+                      onPressed: () {
+                        Navigator.restorablePushReplacementNamed(context, '/food');
+                      },
+                      icon: const Icon(Icons.egg),
+                      iconSize: bottomIconSize,
+                      color: mainScheme,
+                    ),
+                    Text(
+                      'Ingredients',
+                      style: bottomRowOnScreenTextStyle,
+                      textAlign: TextAlign.center,
+                    )
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
@@ -894,20 +899,20 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                       onPressed: () {
                         Navigator.restorablePushReplacementNamed(context, '/recipe');
                       },
-                      icon: Icon(Icons.restaurant),
+                      icon: const Icon(Icons.restaurant),
+                      iconSize: bottomIconSize,
                       color: bottomRowIcon,
-                      iconSize: 55,
                     ),
-                    const Text(
+                    Text(
                       'Recipes',
-                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
-                      textAlign: TextAlign.right,
-                    ),
+                      style: bottomRowIconTextStyle,
+                      textAlign: TextAlign.center,
+                    )
                   ],
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
@@ -915,32 +920,32 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                       onPressed: () {
                         Navigator.restorablePushReplacementNamed(context, '/cart');
                       },
-                      icon: Icon(Icons.shopping_cart),
-                      iconSize: 55,
+                      icon: const Icon(Icons.shopping_cart),
+                      iconSize: bottomIconSize,
                       color: bottomRowIcon,
                     ),
-                    const Text(
+                    Text(
                       'Shopping Cart',
-                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
+                      style: bottomRowIconTextStyle,
                       textAlign: TextAlign.center,
                     )
                   ],
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
                       onPressed: () {},
-                      icon: Icon(Icons.person),
-                      iconSize: 55,
+                      icon: const Icon(Icons.person),
+                      iconSize: bottomIconSize,
                       color: mainScheme,
                     ),
-                    const Text(
+                    Text(
                       'User Profile',
-                      style: TextStyle(fontSize: 12, color: mainScheme),
+                      style: bottomRowOnScreenTextStyle,
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -976,22 +981,14 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
       toReturn = false;
       unfilledLastName = true;
     }
-    if (_email.value.text.isEmpty) {
-      toReturn = false;
-      unfilledEmail = true;
-    }
     if (_password.value.text.isEmpty) {
       toReturn = false;
       unfilledPassword = true;
+      errorMessage = 'Password required to confirm changes';
     }
     if (_confirmPassword.value.text.isEmpty) {
       toReturn = false;
       unfilledConfirmPassword = true;
-    }
-    if (!isEmail(_email.value.text)) {
-      toReturn = false;
-      errorMessage = 'Email must be in valid form';
-      unfilledEmail = true;
     }
     return toReturn;
   }
@@ -1001,18 +998,20 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
       errorMessage = 'Password is incorrect';
       return false;
     }
+    if (_password.value.text != _confirmPassword.value.text) {
+      errorMessage = 'Passwords must match';
+      return false;
+    }
     return true;
   }
 
   void clearFields() {
     unfilledFirstName = false;
     unfilledLastName = false;
-    unfilledEmail = false;
     unfilledPassword = false;
     unfilledConfirmPassword = false;
     _firstName.clear();
     _lastName.clear();
-    _email.clear();
     _password.clear();
     _confirmPassword.clear();
   }
@@ -1020,10 +1019,8 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
   Future<String> getUpdateProfileError(int statusCode) async {
     switch (statusCode) {
       case 400:
-        return "Incorrect formatting!";
+        return "Username already taken";
       case 401:
-        return 'Access token missing';
-      case 403:
         errorMessage = 'Reconnecting...';
         if (await tryTokenRefresh()) {
           return 'Successfully changed password!';
@@ -1074,7 +1071,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
           onPressed: () {
             Navigator.pop(context);
           },
-          icon: Icon(
+          icon: const Icon(
             Icons.navigate_before,
             color: Colors.black,
           ),
@@ -1082,17 +1079,18 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
         ),
       ),
       body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: SingleChildScrollView(
           child: Container(
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
-            decoration: BoxDecoration(color: Colors.white),
+            decoration: const BoxDecoration(color: Colors.white),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 Container(
-                  margin: EdgeInsets.only(top: 20),
+                  margin: const EdgeInsets.only(top: 20),
                   alignment: Alignment.topCenter,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1100,7 +1098,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                       Column(
                         children: <Widget>[
                           Container(
-                            margin: EdgeInsets.only(top: 15),
+                            margin: const EdgeInsets.only(top: 15),
                             child: const Text(
                               'Old Password',
                               style: TextStyle(
@@ -1116,8 +1114,8 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                                 vertical: 5, horizontal: 5),
                             decoration: const BoxDecoration(
                               color: mainScheme,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
+                              borderRadius: BorderRadius.all(
+                                  Radius.circular(roundedCorner)),
                             ),
                             child: TextField(
                               maxLines: 1,
@@ -1127,6 +1125,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                                       hintText: 'Enter Old Password')
                                   : globalDecoration.copyWith(
                                       hintText: 'Enter Old Password'),
+                              style: textFieldFontStyle,
                               onChanged: (password) {
                                 if (_oldPassword.text.isEmpty) {
                                   errorMessage =
@@ -1145,7 +1144,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                       Column(
                         children: <Widget>[
                           Container(
-                            margin: EdgeInsets.only(top: 15),
+                            margin: const EdgeInsets.only(top: 15),
                             child: const Text(
                               'Enter Password to confirm changes',
                               style: TextStyle(
@@ -1157,13 +1156,13 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                           ),
                           Container(
                             width: 320,
-                            margin: EdgeInsets.only(bottom: 10),
-                            padding: EdgeInsets.symmetric(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.symmetric(
                                 vertical: 5, horizontal: 5),
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: mainScheme,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
+                              borderRadius: BorderRadius.all(
+                                  Radius.circular(roundedCorner)),
                             ),
                             child: TextField(
                               maxLines: 1,
@@ -1174,6 +1173,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                                       hintText: 'Enter Password')
                                   : globalDecoration.copyWith(
                                       hintText: 'Enter Password'),
+                              style: textFieldFontStyle,
                               onChanged: (password) {
                                 if (password.isEmpty) {
                                   setState(() => unfilledNewPassword = true);
@@ -1184,7 +1184,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                             ),
                           ),
                           Container(
-                            margin: EdgeInsets.only(top: 5),
+                            margin: const EdgeInsets.only(top: 5),
                             child: const Text(
                               'Confirm Password',
                               style: TextStyle(
@@ -1196,12 +1196,12 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                           ),
                           Container(
                             width: 320,
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 vertical: 5, horizontal: 5),
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: mainScheme,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
+                              borderRadius: BorderRadius.all(
+                                  Radius.circular(roundedCorner)),
                             ),
                             child: TextField(
                               maxLines: 1,
@@ -1212,6 +1212,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                                       hintText: 'Confirm Password')
                                   : globalDecoration.copyWith(
                                       hintText: 'Confirm Password'),
+                              style: textFieldFontStyle,
                               onChanged: (password) {
                                 if (validateConfirmPassword()) {
                                   setState(
@@ -1224,8 +1225,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                             margin: const EdgeInsets.only(bottom: 100),
                             child: Text(
                               errorMessage,
-                              style: const TextStyle(
-                                  fontSize: 14, color: Colors.red),
+                              style: errorTextStyle.copyWith(fontSize: 14),
                               textAlign: TextAlign.center,
                             ),
                           ),
@@ -1235,30 +1235,37 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                             child: ElevatedButton(
                               onPressed: () async {
                                 if (validateConfirmPassword()) {
-
                                   Map<String, dynamic> changes = {
+                                    'email' : user.email,
                                     'firstName': user.firstName.trim(),
                                     'lastName': user.lastName.trim(),
+                                    'lastSeen' : -1,
                                     'username': user.email.trim(),
                                     'password': _newPassword.value.text.trim(),
                                   };
 
                                   try {
-                                    final res =
-                                        await User.updateUser(changes);
+                                    final res = await User.updateUser(changes);
                                     if (res.statusCode == 200) {
-                                      user.password = _newPassword.value.text.trim();
+                                      user.password =
+                                          _newPassword.value.text.trim();
 
-                                      errorMessage = 'Successfully updated your password!';
-                                      await Future.delayed(const Duration(seconds: 1));
+                                      errorMessage =
+                                          'Successfully updated your password!';
+                                      await Future.delayed(
+                                          const Duration(seconds: 1));
 
                                       clearFields();
                                       Navigator.pop(context);
                                     }
-                                    errorMessage = await getChangePasswordError(res.statusCode);
-                                    if (errorMessage == 'Successfully updated your password!') {
-                                      user.password = _newPassword.value.text.trim();
-                                      await Future.delayed(const Duration(seconds: 1));
+                                    errorMessage = await getChangePasswordError(
+                                        res.statusCode);
+                                    if (errorMessage ==
+                                        'Successfully updated your password!') {
+                                      user.password =
+                                          _newPassword.value.text.trim();
+                                      await Future.delayed(
+                                          const Duration(seconds: 1));
 
                                       clearFields();
                                       Navigator.pop(context);
@@ -1271,13 +1278,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                                   setState(() {});
                                 }
                               },
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                backgroundColor: mainScheme,
-                                shadowColor: Colors.black,
-                              ),
+                              style: buttonStyle,
                               child: const Text(
                                 'Confirm Changes',
                                 style: TextStyle(
@@ -1311,27 +1312,29 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              SizedBox(
-                  width: MediaQuery.of(context).size.width / 4,
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        IconButton(
-                          onPressed: () {
-                            Navigator.restorablePushReplacementNamed(context, '/food');
-                          },
-                          icon: const Icon(Icons.egg),
-                          iconSize: 55,
-                          color: bottomRowIcon,
-                        ),
-                        const Text(
-                          'Ingredients',
-                          style: TextStyle(fontSize: 12, color: bottomRowIcon),
-                          textAlign: TextAlign.center,
-                        )
-                      ])),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    IconButton(
+                      onPressed: () {
+                        Navigator.restorablePushReplacementNamed(context, '/food');
+                      },
+                      icon: const Icon(Icons.egg),
+                      iconSize: bottomIconSize,
+                      color: mainScheme,
+                    ),
+                    Text(
+                      'Ingredients',
+                      style: bottomRowOnScreenTextStyle,
+                      textAlign: TextAlign.center,
+                    )
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
@@ -1340,19 +1343,19 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                         Navigator.restorablePushReplacementNamed(context, '/recipe');
                       },
                       icon: const Icon(Icons.restaurant),
+                      iconSize: bottomIconSize,
                       color: bottomRowIcon,
-                      iconSize: 55,
                     ),
-                    const Text(
+                    Text(
                       'Recipes',
-                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
-                      textAlign: TextAlign.right,
-                    ),
+                      style: bottomRowIconTextStyle,
+                      textAlign: TextAlign.center,
+                    )
                   ],
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
@@ -1361,31 +1364,31 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                         Navigator.restorablePushReplacementNamed(context, '/cart');
                       },
                       icon: const Icon(Icons.shopping_cart),
-                      iconSize: 55,
+                      iconSize: bottomIconSize,
                       color: bottomRowIcon,
                     ),
-                    const Text(
+                    Text(
                       'Shopping Cart',
-                      style: TextStyle(fontSize: 12, color: bottomRowIcon),
+                      style: bottomRowIconTextStyle,
                       textAlign: TextAlign.center,
                     )
                   ],
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 4,
+              Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
                       onPressed: () {},
                       icon: const Icon(Icons.person),
-                      iconSize: 55,
+                      iconSize: bottomIconSize,
                       color: mainScheme,
                     ),
-                    const Text(
+                    Text(
                       'User Profile',
-                      style: TextStyle(fontSize: 12, color: mainScheme),
+                      style: bottomRowOnScreenTextStyle,
                       textAlign: TextAlign.center,
                     )
                   ],
