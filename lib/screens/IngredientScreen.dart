@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:smart_chef/utils/APIutils.dart';
@@ -334,20 +335,18 @@ class _IngredientsPageState extends State<IngredientsPage> {
 
     if (numIngreds == 0) {
       return Container(
-        margin: const EdgeInsets.only(top:20),
-        child: Column(
-            children: <Widget>[
-              Flexible(
-                  child: Text(
-                    'You have no items in your inventory!\nPress the add button on the bottom right to start adding ingredients',
-                    style: TextStyle(
-                        fontSize: 24, color: Colors.grey[600], fontWeight: FontWeight.w600),
-                    textAlign: TextAlign.center,
-                  )
-              )
-            ]
-        )
-      );
+          margin: const EdgeInsets.only(top: 20),
+          child: Column(children: <Widget>[
+            Flexible(
+                child: Text(
+              'You have no items in your inventory!\nPress the add button on the bottom right to start adding ingredients',
+              style: TextStyle(
+                  fontSize: 24,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ))
+          ]));
     }
 
     double bodyHeight = MediaQuery.of(context).size.height -
@@ -1330,16 +1329,16 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
               Navigator.pop(context);
             },
           )),
-      body:Container(
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height,
-          margin: const EdgeInsets.fromLTRB(5, 10, 5, 0),
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onTap: () {
-              FocusManager.instance.primaryFocus?.unfocus();
-            },
-            child: Column(
+      body: Container(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height,
+        margin: const EdgeInsets.fromLTRB(5, 10, 5, 0),
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () {
+            FocusManager.instance.primaryFocus?.unfocus();
+          },
+          child: Column(
             children: <Widget>[
               Container(
                 width: MediaQuery.of(context).size.width,
@@ -1371,36 +1370,23 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                 child: LayoutBuilder(builder:
                     (BuildContext context, BoxConstraints constraints) {
                   return DropdownButtonFormField2<String>(
-                          decoration: const InputDecoration.collapsed(
-                            hintText: 'Search...',
-                            hintStyle: TextStyle(
-                              color: searchFieldText,
-                              fontSize: 18,
-                            ),
-                          ),
-                          icon: const Icon(
-                            Icons.search,
-                            color: Colors.black,
-                            size: topBarIconSize,
-                          ),
-                          items: searches,
-                          onChanged: (String? newVal) {
-
-                          },
-                        );
-                        // child: TextField(
-                        //   maxLines: 1,
-                        //   decoration:
-                        //   style: const TextStyle(
-                        //     color: searchFieldText,
-                        //     fontSize: 18,
-                        //   ),
-                        //   textInputAction: TextInputAction.done,
-                        //   onChanged: (query) {
-                        //     pageCount = 0;
-                        //     // TODO(15): Dynamic search
-                        //   },
-                        // ),
+                    decoration: const InputDecoration.collapsed(
+                      hintText: 'Search...',
+                      hintStyle: TextStyle(
+                        color: searchFieldText,
+                        fontSize: 18,
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.search,
+                      color: Colors.black,
+                      size: topBarIconSize,
+                    ),
+                    items: searches,
+                    onChanged: (String? newVal) {
+                      // TODO(15): Dynamic search
+                    },
+                  );
                 }),
               ),
               Container(
@@ -1566,10 +1552,10 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
 
   // TODO(26): Allow searching of ingredients to add predefined things
   void updateSearchList(String searchQuery) async {
-
     int resultsPerPage = 20;
 
-    final res = await Ingredients.searchIngredients(searchQuery, resultsPerPage, pageCount++, '');
+    final res = await Ingredients.searchIngredients(
+        searchQuery, resultsPerPage, pageCount++, '');
     if (res.statusCode != 200) {
       return null;
     }
@@ -1577,16 +1563,14 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
     var data = json.decode(res.body);
     for (var value in data) {
       DropdownMenuItem<String> searchToAdd = DropdownMenuItem(
-        child: Text(
-            value['name'],
-          style: const TextStyle(
-            color: searchFieldText,
-            fontSize: 18,
-          ),
-        )
-      );
+          child: Text(
+        value['name'],
+        style: const TextStyle(
+          color: searchFieldText,
+          fontSize: 18,
+        ),
+      ));
       searches.add(searchToAdd);
     }
-
   }
 }
