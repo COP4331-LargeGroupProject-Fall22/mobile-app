@@ -43,7 +43,7 @@ class IngredientData {
   IngredientData inventoryIngredient(Map<String, dynamic> json) {
     this.ID = json['id'];
     this.name = json['name'];
-    this.category = json.containsKey('category') ? '' : json['category'];
+    this.category = json.containsKey('category') ? json['category'] : '';
     this.expirationDate = json['expirationDate'];
     return this;
   }
