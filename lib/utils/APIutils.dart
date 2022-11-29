@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:smart_chef/utils/authAPI.dart';
+import 'package:smart_chef/utils/ingredientData.dart';
 import 'package:smart_chef/utils/userData.dart';
 
 const String API_PREFIX = "https://api-smart-chef.herokuapp.com/";
@@ -13,6 +14,9 @@ final accessTokenHeader = {
 };
 
 UserData user = UserData.create();
+IngredientData ingredientToPass = IngredientData.create();
+bool navFromAddIngred = false;
+final messageDelay = Future.delayed(Duration(seconds: 1));
 
 RegExp emailValidation = RegExp(
     r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$');
@@ -47,8 +51,8 @@ Future<bool> refreshTokenStatus() async {
   switch (changeToken.statusCode) {
     case 200:
       var tokens = json.decode(changeToken.body);
-      user.accessToken = tokens['accessToken'];
-      user.refreshToken = tokens['refreshToken'];
+      user.accessToken = tokens['accessToken']['token'];
+      user.refreshToken = tokens['refreshToken']['token'];
       return true;
     case 400:
       return false;
@@ -73,6 +77,7 @@ Future<bool> reauthenticateUser() async {
       var data = json.decode(response.body);
       user.accessToken = data['accessToken'];
       user.refreshToken = data['refreshToken'];
+      print('Successful relog');
       return true;
     case 400:
       print('Incorrect request format');
@@ -86,6 +91,8 @@ Future<bool> reauthenticateUser() async {
     case 404:
       print('User not found');
       break;
+    default:
+      print('Cannot connect!');
   }
   return false;
 }

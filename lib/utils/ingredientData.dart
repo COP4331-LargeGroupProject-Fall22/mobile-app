@@ -6,35 +6,51 @@ class IngredientData {
   List<String> units;
   List<Nutrient> nutrients;
   int expirationDate;
+  // TODO(tbd): Add image support for ingredients
+  // int image;
 
   IngredientData(this.ID, this.name, this.category, this.units, this.nutrients, this.expirationDate);
 
-  static final IngredientData origin = IngredientData(0, '', '', [], [], 0);
-
   factory IngredientData.create() {
+    IngredientData origin = IngredientData(0, '', '', [], [], 0);
     return origin;
   }
 
-  void baseIngredient(Map<String, dynamic> json) {
+  IngredientData baseIngredient(Map<String, dynamic> json) {
     this.ID = json['id'];
     this.name = json['name'];
-    this.category = json['category'];
+    this.category = json.containsKey('category') ? '' : json['category'];
+    return this;
   }
 
-  void completeIngredient(Map<String, dynamic> json) {
+  IngredientData completeIngredient(Map<String, dynamic> json) {
     this.ID = json['id'];
     this.name = json['name'];
-    this.category = json['category'];
-    this.units = json['quantityUnits'];
-    this.nutrients = json['nutrients'];
+    this.category = json.containsKey('category') ? '' : json['category'];
+    this.units = insertUnits(json);
+    this.nutrients = Nutrient.create().toNutrient(json);
+    return this;
   }
 
-  void inventoryIngredient(Map<String, dynamic> json) {
+  List<String> insertUnits(Map<String, dynamic> json) {
+    List<String> units = [];
+    for (var unit in json['quantityUnits']) {
+      units.add(unit);
+    }
+    return units;
+  }
+
+  IngredientData inventoryIngredient(Map<String, dynamic> json) {
     this.ID = json['id'];
     this.name = json['name'];
-    this.category = json['category'];
+    this.category = json.containsKey('category') ? '' : json['category'];
     this.expirationDate = json['expirationDate'];
+    return this;
+  }
 
+  void addInformationToIngredient(Map<String, dynamic> json) {
+    this.units = insertUnits(json);
+    this.nutrients = Nutrient.create().toNutrient(json);
   }
 
   Map<String,dynamic> toJson() => {
@@ -53,24 +69,62 @@ class IngredientData {
     this.units = [];
     this.expirationDate = 0;
   }
+
+  @override
+  String toString() {
+    String toString = '';
+    if (this.name.isNotEmpty) {
+      toString += 'Name: ${this.name}';
+    }
+    if (this.ID != 0) {
+      toString += '\nID: ${this.ID}';
+    }
+    if (this.category.isNotEmpty) {
+      toString += '\nCategories: ${this.category}';
+    }
+    return toString;
+  }
 }
 
 class Nutrient{
 
   String name;
   Unit unit;
-  double percentOfDaily;
+  num percentOfDaily;
 
   Nutrient(this.name, this.unit, this.percentOfDaily);
 
-  static final Nutrient origin = Nutrient('', Unit.origin, 0);
+  factory Nutrient.create() {
+    Nutrient origin = Nutrient('', Unit.create(), 0);
+    return origin;
+  }
+
+  List<Nutrient> toNutrient(Map<String, dynamic> json) {
+    List<Nutrient> nutrient = [];
+    for (var nutrients in json['nutrients']) {
+      nutrient.add(Nutrient(nutrients['name'], Unit(nutrients['unit']['unit'], nutrients['unit']['value']), nutrients['percentOfDaily']));
+    }
+    return nutrient;
+  }
+
+  @override
+  String toString() {
+    return '${this.name}: ${this.unit.toString()}; Percent of daily value: ${this.percentOfDaily}\n';
+  }
 }
 
 class Unit{
   String unit;
-  double value;
+  num value;
 
   Unit(this.unit, this.value);
 
-  static final Unit origin = Unit('', 0);
+  factory Unit.create() {
+    Unit origin = Unit('', 0);
+    return origin;
+  }
+
+  String toString() {
+    return '${this.value} ${this.unit}';
+  }
 }

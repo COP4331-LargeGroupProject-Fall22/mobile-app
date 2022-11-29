@@ -26,7 +26,7 @@ class Authentication {
 
     try {
       Map<String, dynamic> tokenBody = {'refreshToken': user.refreshToken};
-      response = await http.put(Uri.parse('$API_PREFIX$apiRoute/refreshJWT'),
+      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/refreshJWT'),
           body: json.encode(tokenBody),
           headers: baseHeader);
     } catch (e) {

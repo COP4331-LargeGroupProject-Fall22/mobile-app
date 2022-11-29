@@ -57,13 +57,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 setState(() {
                   errorMessage = 'Logout successful!';
                 });
-                await Future.delayed(Duration(seconds: 1));
+                await messageDelay;
                 user.clear();
 
                 Navigator.pushNamedAndRemoveUntil(
                     context, '/startup', ((Route<dynamic> route) => false));
               } else {
-                errorMessage = getLogoutError(res.statusCode);
+                int errorCode = await getLogoutError(res.statusCode);
               }
             } catch (e) {
               print('Could not connect to server');
@@ -91,7 +91,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   Navigator.pushNamedAndRemoveUntil(
                       context, '/startup', ((Route<dynamic> route) => false));
                 } else {
-                  errorMessage = getDeleteError(res.statusCode);
+                  int errorCode = await getDeleteError(res.statusCode);
                 }
               } catch (e) {
                 errorDialog(context);
@@ -371,7 +371,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     ),
                     Text(
                       'Ingredients',
-                      style: bottomRowOnScreenTextStyle,
+                      style: bottomRowIconTextStyle,
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -445,27 +445,46 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  String getLogoutError(int statusCode) {
+  Future<int> getLogoutError(int statusCode) async {
     switch (statusCode) {
       case 400:
-        return "Could not logout";
+        errorMessage = 'Incorrect request format';
+        return 1;
       case 401:
-        return 'Access Token invalid';
+        errorMessage = 'Reconnecting...';
+        if (await tryTokenRefresh()) {
+          errorMessage = 'Successfully changed password!';
+          return 2;
+        } else {
+          errorMessage = 'Cannot connect to server';
+          return 3;
+        }
       default:
-        return 'Something went wrong!';
+        errorMessage = 'Something went wrong!';
+        return 3;
     }
   }
 
-  String getDeleteError(int statusCode) {
+  Future<int> getDeleteError(int statusCode) async {
     switch (statusCode) {
       case 400:
-        return 'Incorrect request format';
+        errorMessage = 'Incorrect request format';
+        return 1;
       case 401:
-        return 'Token is invalid';
+        errorMessage = 'Reconnecting...';
+        if (await tryTokenRefresh()) {
+          errorMessage = 'Successfully changed password!';
+          return 2;
+        } else {
+          errorMessage = 'Cannot connect to server';
+          return 3;
+        }
       case 404:
-        return 'User not found';
+        errorMessage = 'User not found';
+        return 3;
       default:
-        return 'Something went wrong!';
+        errorMessage = 'Something went wrong!';
+        return 3;
     }
   }
 }

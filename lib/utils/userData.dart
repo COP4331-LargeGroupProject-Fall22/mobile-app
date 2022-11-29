@@ -27,8 +27,8 @@ class UserData {
   }
 
   void defineTokens(Map<String, dynamic> json) {
-    this.accessToken = json['accessToken'];
-    this.refreshToken = json['refreshToken'];
+    this.accessToken = json['accessToken']['token'];
+    this.refreshToken = json['refreshToken']['token'];
   }
 
   void setPassword(String pass) {

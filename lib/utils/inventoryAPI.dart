@@ -57,7 +57,6 @@ class Inventory {
   static Future<http.Response> retrieveIngredientFromInventory(int id) async {
     http.Response response;
 
-
     try {
       response = await http.get(Uri.parse('$API_PREFIX$apiRoute/$id'),
           headers: accessTokenHeader);
@@ -69,12 +68,12 @@ class Inventory {
     return response;
   }
 
-  static Future<http.Response> addIngredientToInventory(int id, int expirationDate) async {
+  static Future<http.Response> updateIngredientInInventory(int id, Map<String, dynamic> payload) async {
     http.Response response;
 
     try {
       response = await http.put(Uri.parse('$API_PREFIX$apiRoute/$id'),
-          body: json.encode('"expirationDate": $expirationDate'),
+          body: json.encode(payload),
           headers: accessTokenHeader);
     } catch (e) {
       print(e.toString());
