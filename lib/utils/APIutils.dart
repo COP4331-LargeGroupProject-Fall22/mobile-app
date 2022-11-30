@@ -14,8 +14,6 @@ final accessTokenHeader = {
 };
 
 UserData user = UserData.create();
-IngredientData ingredientToPass = IngredientData.create();
-bool navFromAddIngred = false;
 final messageDelay = Future.delayed(Duration(seconds: 1));
 
 RegExp emailValidation = RegExp(

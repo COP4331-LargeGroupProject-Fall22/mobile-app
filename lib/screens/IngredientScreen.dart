@@ -3,6 +3,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:smart_chef/screens/LoadingOverlay.dart';
 import 'package:smart_chef/utils/APIutils.dart';
 import 'package:smart_chef/utils/authAPI.dart';
 import 'package:smart_chef/utils/colors.dart';
@@ -38,14 +39,23 @@ class _IngredientsPageState extends State<IngredientsPage> {
   @override
   void initState() {
     super.initState();
-    makeTiles();
+    inventoryScroll = ScrollController()..addListener(_scrollListener);
   }
 
-  Widget body = Container();
+  @override
+  void dispose() {
+    inventoryScroll.removeListener(_scrollListener);
+    super.dispose();
+  }
 
-  void makeTiles() async {
-    body = await BuildTiles(_groupValue);
-    setState(() {});
+  late List<Widget> body;
+  Map<String, List<IngredientData>> userInventory = {};
+  late ScrollController inventoryScroll;
+  String errorMessage = 'You have no items in your inventory!';
+
+  Future<void> makeTiles() async {
+    userInventory = await retrieveInventory(_groupValue);
+    body = await BuildTiles();
   }
 
   Icon leadingIcon = const Icon(Icons.search, color: black);
@@ -54,6 +64,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
   final _search = TextEditingController();
 
   int _groupValue = 0;
+  int itemsToDisplay = 30;
 
   String sorted = 'Sorted by Expiration Date(Oldest First)';
   List checkListItems = [
@@ -91,6 +102,10 @@ class _IngredientsPageState extends State<IngredientsPage> {
 
   @override
   Widget build(BuildContext context) {
+    double bodyHeight = MediaQuery.of(context).size.height -
+        bottomRowHeight -
+        MediaQuery.of(context).padding.top -
+        AppBar().preferredSize.height;
     return Scaffold(
       appBar: AppBar(
         title: searchBar,
@@ -151,6 +166,91 @@ class _IngredientsPageState extends State<IngredientsPage> {
           iconSize: topBarIconSize + 5,
         ),
         actions: <Widget>[
+          IconButton(
+            icon: const Icon(
+              Icons.clear,
+              color: Colors.red,
+            ),
+            iconSize: topBarIconSize,
+            onPressed: () async {
+              bool delete = false;
+              await showDialog(
+                context: context,
+                barrierDismissible: true,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text(
+                        'Are you sure you want to clear your inventory?'),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    elevation: 15,
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          delete = false;
+                          Navigator.pop(context);
+                        },
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(color: Colors.red, fontSize: 18),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          delete = true;
+                          Navigator.pop(context);
+                        },
+                        child: const Text(
+                          'Yes',
+                          style: TextStyle(color: Colors.red, fontSize: 18),
+                        ),
+                      )
+                    ],
+                  );
+                },
+              );
+
+              if (!delete) {
+                return;
+              }
+
+              try {
+                for (var cat in userInventory.keys) {
+                  if (userInventory[cat]!.length == 0) {
+                    continue;
+                  }
+                  for (var ingreds in userInventory[cat]!) {
+                    print(ingreds.toString());
+                    final res = await Inventory.deleteIngredientfromInventory(
+                        ingreds.ID);
+                    if (res.statusCode == 200) {
+                      errorMessage =
+                      'Successfully cleared your inventory!';
+                      await messageDelay;
+                      Navigator.pop(context);
+                    } else {
+                      int errorCode = await getDeleteError(res.statusCode);
+                      if (errorCode == 2) {
+                        final ret = await Inventory.deleteIngredientfromInventory(
+                            ingreds.ID);
+                        if (ret.statusCode == 200) {
+                          errorMessage =
+                          'Successfully deleted ingredient from inventory!';
+                          await messageDelay;
+                          Navigator.pop(context);
+                        } else {
+                          errorDialog(context);
+                        }
+                      }
+                    }
+                  }
+                }
+              } catch(e) {
+                print(e.toString());
+                errorMessage = 'Cannot clear Inventory!';
+              }
+              setState(() {});
+            }),
           Builder(builder: (BuildContext context) {
             return IconButton(
               icon: const Icon(
@@ -172,8 +272,8 @@ class _IngredientsPageState extends State<IngredientsPage> {
               padding: const EdgeInsets.only(top: 15),
               decoration: BoxDecoration(
                   border: Border(
-                      bottom: BorderSide(
-                          color: black.withOpacity(.2), width: 3))),
+                      bottom:
+                          BorderSide(color: black.withOpacity(.2), width: 3))),
               child: const DrawerHeader(
                 child: Text(
                   'Sort by...',
@@ -215,28 +315,64 @@ class _IngredientsPageState extends State<IngredientsPage> {
         onTap: () {
           FocusManager.instance.primaryFocus?.unfocus();
         },
-        child: FutureBuilder(
-          future: BuildTiles(_groupValue),
-          builder: (BuildContext context, AsyncSnapshot snapshot) {
-            switch (snapshot.connectionState) {
-              case ConnectionState.waiting:
-                return Container(
-                  padding: const EdgeInsets.all(15),
-                  child: const Text(
-                    'Fetching your inventory...',
-                    style: TextStyle(
-                      fontSize: addIngredientPageTextSize,
-                      color: searchFieldText,
+        child: SingleChildScrollView(
+          controller: inventoryScroll,
+          child: Container(
+            width: MediaQuery.of(context).size.width,
+            height: bodyHeight,
+            decoration: const BoxDecoration(color: white),
+            child: Column(
+              children: <Widget>[
+                Container(
+                    margin: const EdgeInsets.all(10),
+                    width: MediaQuery.of(context).size.width,
+                    decoration: const BoxDecoration(
+                      color: Colors.transparent,
                     ),
-                    textAlign: TextAlign.center,
+                    child: Text(sorted,
+                        style: const TextStyle(
+                          fontSize: ingredientInfoFontSize,
+                          color: black,
+                        ))),
+                Expanded(
+                  child: FutureBuilder(
+                    future: makeTiles(),
+                    builder: (BuildContext context, AsyncSnapshot snapshot) {
+                      switch (snapshot.connectionState) {
+                        case ConnectionState.active:
+                        case ConnectionState.waiting:
+                          return const CircularProgressIndicator();
+                        case ConnectionState.done:
+                          if (snapshot.hasError) {
+                            return Text('Error: $snapshot.error}');
+                          }
+                          if (body.length == 0) {
+                            return ListTile(
+                              contentPadding: const EdgeInsets.all(15),
+                              title: Text(
+                                errorMessage,
+                                style: const TextStyle(
+                                  fontSize: addIngredientPageTextSize,
+                                  color: searchFieldText,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            );
+                          }
+                          return ListView.builder(
+                            itemCount: body.length,
+                            itemBuilder: (context, index) {
+                              return body[index];
+                            },
+                          );
+                      }
+                      return const CircularProgressIndicator();
+                    },
                   ),
-                );
-              case ConnectionState.done:
-                return body;
-              default:
-                return body;
-            }
-          },
+                ),
+              ],
+            ),
+          ),
         ),
       ),
       extendBody: false,
@@ -246,8 +382,8 @@ class _IngredientsPageState extends State<IngredientsPage> {
           height: bottomRowHeight,
           width: MediaQuery.of(context).size.width,
           decoration: BoxDecoration(
-            border: Border(
-                top: BorderSide(color: black.withOpacity(.2), width: 3)),
+            border:
+                Border(top: BorderSide(color: black.withOpacity(.2), width: 3)),
             color: white,
           ),
           child: Row(
@@ -355,6 +491,15 @@ class _IngredientsPageState extends State<IngredientsPage> {
     );
   }
 
+  void _scrollListener() {
+    if (inventoryScroll.position.atEdge) {
+      bool isTop = inventoryScroll.position.pixels == 0;
+      if (!isTop) {
+        makeTiles();
+      }
+    }
+  }
+
   DateTime convertToDate(int secondEpoch) {
     var date = DateTime.fromMicrosecondsSinceEpoch(secondEpoch * 1000);
     return date;
@@ -364,35 +509,42 @@ class _IngredientsPageState extends State<IngredientsPage> {
     return date.toUtc().microsecondsSinceEpoch;
   }
 
-  Future<List<IngredientData>> FetchInventory(int sortBy) async {
+  Future<Map<String, List<IngredientData>>> retrieveInventory(
+      int sortBy) async {
     bool reverse = false;
     bool exDate = true;
     bool cat = false;
     bool alphabet = false;
+    String toSortBy = '';
+    itemsToDisplay = 30;
 
-    List<IngredientData> inventory = [];
+    Map<String, List<IngredientData>> inventory = {};
 
     switch (sortBy) {
       case 1:
         reverse = true;
         break;
       case 2:
-        cat = true;
+        alphabet = true;
         exDate = false;
+        toSortBy = 'lexigraphical';
         break;
       case 3:
+        alphabet = true;
+        reverse = true;
+        exDate = false;
+        toSortBy = 'reverseLexigraphical';
+        break;
+      case 4:
+        cat = true;
+        exDate = false;
+        toSortBy = 'category';
+        break;
+      case 5:
         cat = true;
         reverse = true;
         exDate = false;
-        break;
-      case 4:
-        alphabet = true;
-        exDate = false;
-        break;
-      case 5:
-        alphabet = true;
-        reverse = true;
-        exDate = false;
+        toSortBy = 'categoryReversed';
         break;
       default:
         break;
@@ -404,224 +556,257 @@ class _IngredientsPageState extends State<IngredientsPage> {
     do {
       if (res.statusCode == 200) {
         var data = json.decode(res.body);
-        for (var ingredient in data['hasExpirationDate']) {
-          inventory
-              .add(IngredientData.create().inventoryIngredient(ingredient));
-        }
-        for (var ingredient in data['noExpirationDate']) {
-          inventory
-              .add(IngredientData.create().inventoryIngredient(ingredient));
+        for (int i = 0; i < data.length; i += 2) {
+          for (var cats in data) {
+            List<IngredientData> ingredients = [];
+            for (var ingred in cats[1]) {
+              ingredients
+                  .add(IngredientData.create().inventoryIngredient(ingred));
+            }
+            inventory[cats[i]] = ingredients;
+          }
         }
         success = true;
       } else {
-        if (res.statusCode == 401) {
-          bool refresh = await tryTokenRefresh();
-          if (!refresh) {
-            errorDialog(context);
-          }
+        int errorCode = await getDataRetrieveError(res.statusCode);
+        if (errorCode == 3) {
+          errorDialog(context);
         }
       }
     } while (!success);
 
-
     return inventory;
   }
 
-  Future<Widget> BuildTiles(int sortBy) async {
-    List<IngredientData> userInventory = await FetchInventory(sortBy);
-    if (userInventory.length == 0) {
-      return Container(
-        width: MediaQuery.of(context).size.width,
-        padding: const EdgeInsets.all(15),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const <Widget>[
-            Flexible(
-              child: Text(
-                'You have no items in your inventory!',
-                style: TextStyle(
-                  fontSize: addIngredientPageTextSize,
-                  color: searchFieldText,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+  Future<List<Widget>> BuildTiles() async {
+    List<Widget> toRet = [];
 
-    List<Widget> ingredients = [];
-
-    double bodyHeight = MediaQuery.of(context).size.height -
-        bottomRowHeight -
-        MediaQuery.of(context).padding.top -
-        AppBar().preferredSize.height;
-
-    double itemWidth = MediaQuery.of(context).size.width / 2 - 20;
-    double itemHeight = MediaQuery.of(context).size.height / 4 - 20;
-
-    for (var item in userInventory) {
-      ingredients.add(
-        GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: () {
-            ingredientToPass = item;
-            Navigator.restorablePushNamed(context, '/food/food');
-          },
-          child: IngredientTile(item),
-        ),
-      );
-    }
-
-    GridView ingreds = GridView.count(
-        shrinkWrap: true,
-        childAspectRatio: itemWidth / itemHeight,
-        crossAxisCount: 2,
-        padding: const EdgeInsets.all(15),
-        scrollDirection: Axis.vertical,
-        crossAxisSpacing: 20,
-        mainAxisSpacing: 15,
-        children: ingredients);
-    return SingleChildScrollView(
-      child: Container(
-        width: MediaQuery.of(context).size.width,
-        height: bodyHeight,
-        decoration: const BoxDecoration(color: white),
-        child: Column(
-          children: <Widget>[
-            Container(
-                margin: const EdgeInsets.all(10),
-                width: MediaQuery.of(context).size.width,
-                decoration: const BoxDecoration(
-                  color: Colors.transparent,
-                ),
-                child: Text(sorted,
-                    style: const TextStyle(
-                      fontSize: ingredientInfoFontSize,
-                      color: black,
-                    ))),
-            Expanded(child: ingreds)
-          ],
-        ),
-      ),
-    );
-  }
-
-  // TODO(18): integrate API into making ingredients
-  Widget IngredientTile(IngredientData item) {
-    double tileHeight = 200;
-
-    bool expiresSoon = false;
-    bool expired = false;
-    DateTime expDate = convertToDate(item.expirationDate);
-
-    if (DateTime.now().difference(expDate).inDays < 7) {
-      expiresSoon = true;
-    } else {
-      if (expDate.difference(DateTime.now()).inDays > 0) {
-        expired = true;
+    for (var cat in userInventory.keys) {
+      if (userInventory[cat]!.length == 0) {
+        continue;
       }
-    }
-
-    Container expires = Container(
-      height: tileHeight,
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.all(Radius.circular(20)),
-        color: expiresSoon
-            ? Colors.red[200]
-            : (expired ? const Color(0xffFF0000) : white),
-      ),
-      child: Align(
-        alignment: FractionalOffset.bottomLeft,
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  expiresSoon ? 'Expires Soon!' : (expired ? 'Expired!' : ''),
-                  style: const TextStyle(
-                    color: white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
+      toRet.add(Text(
+        cat,
+        style: const TextStyle(
+          fontSize: addIngredientPageTextSize,
+          color: searchFieldText,
         ),
-      ),
-    );
+      ));
+      toRet.add(
+        GridView.builder(
+          itemCount: itemsToDisplay < userInventory[cat]!.length
+              ? itemsToDisplay
+              : userInventory[cat]!.length,
+          shrinkWrap: true,
+          itemBuilder: (context, index) {
+            IngredientData item = userInventory[cat]![index];
+            bool expiresSoon = false;
+            bool expired = false;
 
-    return SizedBox(
-      child: Stack(
-        children: <Widget>[
-          expires,
-          Container(
-            height: tileHeight - 40,
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(20)),
-              image: DecorationImage(
-                image: AssetImage('assets/images/Background.png'),
-                fit: BoxFit.fitWidth,
-              ),
-            ),
-          ),
-          Container(
-            height: tileHeight - 40,
-            decoration: BoxDecoration(
-              color: white,
-              borderRadius: const BorderRadius.all(Radius.circular(20)),
-              gradient: LinearGradient(
-                begin: FractionalOffset.topCenter,
-                end: FractionalOffset.bottomCenter,
-                colors: [
-                  Colors.grey.withOpacity(0.0),
-                  black.withOpacity(0.5),
-                ],
-                stops: [0.0, 0.75],
-              ),
-            ),
-            child: Align(
-              alignment: FractionalOffset.bottomLeft,
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: Text(
-                        item.name,
-                        style: const TextStyle(
-                          fontSize: ingredientInfoFontSize,
-                          fontWeight: FontWeight.w600,
-                          color: white,
+            double tileHeight = MediaQuery.of(context).size.height;
+
+            if (item.expirationDate != 0) {
+              DateTime expDate = convertToDate(item.expirationDate);
+
+              if (DateTime.now().difference(expDate).inDays < 7) {
+                expiresSoon = true;
+              } else {
+                if (expDate.difference(DateTime.now()).inDays > 0) {
+                  expired = true;
+                }
+              }
+            }
+            return GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () {
+                Navigator.restorablePushNamed(context, '/food/food', arguments:IngredientArguments(ingredient: item, isEditing: false, navFromAdd: false));
+                setState(() {});
+              },
+              child: Stack(
+                children: <Widget>[
+                  Container(
+                    height: tileHeight,
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                      color: expiresSoon
+                          ? Colors.red[200]
+                          : (expired ? const Color(0xffFF0000) : white),
+                    ),
+                    child: Align(
+                      alignment: FractionalOffset.bottomLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: Text(
+                                expiresSoon
+                                    ? 'Expires Soon!'
+                                    : (expired ? 'Expired!' : ''),
+                                style: const TextStyle(
+                                  color: white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        textAlign: TextAlign.left,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  Container(
+                    height: tileHeight - 40,
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20)),
+                      image: DecorationImage(
+                        image: AssetImage('assets/images/Background.png'),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    height: tileHeight - 40,
+                    decoration: BoxDecoration(
+                      color: white,
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                      gradient: LinearGradient(
+                        begin: FractionalOffset.topCenter,
+                        end: FractionalOffset.bottomCenter,
+                        colors: [
+                          Colors.grey.withOpacity(0.0),
+                          black.withOpacity(0.5),
+                        ],
+                        stops: const [0.0, 0.75],
+                      ),
+                    ),
+                    child: Align(
+                      alignment: FractionalOffset.bottomLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: Text(
+                                item.name,
+                                style: const TextStyle(
+                                  fontSize: ingredientInfoFontSize,
+                                  fontWeight: FontWeight.w600,
+                                  color: white,
+                                ),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
+            );
+          },
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 20,
+            mainAxisSpacing: 20,
           ),
-        ],
-      ),
-    );
+          physics: const NeverScrollableScrollPhysics(),
+        ),
+      );
+    }
+    itemsToDisplay += 30;
+
+    return toRet;
+  }
+
+  Future<int> getDataRetrieveError(int statusCode) async {
+    switch (statusCode) {
+      case 400:
+        errorMessage = "Unknown error has occured";
+        return 1;
+      case 401:
+        errorMessage = 'Reconnecting...';
+        if (await tryTokenRefresh()) {
+          errorMessage = 'Reconnected';
+          return 2;
+        } else {
+          errorMessage = 'Cannot connect to server';
+          return 3;
+        }
+      case 404:
+        return 3;
+      case 503:
+        errorMessage = 'Cannot connect to server!';
+        return 3;
+      default:
+        return 3;
+    }
+  }
+
+  Future<int> getDeleteError(int statusCode) async {
+    switch (statusCode) {
+      case 400:
+        errorMessage = "Unknown error has occured";
+        return 1;
+      case 401:
+        errorMessage = 'Reconnecting...';
+        if (await tryTokenRefresh()) {
+          errorMessage = 'Reconnected';
+          return 2;
+        } else {
+          errorMessage = 'Cannot connect to server';
+          return 3;
+        }
+      case 404:
+        return 3;
+      case 503:
+        errorMessage = 'Cannot connect to server!';
+        return 3;
+      default:
+        return 3;
+    }
   }
 }
 
 class IngredientPage extends StatefulWidget {
+  IngredientArguments args;
+
+  IngredientPage(this.args);
+
   @override
-  _IngredientPageState createState() => _IngredientPageState();
+  _IngredientPageState createState() => _IngredientPageState(args);
 }
 
 class _IngredientPageState extends State<IngredientPage> {
+  IngredientArguments args;
+
+  _IngredientPageState(this.args);
+
+  IngredientData ingredientToDisplay = IngredientData.create();
+  bool isEditing = false;
+  bool navFromAddIngred = false;
+
   @override
   void initState() {
     super.initState();
+    ingredientToDisplay = args.ingredient;
+    isEditing = args.isEditing;
+    navFromAddIngred = args.navFromAdd;
     getFullIngredientData();
+    if (ingredientToDisplay.expirationDate != 0) {
+      _selectedDate = convertToDate(ingredientToDisplay.expirationDate);
+    } else {
+      _selectedDate = DateTime.now();
+    }
+    _expirationDate.text = DateFormat.yMd().format(_selectedDate);
   }
+
+  final _expirationDate = TextEditingController();
+  bool unfilledExpirationDate = false;
+  late DateTime _selectedDate;
 
   String errorMessage = '';
 
@@ -631,80 +816,164 @@ class _IngredientPageState extends State<IngredientPage> {
       appBar: AppBar(
           backgroundColor: white,
           actions: [
-            IconButton(
-              onPressed: () {
-                Navigator.restorablePushNamed(context, '/food/edit');
-              },
-              icon: const Icon(Icons.edit, color: black),
-              iconSize: topBarIconSize,
-            ),
-            IconButton(
-              onPressed: () async {
-                bool delete = false;
-                await showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: const Text('Are you sure you want to remove this ingredient from your inventory?'),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      elevation: 15,
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            delete = false;
-                          },
-                          child: const Text(
-                            'Cancel',
-                            style: TextStyle(color: Colors.red, fontSize: 18),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            delete = true;
-                          },
-                          child: const Text(
-                            'Yes',
-                            style: TextStyle(color: Colors.red, fontSize: 18),
-                          ),
-                        )
-                      ],
-                    );
-                  },
-                );
+            if (isEditing)
+              IconButton(
+                onPressed: () async {
+                  if (navFromAddIngred) {
+                    Map<String, dynamic> payload = {
+                      'id': ingredientToDisplay.ID,
+                      'name': ingredientToDisplay.name,
+                      'category': ingredientToDisplay.category,
+                      'image': 'none',
+                      'expirationDate': _expirationDate.text.isEmpty
+                          ? 0
+                          : convertToEpoch(_selectedDate)
+                    };
 
-                if (!delete) {
-                  return;
-                }
-
-                final res = await Inventory.deleteIngredientfromInventory(ingredientToPass.ID);
-                if (res.statusCode == 200) {
-                  errorMessage = 'Successfully deleted ingredient from inventory!';
-                  await messageDelay;
-                  Navigator.pop(context);
-                } else {
-                  int errorCode = await getError(res.statusCode);
-                  if (errorCode == 2) {
-                    final ret = await Inventory.deleteIngredientfromInventory(ingredientToPass.ID);
-                    if (ret.statusCode == 200) {
-                      errorMessage = 'Successfully deleted ingredient from inventory!';
+                    final res = await Inventory.addIngredient(payload);
+                    print(res.body);
+                    if (res.statusCode == 201) {
+                      errorMessage = 'Ingredient Added Successfully!';
+                      setState(() {});
+                      await messageDelay;
+                      Navigator.pop(context);
+                      navFromAddIngred = false;
+                    } else {
+                      int errorCode = await getError(res.statusCode);
+                      if (errorCode == 2) {
+                        final ret = await Inventory.addIngredient(payload);
+                        if (ret.statusCode == 200) {
+                          errorMessage = 'Ingredient Added Successfully!';
+                          await messageDelay;
+                          Navigator.pop(context);
+                          navFromAddIngred = false;
+                        } else {
+                          errorDialog(context);
+                        }
+                      }
+                    }
+                  } else {
+                    Map<String, dynamic> payload = {
+                      'expirationDate': _expirationDate.text.isEmpty
+                          ? 1
+                          : convertToEpoch(_selectedDate)
+                    };
+                    final res = await Inventory.updateIngredientInInventory(
+                        ingredientToDisplay.ID, payload);
+                    if (res.statusCode == 200) {
+                      errorMessage = 'Ingredient Updated Successfully!';
                       await messageDelay;
                       Navigator.pop(context);
                     } else {
-                      errorDialog(context);
+                      int errorCode = await getError(res.statusCode);
+                      if (errorCode == 2) {
+                        final res = await Inventory.updateIngredientInInventory(
+                            ingredientToDisplay.ID, payload);
+                        if (res.statusCode == 200) {
+                          errorMessage = 'Ingredient Updated Successfully!';
+                          await messageDelay;
+                          Navigator.pop(context);
+                          navFromAddIngred = false;
+                        } else {
+                          errorDialog(context);
+                        }
+                      }
                     }
                   }
-                }
-              },
-              icon: const Icon(Icons.delete, color: Colors.red),
-              iconSize: topBarIconSize,
-            ),
+                },
+                icon: const Icon(Icons.check, color: Colors.red),
+                iconSize: topBarIconSize,
+              ),
+            if (!isEditing)
+              IconButton(
+                onPressed: () {
+                  isEditing = true;
+                  setState(() {});
+                },
+                icon: const Icon(Icons.edit, color: black),
+                iconSize: topBarIconSize,
+              ),
+            if (!isEditing)
+              IconButton(
+                onPressed: () async {
+                  bool delete = false;
+                  await showDialog(
+                    context: context,
+                    barrierDismissible: true,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text(
+                            'Are you sure you want to remove this ingredient from your inventory?'),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        elevation: 15,
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              delete = false;
+                              Navigator.pop(context);
+                            },
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(color: Colors.red, fontSize: 18),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              delete = true;
+                              Navigator.pop(context);
+                            },
+                            child: const Text(
+                              'Yes',
+                              style: TextStyle(color: Colors.red, fontSize: 18),
+                            ),
+                          )
+                        ],
+                      );
+                    },
+                  );
+
+                  if (!delete) {
+                    return;
+                  }
+
+                  final res = await Inventory.deleteIngredientfromInventory(
+                      ingredientToDisplay.ID);
+                  if (res.statusCode == 200) {
+                    errorMessage =
+                        'Successfully deleted ingredient from inventory!';
+                    await messageDelay;
+                    Navigator.pop(context);
+                  } else {
+                    int errorCode = await getError(res.statusCode);
+                    if (errorCode == 2) {
+                      final ret = await Inventory.deleteIngredientfromInventory(
+                          ingredientToDisplay.ID);
+                      if (ret.statusCode == 200) {
+                        errorMessage =
+                            'Successfully deleted ingredient from inventory!';
+                        await messageDelay;
+                        Navigator.pop(context);
+                      } else {
+                        errorDialog(context);
+                      }
+                    }
+                  }
+                },
+                icon: const Icon(Icons.delete, color: Colors.red),
+                iconSize: topBarIconSize,
+              ),
           ],
           leading: IconButton(
             icon: const Icon(Icons.navigate_before, color: black),
             iconSize: 35,
             onPressed: () {
-              Navigator.pop(context);
+              if (isEditing) {
+                isEditing = false;
+                setState(() {});
+              } else {
+                Navigator.pop(context);
+              }
             },
           )),
       body: Container(
@@ -712,104 +981,137 @@ class _IngredientPageState extends State<IngredientPage> {
         height: MediaQuery.of(context).size.height,
         margin: const EdgeInsets.fromLTRB(5, 10, 5, 0),
         child: SingleChildScrollView(
-          child: Column(
-            children: <Widget>[
-              Container(
-                width: MediaQuery.of(context).size.width / 2,
-                height: MediaQuery.of(context).size.width / 2,
-                margin: const EdgeInsets.symmetric(vertical: 20),
-                decoration: BoxDecoration(
-                  border: Border.all(color: black, width: 3),
-                  color: Colors.grey,
-                ),
-                child: const Text('Ingredient image'),
-              ),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                margin: const EdgeInsets.symmetric(vertical: 20),
-                child: Text(
-                  ingredientToPass.name,
-                  style: const TextStyle(
-                    fontSize: 36,
-                    color: black,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+          child: FutureBuilder(
+            future: fetchIngredientData(),
+            builder: (BuildContext context, AsyncSnapshot snapshot) {
+              switch (snapshot.connectionState) {
+                case ConnectionState.waiting:
+                  break;
+                case ConnectionState.done:
+                  break;
+              }
+              return Column(
                 children: <Widget>[
-                  Column(
-                    children: <Widget>[
-                      Text(
-                        'Food Categories',
-                        style: ingredientInfoTextStyle,
-                        textAlign: TextAlign.center,
-                      ),
-                      Text(
-                        ingredientToPass.category.isEmpty ? 'Miscellaneous' : ingredientToPass.category,
-                        style: ingredientInfoTextStyle,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Text(
-                errorMessage,
-                style: errorTextStyle,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Column(
-                    children: <Widget>[
-                      Text(
-                        'Expiration Date',
-                        style: ingredientInfoTextStyle,
-                        textAlign: TextAlign.center,
-                      ),
-                      Container(
-                        width: MediaQuery.of(context).size.width / 2,
-                        margin: const EdgeInsets.symmetric(horizontal: 5),
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 5, horizontal: 5),
-                        decoration: const BoxDecoration(
-                          color: mainScheme,
-                          borderRadius:
-                          BorderRadius.all(Radius.circular(10)),
-                        ),
-                        child: Text(
-                          convertToDate(ingredientToPass.expirationDate).toString(),
-                          style: ingredientInfoTextStyle,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height,
-                padding: const EdgeInsets.fromLTRB(5, 20, 5, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width,
-                      child: Text(
-                        'Nutrition Values:',
-                        style: ingredientInfoTextStyle,
-                        textAlign: TextAlign.left,
-                      ),
+                  Container(
+                    width: MediaQuery.of(context).size.width / 2,
+                    height: MediaQuery.of(context).size.width / 2,
+                    margin: const EdgeInsets.symmetric(vertical: 20),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: black, width: 3),
+                      color: Colors.grey,
                     ),
-                    Expanded(
-                      child: BuildNutrientTiles()
-                    )
-                  ],
-                ),
-              ),
-            ],
+                    child: const Text('Ingredient image'),
+                  ),
+                  Container(
+                    width: MediaQuery.of(context).size.width,
+                    margin: const EdgeInsets.symmetric(vertical: 20),
+                    child: Text(
+                      ingredientToDisplay.name,
+                      style: const TextStyle(
+                        fontSize: 36,
+                        color: black,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Column(
+                        children: <Widget>[
+                          const Text(
+                            'Food Categories',
+                            style: TextStyle(
+                              fontSize: ingredientInfoFontSize,
+                              color: black,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 10, horizontal: 5),
+                            child: Text(
+                              ingredientToDisplay.category.isEmpty
+                                  ? 'Miscellaneous'
+                                  : ingredientToDisplay.category,
+                              style: ingredientInfoTextStyle,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Text(
+                    errorMessage,
+                    style: errorTextStyle,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Column(
+                        children: <Widget>[
+                          Text(
+                            'Expiration Date(s)',
+                            style: ingredientInfoTextStyle,
+                            textAlign: TextAlign.center,
+                          ),
+                          Container(
+                            width: MediaQuery.of(context).size.width / 2,
+                            margin: const EdgeInsets.symmetric(horizontal: 5),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 5, horizontal: 5),
+                            decoration: const BoxDecoration(
+                              color: mainScheme,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10)),
+                            ),
+                            child: isEditing
+                                ? TextField(
+                                    focusNode: AlwaysDisabledFocusNode(),
+                                    controller: _expirationDate,
+                                    decoration: unfilledExpirationDate
+                                        ? invalidTextField.copyWith(
+                                            hintText: 'Click to choose a date')
+                                        : globalDecoration.copyWith(
+                                            hintText: 'Click to choose a date'),
+                                    onTap: () {
+                                      if (isEditing) _selectDate(context);
+                                    })
+                                : Text(
+                                    _expirationDate.value.text,
+                                    style: ingredientInfoTextStyle,
+                                    textAlign: TextAlign.center,
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Container(
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height,
+                    padding: const EdgeInsets.fromLTRB(5, 20, 5, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width,
+                          child: Text(
+                            'Nutrition Values:',
+                            style: ingredientInfoTextStyle,
+                            textAlign: TextAlign.left,
+                          ),
+                        ),
+                        Expanded(
+                          child: BuildNutrientTiles(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -820,8 +1122,8 @@ class _IngredientPageState extends State<IngredientPage> {
           height: bottomRowHeight,
           width: MediaQuery.of(context).size.width,
           decoration: BoxDecoration(
-            border: Border(
-                top: BorderSide(color: black.withOpacity(.2), width: 3)),
+            border:
+                Border(top: BorderSide(color: black.withOpacity(.2), width: 3)),
             color: white,
           ),
           child: Row(
@@ -920,7 +1222,34 @@ class _IngredientPageState extends State<IngredientPage> {
   }
 
   void getFullIngredientData() async {
-    ingredientToPass = await fetchIngredientData();
+    ingredientToDisplay = await fetchIngredientData();
+    setState(() {});
+  }
+
+  _selectDate(BuildContext context) async {
+    DateTime? newSelectedDate = await showDatePicker(
+        context: context,
+        initialDate: _selectedDate != null ? _selectedDate : DateTime.now(),
+        firstDate: DateTime(2020),
+        lastDate: DateTime(2030),
+        builder: (BuildContext context, Widget? child) {
+          return Theme(
+              data: ThemeData.dark().copyWith(
+                colorScheme: const ColorScheme.dark(
+                  primary: mainScheme,
+                  onPrimary: black,
+                  surface: Colors.grey,
+                  onSurface: black,
+                ),
+                dialogBackgroundColor: white,
+              ),
+              child: child as Widget);
+        });
+
+    if (newSelectedDate != null) {
+      _selectedDate = newSelectedDate;
+      _expirationDate.text = DateFormat.yMd().format(_selectedDate);
+    }
     setState(() {});
   }
 
@@ -934,16 +1263,16 @@ class _IngredientPageState extends State<IngredientPage> {
   }
 
   Widget BuildNutrientTiles() {
-    if (ingredientToPass.nutrients.length == 0) {
+    if (ingredientToDisplay.nutrients.length == 0) {
       return Container();
     }
 
-    List<Nutrient> nuts = ingredientToPass.nutrients;
+    List<Nutrient> nuts = ingredientToDisplay.nutrients;
 
     ListView toRet = ListView.builder(
       padding: const EdgeInsets.all(10),
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: nuts.length,
       itemBuilder: (BuildContext context, int index) {
         if (index == 0) {
@@ -976,6 +1305,7 @@ class _IngredientPageState extends State<IngredientPage> {
             ],
           );
         } else {
+          if (nuts[index].unit.value == 0) return Container();
           return Row(
             children: <Widget>[
               Expanded(
@@ -1034,497 +1364,13 @@ class _IngredientPageState extends State<IngredientPage> {
   }
 
   Future<IngredientData> fetchIngredientData() async {
-    IngredientData newIngred = ingredientToPass;
+    IngredientData newIngred = ingredientToDisplay;
     final res = await Ingredients.getIngredientByID(newIngred.ID, 0, '');
     if (res.statusCode == 200) {
       var data = json.decode(res.body);
       newIngred.addInformationToIngredient(data);
     }
     return newIngred;
-  }
-}
-
-class EditIngredientPage extends StatefulWidget {
-  @override
-  _EditIngredientPageState createState() => _EditIngredientPageState();
-}
-
-class _EditIngredientPageState extends State<EditIngredientPage> {
-  @override
-  void initState() {
-    super.initState();
-    fetchIngredient(ingredientToPass.ID);
-    if (ingredientToPass.expirationDate != 0) {
-      _selectedDate = convertToDate(ingredientToPass.expirationDate);
-    } else {
-      _selectedDate = DateTime.now();
-    }
-    _expirationDate.text = DateFormat.yMd().format(_selectedDate);
-  }
-
-  final _expirationDate = TextEditingController();
-  bool unfilledExpirationDate = false;
-  late DateTime _selectedDate;
-
-  String errorMessage = '';
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-          backgroundColor: white,
-          actions: [
-            IconButton(
-              onPressed: () async {
-                if (navFromAddIngred) {
-                  Map<String, dynamic> payload = {
-                    'id': ingredientToPass.ID,
-                    'name': ingredientToPass.name,
-                    'category': ingredientToPass.category,
-                    'image': 'none',
-                    'expirationDate': _expirationDate.text.isEmpty ? 0 : convertToEpoch(_selectedDate)
-                  };
-
-                  final res = await Inventory.addIngredient(payload);
-                  if (res.statusCode == 201) {
-                    errorMessage = 'Ingredient Added Successfully!';
-                    setState(() {});
-                    await messageDelay;
-                    Navigator.pop(context);
-                    navFromAddIngred = false;
-                  } else {
-                    int errorCode = await getError(res.statusCode);
-                    if (errorCode == 2) {
-                      final ret = await Inventory.addIngredient(payload);
-                      if (ret.statusCode == 200) {
-                        errorMessage = 'Ingredient Added Successfully!';
-                        await messageDelay;
-                        Navigator.pop(context);
-                        navFromAddIngred = false;
-                      } else {
-                        errorDialog(context);
-                      }
-                    }
-                  }
-                } else {
-                  Map<String, dynamic> payload = {
-                    'expirationDate': _expirationDate.text.isEmpty ? 1 : convertToEpoch(_selectedDate)
-                  };
-                  final res = await Inventory.updateIngredientInInventory(ingredientToPass.ID, payload);
-                  if (res.statusCode == 200) {
-                    errorMessage = 'Ingredient Updated Successfully!';
-                    await messageDelay;
-                    Navigator.pop(context);
-                  } else {
-                    int errorCode = await getError(res.statusCode);
-                    if (errorCode == 2) {
-                      final res = await Inventory.updateIngredientInInventory(ingredientToPass.ID, payload);
-                      if (res.statusCode == 200) {
-                        errorMessage = 'Ingredient Updated Successfully!';
-                        await messageDelay;
-                        Navigator.pop(context);
-                        navFromAddIngred = false;
-                      } else {
-                        errorDialog(context);
-                      }
-                    }
-                  }
-                }
-              },
-              icon: const Icon(Icons.check, color: Colors.red),
-              iconSize: topBarIconSize,
-            ),
-          ],
-          leading: IconButton(
-            icon: const Icon(Icons.navigate_before, color: black),
-            iconSize: topBarIconSize + 7,
-            onPressed: () {
-              ingredientToPass = IngredientData.create();
-
-              Navigator.pop(context);
-            },
-          )),
-      body: SafeArea(
-        child: SizedBox(
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height -
-              bottomRowHeight -
-              MediaQuery.of(context).padding.top -
-              AppBar().preferredSize.height,
-          child: SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                Container(
-                  width: MediaQuery.of(context).size.width / 2,
-                  height: MediaQuery.of(context).size.width / 2,
-                  margin: const EdgeInsets.symmetric(vertical: 20),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: black, width: 3),
-                    color: Colors.grey,
-                  ),
-                  child: const Text('Ingredient image'),
-                ),
-                Container(
-                  width: MediaQuery.of(context).size.width,
-                  margin: const EdgeInsets.symmetric(vertical: 20),
-                  child: Text(
-                    ingredientToPass.name,
-                    style: const TextStyle(
-                      fontSize: 36,
-                      color: black,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Column(
-                      children: <Widget>[
-                        const Text(
-                          'Food Categories',
-                          style: TextStyle(
-                            fontSize: ingredientInfoFontSize,
-                            color: black,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        Container(
-                          width: MediaQuery.of(context).size.width,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 5),
-                          child: Text(
-                            ingredientToPass.category.isEmpty ? 'Miscellaneous' : ingredientToPass.category,
-                            style: ingredientInfoTextStyle,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                Text(
-                  errorMessage,
-                  style: errorTextStyle,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Column(
-                      children: <Widget>[
-                        Text(
-                          'Expiration Date(s)',
-                          style: ingredientInfoTextStyle,
-                          textAlign: TextAlign.center,
-                        ),
-                        Container(
-                          width: MediaQuery.of(context).size.width / 2,
-                          margin: const EdgeInsets.symmetric(horizontal: 5),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 5, horizontal: 5),
-                          decoration: const BoxDecoration(
-                            color: mainScheme,
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(10)),
-                          ),
-                          child: TextField(
-                            focusNode: AlwaysDisabledFocusNode(),
-                            controller: _expirationDate,
-                            decoration: unfilledExpirationDate
-                                ? invalidTextField.copyWith(
-                                    hintText: 'Click to choose a date')
-                                : globalDecoration.copyWith(
-                                    hintText: 'Click to choose a date'),
-                            onTap: () {
-                              _selectDate(context);
-                            }
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                Container(
-                  width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.height,
-                  padding: const EdgeInsets.fromLTRB(5, 20, 5, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width,
-                        child: Text(
-                          'Nutrition Values:',
-                          style: ingredientInfoTextStyle,
-                          textAlign: TextAlign.left,
-                        ),
-                      ),
-                      Expanded(
-                        child: BuildNutrientTiles(),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      extendBody: false,
-      extendBodyBehindAppBar: false,
-      bottomNavigationBar: BottomAppBar(
-        child: Container(
-          height: bottomRowHeight,
-          width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(
-            border: Border(
-                top: BorderSide(color: black.withOpacity(.2), width: 3)),
-            color: white,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.egg),
-                      iconSize: bottomIconSize,
-                      color: mainScheme,
-                    ),
-                    Text(
-                      'Ingredients',
-                      style: bottomRowOnScreenTextStyle,
-                      textAlign: TextAlign.center,
-                    )
-                  ],
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    IconButton(
-                      onPressed: () {
-                        Navigator.restorablePushReplacementNamed(
-                            context, '/recipe');
-                      },
-                      icon: const Icon(Icons.restaurant),
-                      iconSize: bottomIconSize,
-                      color: bottomRowIcon,
-                    ),
-                    Text(
-                      'Recipes',
-                      style: bottomRowIconTextStyle,
-                      textAlign: TextAlign.center,
-                    )
-                  ],
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    IconButton(
-                      onPressed: () {
-                        Navigator.restorablePushReplacementNamed(
-                            context, '/cart');
-                      },
-                      icon: const Icon(Icons.shopping_cart),
-                      iconSize: bottomIconSize,
-                      color: bottomRowIcon,
-                    ),
-                    Text(
-                      'Shopping Cart',
-                      style: bottomRowIconTextStyle,
-                      textAlign: TextAlign.center,
-                    )
-                  ],
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    IconButton(
-                      onPressed: () {
-                        Navigator.restorablePushReplacementNamed(
-                            context, '/user');
-                      },
-                      icon: const Icon(Icons.person),
-                      iconSize: bottomIconSize,
-                      color: bottomRowIcon,
-                    ),
-                    Text(
-                      'User Profile',
-                      style: bottomRowIconTextStyle,
-                      textAlign: TextAlign.center,
-                    )
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  _selectDate(BuildContext context) async {
-    DateTime? newSelectedDate = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate != null ? _selectedDate : DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-      builder: (BuildContext context, Widget? child) {
-        return Theme(
-          data: ThemeData.dark().copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: mainScheme,
-              onPrimary: black,
-              surface: Colors.grey,
-              onSurface: black,
-            ),
-            dialogBackgroundColor: white,
-          ),
-          child: child as Widget
-        );
-    });
-
-    if (newSelectedDate != null) {
-      _selectedDate = newSelectedDate;
-      _expirationDate.text = DateFormat.yMd().format(_selectedDate);
-    }
-    setState(() {});
-  }
-
-  Future<IngredientData> fetchIngredient(int ID) async {
-    IngredientData newIngred = ingredientToPass;
-    final res = await Ingredients.getIngredientByID(newIngred.ID, 0, '');
-    if (res.statusCode == 200) {
-      var data = json.decode(res.body);
-      newIngred.addInformationToIngredient(data);
-    }
-    return newIngred;
-  }
-
-  DateTime convertToDate(int secondEpoch) {
-    var date = DateTime.fromMicrosecondsSinceEpoch(secondEpoch * 1000);
-    return date;
-  }
-
-  int convertToEpoch(DateTime date) {
-    return date.toUtc().microsecondsSinceEpoch;
-  }
-
-  Widget BuildNutrientTiles() {
-    if (ingredientToPass.nutrients.length == 0) {
-      return Container();
-    }
-
-    List<Nutrient> nuts = ingredientToPass.nutrients;
-
-    ListView toRet = ListView.builder(
-      padding: const EdgeInsets.all(10),
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      itemCount: nuts.length,
-      itemBuilder: (BuildContext context, int index) {
-        if (index == 0) {
-          return Row(
-            children: <Widget>[
-              Expanded(
-                flex: 4,
-                child: Text(
-                  'Nutrient Name',
-                  style: ingredientInfoTextStyle,
-                  textAlign: TextAlign.left,
-                ),
-              ),
-              Expanded(
-                flex: 3,
-                child: Text(
-                  'Amount',
-                  style: ingredientInfoTextStyle,
-                  textAlign: TextAlign.right,
-                ),
-              ),
-              Expanded(
-                flex: 3,
-                child: Text(
-                  '% value',
-                  style: ingredientInfoTextStyle,
-                  textAlign: TextAlign.right,
-                ),
-              ),
-            ],
-          );
-        } else {
-          if (nuts[index].unit.value != 0) {
-            return Row(
-              children: <Widget>[
-                Expanded(
-                  flex: 4,
-                  child: Text(
-                    nuts[index].name,
-                    style: ingredientInfoTextStyle,
-                    textAlign: TextAlign.left,
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    '${nuts[index].unit.value} ${nuts[index].unit.unit}',
-                    style: ingredientInfoTextStyle,
-                    textAlign: TextAlign.right,
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    '${nuts[index].percentOfDaily}%',
-                    style: ingredientInfoTextStyle,
-                    textAlign: TextAlign.right,
-                  ),
-                ),
-              ],
-            );
-          } else {
-            return Container();
-          }
-        }
-      },
-    );
-
-    return toRet;
-  }
-
-  Future<int> getError(int status) async {
-    switch (status) {
-      case 400:
-        errorMessage = "Incorrect Request Format";
-        return 1;
-      case 401:
-        errorMessage = 'Reconnecting...';
-        if (await tryTokenRefresh()) {
-          errorMessage = 'Reconnected!';
-          return 2;
-        } else {
-          errorMessage = 'Cannot connect to server';
-          return 3;
-        }
-      case 404:
-        errorMessage = 'User not found';
-        return 3;
-      default:
-        return 3;
-    }
   }
 }
 
@@ -1590,8 +1436,8 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
               children: <Widget>[
                 Container(
                   width: MediaQuery.of(context).size.width,
-                  margin:
-                      const EdgeInsets.only(top: 50, bottom: 20, left: 15, right: 15),
+                  margin: const EdgeInsets.only(
+                      top: 50, bottom: 20, left: 15, right: 15),
                   child: Row(
                     children: const <Widget>[
                       Flexible(
@@ -1610,7 +1456,8 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                 ),
                 Text(
                   errorMessage,
-                  style: errorTextStyle.copyWith(fontSize: ingredientInfoFontSize),
+                  style:
+                      errorTextStyle.copyWith(fontSize: ingredientInfoFontSize),
                   textAlign: TextAlign.center,
                 ),
                 Container(
@@ -1661,10 +1508,8 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                                 resultsList = ListView(
                                   controller: loading,
                                 );
-
                               }
                               searchChanged = false;
-
                             },
                           ),
                         ),
@@ -1749,44 +1594,50 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                     ),
                     searching
                         ? Container(
-                          width: MediaQuery.of(context).size.width / 1.5,
-                          height: MediaQuery.of(context).size.height / 2,
-                          decoration: BoxDecoration(
-                            color: white,
-                            border: Border.all(color: searchFieldText),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Expanded(
-                                child: FutureBuilder(
-                                  builder: (BuildContext context, AsyncSnapshot snapshot) {
-                                    switch (snapshot.connectionState) {
-                                      case ConnectionState.waiting:
-                                        return SizedBox(
-                                          width: MediaQuery.of(context).size.width / 1.5,
-                                          height: MediaQuery.of(context).size.height,
-                                          child: const Text(
-                                            'Loading...',
-                                            style: TextStyle(
-                                              fontSize:
-                                                  ingredientInfoFontSize,
-                                              color: searchFieldText,
+                            width: MediaQuery.of(context).size.width / 1.5,
+                            height: MediaQuery.of(context).size.height / 2,
+                            decoration: BoxDecoration(
+                              color: white,
+                              border: Border.all(color: searchFieldText),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Expanded(
+                                  child: FutureBuilder(
+                                    builder: (BuildContext context,
+                                        AsyncSnapshot snapshot) {
+                                      switch (snapshot.connectionState) {
+                                        case ConnectionState.waiting:
+                                          return SizedBox(
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width /
+                                                1.5,
+                                            height: MediaQuery.of(context)
+                                                .size
+                                                .height,
+                                            child: const Text(
+                                              'Loading...',
+                                              style: TextStyle(
+                                                fontSize:
+                                                    ingredientInfoFontSize,
+                                                color: searchFieldText,
+                                              ),
+                                              textAlign: TextAlign.center,
                                             ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        );
-                                      case ConnectionState.done:
-                                        return resultsList;
-                                      default:
-                                        return resultsList;
-                                    }
-                                  },
+                                          );
+                                        case ConnectionState.done:
+                                          return resultsList;
+                                        default:
+                                          return resultsList;
+                                      }
+                                    },
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        )
+                              ],
+                            ),
+                          )
                         : Container(),
                   ],
                 ),
@@ -1802,8 +1653,8 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
           height: bottomRowHeight,
           width: MediaQuery.of(context).size.width,
           decoration: BoxDecoration(
-            border: Border(
-                top: BorderSide(color: black.withOpacity(.2), width: 3)),
+            border:
+                Border(top: BorderSide(color: black.withOpacity(.2), width: 3)),
             color: white,
           ),
           child: Row(
@@ -1956,36 +1807,36 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
       controller: loading,
       itemBuilder: (BuildContext context, int index) {
         return ListTile(
-          key: key,
-          title: Text(
-            index == searchResultList.length && !updated ? 'No items to list' : searchResultList[index].name,
-            style: const TextStyle(
-              color: searchFieldText,
-              fontSize: 18,
+            key: key,
+            title: Text(
+              index == searchResultList.length && !updated
+                  ? 'No items to list'
+                  : searchResultList[index].name,
+              style: const TextStyle(
+                color: searchFieldText,
+                fontSize: 18,
+              ),
+              textAlign: TextAlign.left,
             ),
-            textAlign: TextAlign.left,
-          ),
-          trailing: const Icon(
-            Icons.call_made,
-            color: black,
-            size: searchIconButtonSize,
-          ),
-          onTap: () async {
-            errorMessage = '';
-            final res = await Ingredients.getIngredientByID(
-                searchResultList[index].ID, 0, '');
-            if (res.statusCode == 200) {
-              var data = json.decode(res.body);
-              ingredientToPass.completeIngredient(data);
-              navFromAddIngred = true;
-              Navigator.restorablePopAndPushNamed(
-                  context, '/food/edit');
-            } else {
-              errorMessage = 'Could not retrieve item details!';
-            }
-            setState(() => searching = false);
-          }
-        );
+            trailing: const Icon(
+              Icons.call_made,
+              color: black,
+              size: searchIconButtonSize,
+            ),
+            onTap: () async {
+              errorMessage = '';
+              final res = await Ingredients.getIngredientByID(
+                  searchResultList[index].ID, 0, '');
+              if (res.statusCode == 200) {
+                var data = json.decode(res.body);
+                IngredientData toPass = searchResultList[index];
+                toPass.completeIngredient(data);
+                Navigator.popAndPushNamed(context, '/food/food', arguments: IngredientArguments(ingredient: toPass, isEditing: true, navFromAdd: true));
+              } else {
+                errorMessage = 'Could not retrieve item details!';
+              }
+              setState(() => searching = false);
+            });
       },
     );
   }
@@ -2019,4 +1870,11 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
 
     return true;
   }
+}
+
+class IngredientArguments {
+  IngredientData ingredient;
+  bool isEditing;
+  bool navFromAdd;
+  IngredientArguments({required this.ingredient, required this.isEditing, required this.navFromAdd});
 }

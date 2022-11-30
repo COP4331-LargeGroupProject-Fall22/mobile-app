@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:smart_chef/screens/LoadingOverlay.dart';
 import 'package:smart_chef/utils/APIutils.dart';
 import 'package:smart_chef/utils/authAPI.dart';
 import 'package:smart_chef/utils/colors.dart';
@@ -203,12 +204,9 @@ class _LogInPageState extends State<LogInPage> {
       child: Scaffold(
         backgroundColor: Colors.black.withOpacity(.35),
         body: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-          child: SingleChildScrollView(
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height,
+            behavior: HitTestBehavior.translucent,
+            onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+            child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
@@ -234,14 +232,12 @@ class _LogInPageState extends State<LogInPage> {
                       ),
                     ),
                   ),
-                  //detectState(),
                   buildLogIn()
                 ],
               ),
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -370,6 +366,9 @@ class _LogInPageState extends State<LogInPage> {
                                 setState(() => unfilledPassword = false);
                               }
                             },
+                            onSubmitted: (sub) async {
+                              await runLogin();
+                            },
                             textInputAction: TextInputAction.done,
                           ),
                         ),
@@ -392,83 +391,7 @@ class _LogInPageState extends State<LogInPage> {
                       children: <Widget>[
                         ElevatedButton(
                           onPressed: () async {
-                            if (allLoginFieldsValid(/*hasPassword=*/ true)) {
-                              Map<String, dynamic> payload = {
-                                'username': _username.value.text.trim(),
-                                'password': _password.value.text.trim()
-                              };
-
-                              try {
-                                final ret = await Authentication.login(payload);
-                                if (ret.statusCode == 200) {
-                                  var tokens = json.decode(ret.body);
-                                  user.defineTokens(tokens);
-
-                                  final res = await User.getUser();
-                                  if (res.statusCode == 200) {
-                                    var data = json.decode(res.body);
-                                    user.defineUserData(data);
-                                    user.setPassword(
-                                        _password.value.text.trim());
-
-                                    setState(() => clearFields());
-                                    Navigator.restorablePushNamedAndRemoveUntil(
-                                        context,
-                                        '/food',
-                                        ((Route<dynamic> route) => false));
-                                  } else {
-                                    errorMessage =
-                                        getDataRetrieveError(res.statusCode);
-                                  }
-                                } else {
-                                  errorMessage = getLogInError(ret.statusCode);
-                                  if (ret.statusCode == 403) {
-                                    user.username = _username.value.text.trim();
-                                    showDialog(
-                                        context: context,
-                                        builder: (context) {
-                                          return AlertDialog(
-                                            title: const Text(
-                                                'Account not verified'),
-                                            shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10)),
-                                            elevation: 15,
-                                            actions: <Widget>[
-                                              TextButton(
-                                                onPressed: () {
-                                                  user.username =
-                                                      _username.value.text;
-                                                  Navigator
-                                                      .restorablePushReplacementNamed(
-                                                          context,
-                                                          '/verification');
-                                                },
-                                                child: const Text(
-                                                  'OK',
-                                                  style: TextStyle(
-                                                      color: Colors.red,
-                                                      fontSize: 18),
-                                                ),
-                                              ),
-                                            ],
-                                            content: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: const <Widget>[
-                                                  Flexible(
-                                                      child: Text(
-                                                          'Your account is not verified!\nPress OK to be taken to the verification page')),
-                                                ]),
-                                          );
-                                        });
-                                  }
-                                }
-                              } catch (e) {
-                                errorMessage = 'Could not connect to server';
-                                print('Could not connect to /auth/user');
-                              }
-                            }
-                            setState(() {});
+                            await runLogin();
                           },
                           style: buttonStyle,
                           child: const Text(
@@ -532,6 +455,74 @@ class _LogInPageState extends State<LogInPage> {
     unfilledPassword = false;
     _username.clear();
     _password.clear();
+  }
+
+  Future<void> runLogin() async {
+    if (allLoginFieldsValid(/*hasPassword=*/ true)) {
+      Map<String, dynamic> payload = {
+        'username': _username.value.text.trim(),
+        'password': _password.value.text.trim()
+      };
+
+      try {
+        final ret = await Authentication.login(payload);
+        if (ret.statusCode == 200) {
+          var tokens = json.decode(ret.body);
+          user.defineTokens(tokens);
+
+          final res = await User.getUser();
+          if (res.statusCode == 200) {
+            var data = json.decode(res.body);
+            user.defineUserData(data);
+            user.setPassword(_password.value.text.trim());
+
+            setState(() => clearFields());
+            Navigator.restorablePushNamedAndRemoveUntil(
+                context, '/food', ((Route<dynamic> route) => false));
+          } else {
+            errorMessage = getDataRetrieveError(res.statusCode);
+          }
+        } else {
+          errorMessage = getLogInError(ret.statusCode);
+          if (ret.statusCode == 403) {
+            user.username = _username.value.text.trim();
+            showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text('Account not verified'),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    elevation: 15,
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          user.username = _username.value.text;
+                          Navigator.restorablePushReplacementNamed(
+                              context, '/verification');
+                        },
+                        child: const Text(
+                          'OK',
+                          style: TextStyle(color: Colors.red, fontSize: 18),
+                        ),
+                      ),
+                    ],
+                    content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const <Widget>[
+                          Flexible(
+                              child: Text(
+                                  'Your account is not verified!\nPress OK to be taken to the verification page')),
+                        ]),
+                  );
+                });
+          }
+        }
+      } catch (e) {
+        errorMessage = 'Could not connect to server';
+        print('Could not connect to /auth/user');
+      }
+    }
   }
 
   String getLogInError(int statusCode) {

@@ -87,7 +87,7 @@ class Inventory {
     http.Response response;
 
     try {
-      response = await http.delete(Uri.parse('$API_PREFIX$apiRoute/id'),
+      response = await http.delete(Uri.parse('$API_PREFIX$apiRoute/$id'),
           headers: accessTokenHeader);
     } catch (e) {
       print(e.toString());
