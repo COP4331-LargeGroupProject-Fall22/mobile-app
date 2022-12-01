@@ -664,7 +664,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                     ),
                     child: Image.network(
                       item.imageUrl,
-                      fit: BoxFit.contain,
+                      fit: BoxFit.fitWidth,
                     ),
                   ),
                   Container(

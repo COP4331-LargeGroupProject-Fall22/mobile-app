@@ -1,9 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:http/http.dart' as http;
 import 'package:smart_chef/utils/authAPI.dart';
-import 'package:smart_chef/utils/ingredientData.dart';
 import 'package:smart_chef/utils/userData.dart';
 
 const String API_PREFIX = "https://api-smart-chef.herokuapp.com/";

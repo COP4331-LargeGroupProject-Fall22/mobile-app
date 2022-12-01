@@ -46,4 +46,45 @@ class User {
 
     return response;
   }
+
+  static Future<http.Response> getProfileImage() async {
+    http.Response response;
+
+    try {
+      response = await http.get(Uri.parse('$API_PREFIX$apiRoute/profile-picture'), headers: accessTokenHeader);
+    } catch (e) {
+      print(e.toString());
+      throw Exception('Could not connect to server');
+    }
+
+    return response;
+  }
+
+  static Future<http.Response> newProfileImage(Map<String, dynamic> changes) async {
+    http.Response response;
+
+    try {
+      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/profile-picture'),
+          body: json.encode(changes),
+          headers: accessTokenHeader);
+    } catch (e) {
+      print(e.toString());
+      throw Exception('Could not connect to server');
+    }
+
+    return response;
+  }
+
+  static Future<http.Response> deleteProfileImage() async {
+    http.Response response;
+
+    try {
+      response = await http.delete(Uri.parse('$API_PREFIX$apiRoute/profile-picture'), headers: accessTokenHeader);
+    } catch (e) {
+      print(e.toString());
+      throw Exception('Could not connect to server');
+    }
+
+    return response;
+  }
 }

@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:smart_chef/screens/LoadingOverlay.dart';
 import 'package:smart_chef/utils/APIutils.dart';
 import 'package:smart_chef/utils/authAPI.dart';
@@ -367,7 +369,12 @@ class _LogInPageState extends State<LogInPage> {
                               }
                             },
                             onSubmitted: (sub) async {
-                              await runLogin();
+                              bool logged = await runLogin();
+                              if (logged) {
+                                setState(() => clearFields());
+                                Navigator.restorablePushNamedAndRemoveUntil(
+                                    context, '/food', ((Route<dynamic> route) => false));
+                              }
                             },
                             textInputAction: TextInputAction.done,
                           ),
@@ -457,99 +464,128 @@ class _LogInPageState extends State<LogInPage> {
     _password.clear();
   }
 
-  Future<void> runLogin() async {
+  Future<bool> runLogin() async {
     if (allLoginFieldsValid(/*hasPassword=*/ true)) {
       Map<String, dynamic> payload = {
         'username': _username.value.text.trim(),
         'password': _password.value.text.trim()
       };
 
-      try {
-        final ret = await Authentication.login(payload);
-        if (ret.statusCode == 200) {
-          var tokens = json.decode(ret.body);
-          user.defineTokens(tokens);
+      bool success = false;
+      do {
+        try {
+          final ret = await Authentication.login(payload);
+          if (ret.statusCode == 200) {
+            var tokens = json.decode(ret.body);
+            user.defineTokens(tokens);
 
-          final res = await User.getUser();
-          if (res.statusCode == 200) {
-            var data = json.decode(res.body);
-            user.defineUserData(data);
-            user.setPassword(_password.value.text.trim());
-
-            setState(() => clearFields());
-            Navigator.restorablePushNamedAndRemoveUntil(
-                context, '/food', ((Route<dynamic> route) => false));
+            return await retrieveUserData();
           } else {
-            errorMessage = getDataRetrieveError(res.statusCode);
-          }
-        } else {
-          errorMessage = getLogInError(ret.statusCode);
-          if (ret.statusCode == 403) {
-            user.username = _username.value.text.trim();
-            showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: const Text('Account not verified'),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    elevation: 15,
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () {
-                          user.username = _username.value.text;
-                          Navigator.restorablePushReplacementNamed(
-                              context, '/verification');
-                        },
-                        child: const Text(
-                          'OK',
-                          style: TextStyle(color: Colors.red, fontSize: 18),
+            int errorCode = getLogInError(ret.statusCode);
+            if (errorCode == 3) {
+              user.username = _username.value.text.trim();
+              showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text('Account not verified'),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      elevation: 15,
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            user.username = _username.value.text;
+                            Navigator.restorablePushReplacementNamed(
+                                context, '/verification');
+                          },
+                          child: const Text(
+                            'OK',
+                            style: TextStyle(color: Colors.red, fontSize: 18),
+                          ),
                         ),
-                      ),
-                    ],
-                    content: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const <Widget>[
-                          Flexible(
-                              child: Text(
-                                  'Your account is not verified!\nPress OK to be taken to the verification page')),
-                        ]),
-                  );
-                });
+                      ],
+                      content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const <Widget>[
+                            Flexible(
+                                child: Text(
+                                    'Your account is not verified!\nPress OK to be taken to the verification page')),
+                          ]),
+                    );
+                  });
+              return false;
+            }
           }
+        } catch (e) {
+          errorMessage = 'Could not connect to server';
+          print('Could not connect to /auth/user');
+          return false;
         }
-      } catch (e) {
-        errorMessage = 'Could not connect to server';
-        print('Could not connect to /auth/user');
+      } while (!success);
+    }
+    return false;
+  }
+
+  Future<bool> retrieveUserData() async {
+    bool success = false;
+    do {
+      final res = await User.getUser();
+      if (res.statusCode == 200) {
+        var data = json.decode(res.body);
+        user.defineUserData(data);
+        user.setPassword(_password.value.text.trim());
+        return true;
+      } else {
+        int errorCode = await getDataRetrieveError(res.statusCode);
+        if (errorCode == 3) {
+          errorDialog(context);
+          return false;
+        }
       }
-    }
+    } while(!success);
   }
 
-  String getLogInError(int statusCode) {
+  int getLogInError(int statusCode) {
     switch (statusCode) {
       case 400:
-        return "Incorrect formatting!";
+        errorMessage = "Incorrect formatting!";
+        return 1;
       case 401:
-        return 'Password is incorrect';
+        errorMessage = 'Password is incorrect';
+        return 2;
       case 403:
-        return 'Account not verified';
+        errorMessage = 'Account not verified';
+        return 3;
       case 404:
-        return 'User not found';
+        errorMessage = 'User not found';
+        return 4;
       default:
-        return 'Something in auth went wrong!';
+        return 5;
     }
   }
 
-  String getDataRetrieveError(int statusCode) {
+  Future<int> getDataRetrieveError(int statusCode) async {
     switch (statusCode) {
       case 400:
-        return "Incorrect formatting!";
+        errorMessage = "Incorrect formatting!";
+        return 1;
       case 401:
-        return 'Token is invalid';
+        errorMessage = 'Reconnecting...';
+        setState(() {});
+        if (await tryTokenRefresh()) {
+          errorMessage = 'Reconnected';
+          return 2;
+        } else {
+          errorMessage = 'Could not connect to server!';
+
+          return 3;
+        }
       case 404:
-        return 'User Not Found';
+        errorMessage = 'User not found';
+        return 4;
       default:
-        return 'Something in auth went wrong!';
+        return 5;
     }
   }
 }
@@ -584,6 +620,8 @@ class _RegisterPageState extends State<RegisterPage> {
   String errorMessage = '';
   String topMessage = 'Welcome\nTo SmartChef!';
 
+  XFile? image;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -606,20 +644,42 @@ class _RegisterPageState extends State<RegisterPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   Container(
-                    margin: const EdgeInsets.only(top: 5, bottom: 50),
+                    margin: const EdgeInsets.symmetric(vertical: 25),
                     padding: const EdgeInsets.all(8),
-                    width: MediaQuery.of(context).size.width,
-                    decoration: BoxDecoration(
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(35)),
-                        color: Colors.black.withOpacity(.45)),
-                    child: Text(
-                      topMessage,
-                      style: const TextStyle(
-                          fontSize: 48,
-                          color: Colors.white,
-                          fontFamily: 'EagleLake'),
-                      textAlign: TextAlign.center,
+                    width: MediaQuery.of(context).size.width / 2,
+                    height: MediaQuery.of(context).size.width / 2,
+                    color: Colors.grey,
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        XFile? imageSrc = await _getImageFromGallery();
+                        if (imageSrc != null) {
+                          image = imageSrc;
+                        }
+                      },
+                      child: image == null ? Center(
+                        child: Column(
+                          children: const <Widget>[
+                            Icon(
+                              Icons.upload,
+                              size: bottomIconSize,
+                              color: black,
+                            ),
+                            Flexible(
+                              child: Text(
+                                'Click to upload a profile image',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                      ),
+                      ) : Image.file(
+                        File(image!.path),
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                   Column(
@@ -948,7 +1008,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: <Widget>[
                                   SizedBox(
-                                    width: 85,
                                     height: 36,
                                     child: ElevatedButton(
                                       onPressed: () async {
@@ -1101,6 +1160,15 @@ class _RegisterPageState extends State<RegisterPage> {
         return 'Username already in use';
       default:
         return 'Something went wrong!';
+    }
+  }
+
+  Future<XFile?> _getImageFromGallery() async {
+    XFile? pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+    );
+    if (pickedFile != null) {
+      return pickedFile;
     }
   }
 }
