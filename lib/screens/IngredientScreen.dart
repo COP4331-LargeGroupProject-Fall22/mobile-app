@@ -661,10 +661,10 @@ class _IngredientsPageState extends State<IngredientsPage> {
                       borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(20),
                           topRight: Radius.circular(20)),
-                      image: DecorationImage(
-                        image: AssetImage('assets/images/Background.png'),
-                        fit: BoxFit.cover,
-                      ),
+                    ),
+                    child: Image.network(
+                      item.imageUrl,
+                      fit: BoxFit.contain,
                     ),
                   ),
                   Container(
@@ -824,7 +824,7 @@ class _IngredientPageState extends State<IngredientPage> {
                       'id': ingredientToDisplay.ID,
                       'name': ingredientToDisplay.name,
                       'category': ingredientToDisplay.category,
-                      'image': 'none',
+                      'image': {'srcUrl': ingredientToDisplay.imageUrl},
                       'expirationDate': _expirationDate.text.isEmpty
                           ? 0
                           : convertToEpoch(_selectedDate)
@@ -996,11 +996,10 @@ class _IngredientPageState extends State<IngredientPage> {
                     width: MediaQuery.of(context).size.width / 2,
                     height: MediaQuery.of(context).size.width / 2,
                     margin: const EdgeInsets.symmetric(vertical: 20),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: black, width: 3),
-                      color: Colors.grey,
+                    child: Image.network(
+                      ingredientToDisplay.imageUrl,
+                      fit: BoxFit.contain,
                     ),
-                    child: const Text('Ingredient image'),
                   ),
                   Container(
                     width: MediaQuery.of(context).size.width,
@@ -1535,7 +1534,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                             children: const <Widget>[
                               Flexible(
                                 child: Text(
-                                  'Press the search icon to continue',
+                                  'Click on the ingredient name to continue',
                                   style: TextStyle(
                                     fontSize: 24,
                                     color: black,

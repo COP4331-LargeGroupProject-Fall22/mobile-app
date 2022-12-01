@@ -6,27 +6,28 @@ class IngredientData {
   List<String> units;
   List<Nutrient> nutrients;
   int expirationDate;
-  // TODO(tbd): Add image support for ingredients
-  // int image;
+  String imageUrl;
 
-  IngredientData(this.ID, this.name, this.category, this.units, this.nutrients, this.expirationDate);
+  IngredientData(this.ID, this.name, this.category, this.units, this.nutrients, this.expirationDate, this.imageUrl);
 
   factory IngredientData.create() {
-    IngredientData origin = IngredientData(0, '', '', [], [], 0);
+    IngredientData origin = IngredientData(0, '', '', [], [], 0, '');
     return origin;
   }
 
   IngredientData baseIngredient(Map<String, dynamic> json) {
     this.ID = json['id'];
     this.name = json['name'];
-    this.category = json.containsKey('category') ? '' : json['category'];
+    this.category = json.containsKey('category') ? json['category'] : '';
+    this.imageUrl = json.containsKey('image') ? (json['image'].containsKey('srcUrl') ? json['image']['srcUrl'] : '') : '';
     return this;
   }
 
   IngredientData completeIngredient(Map<String, dynamic> json) {
     this.ID = json['id'];
     this.name = json['name'];
-    this.category = json.containsKey('category') ? '' : json['category'];
+    this.category = json.containsKey('category') ? json['category'] : '';
+    this.imageUrl = json.containsKey('image') ? (json['image'].containsKey('srcUrl') ? json['image']['srcUrl'] : '') : '';
     this.units = insertUnits(json);
     this.nutrients = Nutrient.create().toNutrient(json);
     return this;
@@ -44,6 +45,7 @@ class IngredientData {
     this.ID = json['id'];
     this.name = json['name'];
     this.category = json.containsKey('category') ? json['category'] : '';
+    this.imageUrl = json.containsKey('image') ? json['image']['srcUrl'] : '';
     this.expirationDate = json['expirationDate'];
     return this;
   }
