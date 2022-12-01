@@ -99,4 +99,34 @@ class Authentication {
 
     return response;
   }
+
+  static Future<http.Response> requestResetCode(Map<String, dynamic> payload) async {
+    http.Response response;
+
+    try {
+      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/request-password-reset'),
+          body: json.encode(payload),
+          headers: baseHeader);
+    } catch (e) {
+      print(e.toString());
+      throw Exception('Could not connect to server');
+    }
+
+    return response;
+  }
+
+  static Future<http.Response> resetPassword(Map<String, dynamic> payload) async {
+    http.Response response;
+
+    try {
+      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/perform-password-reset'),
+          body: json.encode(payload),
+          headers: baseHeader);
+    } catch (e) {
+      print(e.toString());
+      throw Exception('Could not connect to server');
+    }
+
+    return response;
+  }
 }
