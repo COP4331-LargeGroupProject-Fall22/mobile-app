@@ -1,6 +1,5 @@
-import 'dart:io';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:smart_chef/utils/APIutils.dart';
 
 class User {
@@ -10,13 +9,8 @@ class User {
   static Future<http.Response> getUser() async {
     http.Response response;
 
-    final headers = {
-      HttpHeaders.contentTypeHeader: 'application/json',
-      HttpHeaders.authorizationHeader: user.accessToken
-    };
-
     try {
-      response = await http.get(Uri.parse('$API_PREFIX$apiRoute'), headers: headers);
+      response = await http.get(Uri.parse('$API_PREFIX$apiRoute'), headers: accessTokenHeader);
     } catch (e) {
       print(e.toString());
       throw Exception('Could not connect to server');
@@ -28,15 +22,10 @@ class User {
   static Future<http.Response> updateUser(Map<String, dynamic> changes) async {
     http.Response response;
 
-    final headers = {
-      HttpHeaders.contentTypeHeader: 'application/json',
-      HttpHeaders.authorizationHeader: user.accessToken
-    };
-
     try {
       response = await http.put(Uri.parse('$API_PREFIX$apiRoute'),
           body: json.encode(changes),
-          headers: headers);
+          headers: accessTokenHeader);
     } catch (e) {
       print(e.toString());
       throw Exception('Could not connect to server');
@@ -48,13 +37,49 @@ class User {
   static Future<http.Response> deleteUser() async {
     http.Response response;
 
-    final headers = {
-      HttpHeaders.contentTypeHeader: 'application/json',
-      HttpHeaders.authorizationHeader: user.accessToken
-    };
+    try {
+      response = await http.delete(Uri.parse('$API_PREFIX$apiRoute'), headers: accessTokenHeader);
+    } catch (e) {
+      print(e.toString());
+      throw Exception('Could not connect to server');
+    }
+
+    return response;
+  }
+
+  static Future<http.Response> getProfileImage() async {
+    http.Response response;
 
     try {
-      response = await http.delete(Uri.parse('$API_PREFIX$apiRoute'), headers: headers);
+      response = await http.get(Uri.parse('$API_PREFIX$apiRoute/profile-picture'), headers: accessTokenHeader);
+    } catch (e) {
+      print(e.toString());
+      throw Exception('Could not connect to server');
+    }
+
+    return response;
+  }
+
+  static Future<http.Response> newProfileImage(Map<String, dynamic> changes) async {
+    http.Response response;
+
+    try {
+      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/profile-picture'),
+          body: json.encode(changes),
+          headers: accessTokenHeader);
+    } catch (e) {
+      print(e.toString());
+      throw Exception('Could not connect to server');
+    }
+
+    return response;
+  }
+
+  static Future<http.Response> deleteProfileImage() async {
+    http.Response response;
+
+    try {
+      response = await http.delete(Uri.parse('$API_PREFIX$apiRoute/profile-picture'), headers: accessTokenHeader);
     } catch (e) {
       print(e.toString());
       throw Exception('Could not connect to server');

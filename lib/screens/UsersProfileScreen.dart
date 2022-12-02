@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:smart_chef/utils/APIutils.dart';
 import 'package:smart_chef/utils/authAPI.dart';
 import 'package:smart_chef/utils/colors.dart';
@@ -33,9 +35,6 @@ class UserProfilePage extends StatefulWidget {
 class _UserProfilePageState extends State<UserProfilePage> {
   @override
   void initState() {
-    setState(() {
-      shoppingCartPage = true;
-    });
     super.initState();
   }
 
@@ -50,7 +49,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           style: TextStyle(fontSize: 24, color: mainScheme),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: white,
         leading: IconButton(
           onPressed: () async {
             try {
@@ -60,13 +59,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 setState(() {
                   errorMessage = 'Logout successful!';
                 });
-                await Future.delayed(Duration(seconds: 1));
+                await messageDelay;
                 user.clear();
 
                 Navigator.pushNamedAndRemoveUntil(
                     context, '/startup', ((Route<dynamic> route) => false));
               } else {
-                errorMessage = getLogoutError(res.statusCode);
+                int errorCode = await getLogoutError(res.statusCode);
               }
             } catch (e) {
               print('Could not connect to server');
@@ -94,7 +93,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   Navigator.pushNamedAndRemoveUntil(
                       context, '/startup', ((Route<dynamic> route) => false));
                 } else {
-                  errorMessage = getDeleteError(res.statusCode);
+                  int errorCode = await getDeleteError(res.statusCode);
                 }
               } catch (e) {
                 errorDialog(context);
@@ -115,7 +114,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           child: Container(
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
-            decoration: const BoxDecoration(color: Colors.white),
+            decoration: const BoxDecoration(color: white),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
@@ -127,9 +126,21 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     color: Colors.grey,
                     border: Border.all(color: Colors.black, width: 2),
                   ),
+                  child: user.profileImage.isEmpty
+                      ? const Text(
+                          'No profile image',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: white,
+                          ),
+                        )
+                      : Image.network(
+                          user.profileImage,
+                          fit: BoxFit.fitWidth,
+                        ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(vertical: 10),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   width: 200,
                   child: const Text(
                     'Your profile image',
@@ -174,7 +185,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                         : user.firstName,
                                     style: const TextStyle(
                                       fontSize: 20,
-                                      color: Colors.white,
+                                      color: white,
                                     ),
                                     textAlign: TextAlign.left,
                                   ),
@@ -208,7 +219,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                     user.lastName.isEmpty ? '' : user.lastName,
                                     style: const TextStyle(
                                       fontSize: 20,
-                                      color: Colors.white,
+                                      color: white,
                                     ),
                                     textAlign: TextAlign.left,
                                   ),
@@ -244,7 +255,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               user.email.isEmpty ? '' : user.email,
                               style: const TextStyle(
                                 fontSize: 20,
-                                color: Colors.white,
+                                color: white,
                               ),
                               textAlign: TextAlign.left,
                             ),
@@ -278,7 +289,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               user.username.isEmpty ? '' : user.username,
                               style: const TextStyle(
                                 fontSize: 20,
-                                color: Colors.white,
+                                color: white,
                               ),
                               textAlign: TextAlign.left,
                             ),
@@ -300,14 +311,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               child: ElevatedButton(
                                 onPressed: () {
                                   Navigator.restorablePushNamed(
-                                        context, '/user/edit');
+                                      context, '/user/edit');
                                 },
                                 style: buttonStyle,
                                 child: const Text(
                                   'Edit Information',
                                   style: TextStyle(
                                     fontSize: 18,
-                                    color: Colors.white,
+                                    color: white,
                                     fontWeight: FontWeight.w400,
                                   ),
                                   textAlign: TextAlign.center,
@@ -322,14 +333,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               child: ElevatedButton(
                                 onPressed: () {
                                   Navigator.restorablePushNamed(
-                                        context, '/user/changePassword');
+                                      context, '/user/changePassword');
                                 },
                                 style: buttonStyle,
                                 child: const Text(
                                   'Change Password',
                                   style: TextStyle(
                                     fontSize: 18,
-                                    color: Colors.white,
+                                    color: white,
                                     fontWeight: FontWeight.w400,
                                   ),
                                   textAlign: TextAlign.center,
@@ -354,7 +365,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           decoration: BoxDecoration(
             border: Border(
                 top: BorderSide(color: Colors.black.withOpacity(.2), width: 3)),
-            color: Colors.white,
+            color: white,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -366,7 +377,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/food');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/food');
                       },
                       icon: const Icon(Icons.egg),
                       iconSize: bottomIconSize,
@@ -374,7 +386,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     ),
                     Text(
                       'Ingredients',
-                      style: bottomRowOnScreenTextStyle,
+                      style: bottomRowIconTextStyle,
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -387,7 +399,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/recipe');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/recipe');
                       },
                       icon: const Icon(Icons.restaurant),
                       iconSize: bottomIconSize,
@@ -408,7 +421,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/cart');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/cart');
                       },
                       icon: const Icon(Icons.shopping_cart),
                       iconSize: bottomIconSize,
@@ -448,27 +462,46 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  String getLogoutError(int statusCode) {
+  Future<int> getLogoutError(int statusCode) async {
     switch (statusCode) {
       case 400:
-        return "Could not logout";
+        errorMessage = 'Incorrect request format';
+        return 1;
       case 401:
-        return 'Access Token invalid';
+        errorMessage = 'Reconnecting...';
+        if (await tryTokenRefresh()) {
+          errorMessage = 'Successfully changed password!';
+          return 2;
+        } else {
+          errorMessage = 'Cannot connect to server';
+          return 3;
+        }
       default:
-        return 'Something went wrong!';
+        errorMessage = 'Something went wrong!';
+        return 3;
     }
   }
 
-  String getDeleteError(int statusCode) {
+  Future<int> getDeleteError(int statusCode) async {
     switch (statusCode) {
       case 400:
-        return 'Incorrect request format';
+        errorMessage = 'Incorrect request format';
+        return 1;
       case 401:
-        return 'Token is invalid';
+        errorMessage = 'Reconnecting...';
+        if (await tryTokenRefresh()) {
+          errorMessage = 'Successfully changed password!';
+          return 2;
+        } else {
+          errorMessage = 'Cannot connect to server';
+          return 3;
+        }
       case 404:
-        return 'User not found';
+        errorMessage = 'User not found';
+        return 3;
       default:
-        return 'Something went wrong!';
+        errorMessage = 'Something went wrong!';
+        return 3;
     }
   }
 }
@@ -484,8 +517,12 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
     _firstName.text = user.firstName;
     _lastName.text = user.lastName;
     _username.text = user.username;
+    image = user.profileImage;
     super.initState();
   }
+
+  String? image;
+  XFile? newImage;
 
   final _firstName = TextEditingController();
   bool unfilledFirstName = false;
@@ -513,7 +550,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
           style: TextStyle(fontSize: 24, color: mainScheme),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: white,
         leading: IconButton(
           onPressed: () {
             Navigator.pop(context);
@@ -531,27 +568,53 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
         child: Container(
           width: MediaQuery.of(context).size.width,
           height: MediaQuery.of(context).size.height,
-          decoration: const BoxDecoration(color: Colors.white),
+          decoration: const BoxDecoration(color: white),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 Container(
-                  width: 200,
-                  height: 200,
-                  margin: const EdgeInsets.only(top: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey,
-                    border: Border.all(color: Colors.black, width: 2),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  width: 200,
-                  child: const Text(
-                    'Your profile image',
-                    style: TextStyle(fontSize: 14, color: Colors.black),
-                    textAlign: TextAlign.center,
+                  margin: const EdgeInsets.symmetric(vertical: 25),
+                  padding: const EdgeInsets.all(8),
+                  width: MediaQuery.of(context).size.width / 2,
+                  height: MediaQuery.of(context).size.width / 2,
+                  color: Colors.grey,
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      XFile? imageSrc = await _getImageFromGallery();
+                      if (imageSrc != null) {
+                        newImage = imageSrc;
+                        setState(() {});
+                      }
+                    },
+                    child: newImage != null
+                        ? Image.file(
+                            File(newImage!.path),
+                            fit: BoxFit.contain,
+                          )
+                        : (image != null
+                            ? Image.network(image!)
+                            : Center(
+                                child: Column(
+                                  children: const <Widget>[
+                                    Icon(
+                                      Icons.upload,
+                                      size: bottomIconSize,
+                                      color: black,
+                                    ),
+                                    Flexible(
+                                      child: Text(
+                                        'Click to upload a profile image',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          color: white,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )),
                   ),
                 ),
                 Container(
@@ -676,9 +739,9 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                               controller: _username,
                               decoration: unfilledUsername
                                   ? invalidTextField.copyWith(
-                                  hintText: 'Enter Username')
+                                      hintText: 'Enter Username')
                                   : globalDecoration.copyWith(
-                                  hintText: 'Enter Username'),
+                                      hintText: 'Enter Username'),
                               style: textFieldFontStyle,
                               textAlign: TextAlign.left,
                               onChanged: (username) {
@@ -761,10 +824,19 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                               onChanged: (password) {
                                 if (validatePassword(password)) {
                                   errorMessage = '';
-                                  setState(() => unfilledConfirmPassword = false);
+                                  setState(
+                                      () => unfilledConfirmPassword = false);
                                 } else {
                                   errorMessage = 'Passwords must match!';
-                                  setState(() => unfilledConfirmPassword = true);
+                                  setState(
+                                      () => unfilledConfirmPassword = true);
+                                }
+                                setState(() {});
+                              },
+                              onSubmitted: (done) async {
+                                bool done = await doUpdate();
+                                if (done) {
+                                  Navigator.pop(context);
                                 }
                                 setState(() {});
                               },
@@ -779,59 +851,14 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 5, horizontal: 10),
                             child: ElevatedButton(
                               onPressed: () async {
-                                if (allEditProfileFieldsValid()) {
-                                  if (passwordsMatch()) {
-                                    Map<String, dynamic> changes = {
-                                      'firstName': _firstName.value.text.trim(),
-                                      'lastName': _lastName.value.text.trim(),
-                                      'lastSeen' : 1,
-                                      'email' : user.email.trim(),
-                                      'username': _username.value.text.trim(),
-                                      'password': user.password,
-                                    };
-
-                                    try {
-                                      final res =
-                                          await User.updateUser(changes);
-                                      if (res.statusCode == 200) {
-                                        user.firstName =
-                                            _firstName.value.text.trim();
-                                        user.lastName =
-                                            _lastName.value.text.trim();
-                                        user.username = _username.value.text.trim();
-
-                                        errorMessage ==
-                                            'Successfully updated your profile!';
-                                        await Future.delayed(const Duration(seconds: 1));
-
-                                        clearFields();
-                                        Navigator.pop(context);
-                                      }
-                                      errorMessage = await getUpdateProfileError(res.statusCode);
-                                      if (res.statusCode == 403) {
-                                        if (errorMessage ==
-                                            'Successfully updated your profile!') {
-                                          user.firstName =
-                                              _firstName.value.text.trim();
-                                          user.lastName =
-                                              _lastName.value.text.trim();
-                                          user.username = _username.value.text.trim();
-
-                                          await Future.delayed(const Duration(seconds: 1));
-
-                                          clearFields();
-                                          Navigator.pop(context);
-                                        } else {
-                                          errorDialog(context);
-                                        }
-                                      }
-                                    } catch (e) {
-                                      print('Could not connect to server');
-                                    }
-                                  }
+                                bool done1 = await doUpdate();
+                                bool done2 = await updatePFP();
+                                if (done1 && done2) {
+                                  Navigator.pop(context);
                                 }
                                 setState(() {});
                               },
@@ -840,7 +867,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                 'Confirm Changes',
                                 style: TextStyle(
                                   fontSize: 18,
-                                  color: Colors.white,
+                                  color: white,
                                   fontWeight: FontWeight.w400,
                                 ),
                                 textAlign: TextAlign.center,
@@ -864,7 +891,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
           decoration: BoxDecoration(
             border: Border(
                 top: BorderSide(color: Colors.black.withOpacity(.2), width: 3)),
-            color: Colors.white,
+            color: white,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -876,7 +903,8 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/food');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/food');
                       },
                       icon: const Icon(Icons.egg),
                       iconSize: bottomIconSize,
@@ -897,7 +925,8 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/recipe');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/recipe');
                       },
                       icon: const Icon(Icons.restaurant),
                       iconSize: bottomIconSize,
@@ -918,7 +947,8 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/cart');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/cart');
                       },
                       icon: const Icon(Icons.shopping_cart),
                       iconSize: bottomIconSize,
@@ -956,6 +986,87 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
         ),
       ),
     );
+  }
+
+  Future<bool> doUpdate() async {
+    if (allEditProfileFieldsValid()) {
+      if (passwordsMatch()) {
+        Map<String, dynamic> changes = {};
+        if (_firstName.value.text.trim() != user.firstName) {
+          changes['firstName'] = _firstName.value.text.trim();
+        }
+        if (_lastName.value.text.trim() != user.lastName) {
+          changes['lastName'] = _lastName.value.text.trim();
+        }
+        if (_username.value.text.trim() != user.username) {
+          changes['username'] = _username.value.text.trim();
+        }
+
+        if (changes.isEmpty) {
+          errorMessage = 'Nothing to update!';
+          return false;
+        }
+
+        try {
+          bool success = false;
+          do {
+            final res = await User.updateUser(changes);
+            if (res.statusCode == 200) {
+              user.firstName = _firstName.value.text.trim();
+              user.lastName = _lastName.value.text.trim();
+              user.username = _username.value.text.trim();
+
+              errorMessage == 'Successfully updated your profile!';
+              await Future.delayed(const Duration(seconds: 1));
+
+              clearFields();
+              return true;
+            }
+            int errorCode = await getUpdateProfileError(res.statusCode);
+            if (errorCode == 3) {
+              errorDialog(context);
+            }
+          } while (!success);
+        } catch (e) {
+          print('Could not connect to server');
+        }
+        throw Exception('Could not update');
+      } else
+        return false;
+    } else
+      return false;
+  }
+
+  Future<bool> updatePFP() async {
+    if (newImage != null) {
+      if (user.profileImage.isNotEmpty) {
+        final res = await User.deleteProfileImage();
+        if (res.statusCode != 200) {
+          errorMessage = json.decode(res.body);
+        }
+      }
+      var imageFile = File(newImage!.path);
+      String imageBase64 = base64Encode(imageFile.readAsBytesSync());
+      bool success = false;
+      do {
+        Map<String, dynamic> payload = {
+          'imgAsBase64': imageBase64
+        };
+
+        final ret = await User.newProfileImage(payload);
+        if (ret.statusCode == 200) {
+          var data = json.decode(ret.body);
+          user.defineProfileImage(data);
+          return true;
+        } else {
+          int errorCode = await updatePFPError(ret.statusCode);
+          if (errorCode == 3) {
+            errorDialog(context);
+          }
+        }
+      } while (!success);
+    }
+    return true;
   }
 
   bool validatePassword(String password) {
@@ -1016,21 +1127,85 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
     _confirmPassword.clear();
   }
 
-  Future<String> getUpdateProfileError(int statusCode) async {
+  Future<int> getChangePasswordError(int statusCode) async {
     switch (statusCode) {
       case 400:
-        return "Username already taken";
+        errorMessage = "Incorrect formatting!";
+        return 1;
+      case 401:
+        errorMessage = 'Access token missing';
+        return 1;
+      case 403:
+        errorMessage = 'Reconnecting...';
+        if (await tryTokenRefresh()) {
+          errorMessage = 'Reconnected';
+          return 2;
+        } else {
+          errorMessage = 'Could not connect to server!';
+          return 3;
+        }
+      case 404:
+        errorMessage = 'User not found!';
+        return 3;
+      default:
+        errorMessage = 'Service temporarily unavailable!';
+        return 3;
+    }
+  }
+
+  Future<int> getUpdateProfileError(int statusCode) async {
+    switch (statusCode) {
+      case 400:
+        errorMessage = "Username already taken";
+        return 1;
+      case 401:
+        errorMessage = 'Reconnecting...';
+        setState(() {});
+        if (await tryTokenRefresh()) {
+          errorMessage = 'Reconnected';
+          return 2;
+        } else {
+          errorMessage = 'Could not connect to server!';
+          return 3;
+        }
+      case 404:
+        errorMessage = 'User not found!';
+        return 3;
+      default:
+        errorMessage = 'Service temporarily unavailable!';
+        return 3;
+    }
+  }
+
+  Future<int> updatePFPError(int statusCode) async {
+    switch (statusCode) {
+      case 400:
+        errorMessage = "Incorrect formatting!";
+        return 1;
       case 401:
         errorMessage = 'Reconnecting...';
         if (await tryTokenRefresh()) {
-          return 'Successfully changed password!';
+          errorMessage = 'Reconnected';
+          return 2;
         } else {
-          return 'Cannot connect to server';
+          errorMessage = 'Could not connect to server!';
+          return 3;
         }
       case 404:
-        return 'User not found';
+        errorMessage = 'User not found!';
+        return 3;
       default:
-        return 'Something in edit password went wrong!';
+        errorMessage = 'Service temporarily unavailable!';
+        return 3;
+    }
+  }
+
+  Future<XFile?> _getImageFromGallery() async {
+    XFile? pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+    );
+    if (pickedFile != null) {
+      return pickedFile;
     }
   }
 }
@@ -1066,7 +1241,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
           style: TextStyle(fontSize: 24, color: mainScheme),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: white,
         leading: IconButton(
           onPressed: () {
             Navigator.pop(context);
@@ -1085,7 +1260,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
           child: Container(
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
-            decoration: const BoxDecoration(color: Colors.white),
+            decoration: const BoxDecoration(color: white),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
@@ -1236,41 +1411,40 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                               onPressed: () async {
                                 if (validateConfirmPassword()) {
                                   Map<String, dynamic> changes = {
-                                    'email' : user.email,
+                                    'email': user.email,
                                     'firstName': user.firstName.trim(),
                                     'lastName': user.lastName.trim(),
-                                    'lastSeen' : -1,
+                                    'lastSeen': -1,
                                     'username': user.email.trim(),
                                     'password': _newPassword.value.text.trim(),
                                   };
 
                                   try {
-                                    final res = await User.updateUser(changes);
-                                    if (res.statusCode == 200) {
-                                      user.password =
-                                          _newPassword.value.text.trim();
+                                    bool success = false;
+                                    do {
+                                      final res =
+                                          await User.updateUser(changes);
+                                      if (res.statusCode == 200) {
+                                        user.password =
+                                            _newPassword.value.text.trim();
 
-                                      errorMessage =
-                                          'Successfully updated your password!';
-                                      await Future.delayed(
-                                          const Duration(seconds: 1));
+                                        errorMessage =
+                                            'Successfully updated your password!';
+                                        await Future.delayed(
+                                            const Duration(seconds: 1));
 
-                                      clearFields();
-                                      Navigator.pop(context);
-                                    }
-                                    errorMessage = await getChangePasswordError(
-                                        res.statusCode);
-                                    if (errorMessage ==
-                                        'Successfully updated your password!') {
-                                      user.password =
-                                          _newPassword.value.text.trim();
-                                      await Future.delayed(
-                                          const Duration(seconds: 1));
-
-                                      clearFields();
-                                      Navigator.pop(context);
-                                    }
-                                    errorDialog(context);
+                                        clearFields();
+                                        Navigator.pop(context);
+                                      }
+                                      int errorCode =
+                                          await getChangePasswordError(
+                                              res.statusCode);
+                                      if (errorCode == 3) {
+                                        clearFields();
+                                        Navigator.pop(context);
+                                      }
+                                      errorDialog(context);
+                                    } while (!success);
                                   } catch (e) {
                                     print('Could not connect to server');
                                   }
@@ -1283,7 +1457,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                                 'Confirm Changes',
                                 style: TextStyle(
                                   fontSize: 18,
-                                  color: Colors.white,
+                                  color: white,
                                   fontWeight: FontWeight.w300,
                                 ),
                                 textAlign: TextAlign.center,
@@ -1307,7 +1481,7 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
           decoration: BoxDecoration(
             border: Border(
                 top: BorderSide(color: Colors.black.withOpacity(.2), width: 3)),
-            color: Colors.white,
+            color: white,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1319,7 +1493,8 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/food');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/food');
                       },
                       icon: const Icon(Icons.egg),
                       iconSize: bottomIconSize,
@@ -1340,7 +1515,8 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/recipe');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/recipe');
                       },
                       icon: const Icon(Icons.restaurant),
                       iconSize: bottomIconSize,
@@ -1361,7 +1537,8 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                   children: <Widget>[
                     IconButton(
                       onPressed: () {
-                        Navigator.restorablePushReplacementNamed(context, '/cart');
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/cart');
                       },
                       icon: const Icon(Icons.shopping_cart),
                       iconSize: bottomIconSize,
@@ -1457,23 +1634,29 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
     _confirmPassword.clear();
   }
 
-  Future<String> getChangePasswordError(int statusCode) async {
+  Future<int> getChangePasswordError(int statusCode) async {
     switch (statusCode) {
       case 400:
-        return "Incorrect formatting!";
+        errorMessage = "Incorrect formatting!";
+        return 1;
       case 401:
-        return 'Access token missing';
+        errorMessage = 'Access token missing';
+        return 1;
       case 403:
         errorMessage = 'Reconnecting...';
         if (await tryTokenRefresh()) {
-          return 'Successfully updated your password!';
+          errorMessage = 'Reconnected';
+          return 2;
         } else {
-          return 'Cannot connect to server';
+          errorMessage = 'Could not connect to server!';
+          return 3;
         }
       case 404:
-        return 'User not found';
+        errorMessage = 'User not found!';
+        return 3;
       default:
-        return 'Something in edit password went wrong!';
+        errorMessage = 'Service temporarily unavailable!';
+        return 3;
     }
   }
 }

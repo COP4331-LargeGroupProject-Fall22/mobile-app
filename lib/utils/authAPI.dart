@@ -26,7 +26,7 @@ class Authentication {
 
     try {
       Map<String, dynamic> tokenBody = {'refreshToken': user.refreshToken};
-      response = await http.put(Uri.parse('$API_PREFIX$apiRoute/refreshJWT'),
+      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/refreshJWT'),
           body: json.encode(tokenBody),
           headers: baseHeader);
     } catch (e) {
@@ -90,6 +90,36 @@ class Authentication {
 
     try {
       response = await http.post(Uri.parse('$API_PREFIX$apiRoute/confirm-verification-code'),
+          body: json.encode(payload),
+          headers: baseHeader);
+    } catch (e) {
+      print(e.toString());
+      throw Exception('Could not connect to server');
+    }
+
+    return response;
+  }
+
+  static Future<http.Response> requestResetCode(Map<String, dynamic> payload) async {
+    http.Response response;
+
+    try {
+      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/request-password-reset'),
+          body: json.encode(payload),
+          headers: baseHeader);
+    } catch (e) {
+      print(e.toString());
+      throw Exception('Could not connect to server');
+    }
+
+    return response;
+  }
+
+  static Future<http.Response> resetPassword(Map<String, dynamic> payload) async {
+    http.Response response;
+
+    try {
+      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/perform-password-reset'),
           body: json.encode(payload),
           headers: baseHeader);
     } catch (e) {

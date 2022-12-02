@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
 class UserData {
 
   String firstName;
@@ -11,12 +8,11 @@ class UserData {
   String accessToken;
   String refreshToken;
   // TODO(6): Add profile image support
-  //static late bool hasProfileImage;
-  //static late String profileImage;
+  String profileImage;
 
-  UserData(this.firstName, this.lastName, this.username, this.email, this.password, this.accessToken, this.refreshToken);
+  UserData(this.firstName, this.lastName, this.username, this.email, this.password, this.accessToken, this.refreshToken, this.profileImage);
 
-  static final UserData origin = UserData('', '', '', '', '', '', '');
+  static final UserData origin = UserData('', '', '', '', '', '', '', '');
 
   factory UserData.create() {
     return origin;
@@ -29,9 +25,13 @@ class UserData {
     this.email = json['email'];
   }
 
+  void defineProfileImage(Map<String, dynamic> json) {
+    this.profileImage = json.containsKey('srcUrl') ? json['srcUrl'] : '';
+  }
+
   void defineTokens(Map<String, dynamic> json) {
-    this.accessToken = json['accessToken'];
-    this.refreshToken = json['refreshToken'];
+    this.accessToken = json['accessToken']['token'];
+    this.refreshToken = json['refreshToken']['token'];
   }
 
   void setPassword(String pass) {
@@ -42,7 +42,8 @@ class UserData {
     'firstName': this.firstName,
     'lastName': this.lastName,
     'lastSeen': 1,
-    'username': this.email,
+    'username': this.username,
+    'email': this.email,
     'password': this.password,
   };
 
