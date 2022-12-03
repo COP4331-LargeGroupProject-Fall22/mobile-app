@@ -41,3 +41,20 @@ List<String> dietsList = [
   'Low FODMAP',
   'Whole30',
 ];
+
+List<String> mealTypesList = [
+  'main course',
+  'side dish',
+  'dessert',
+  'appetizer',
+  'salad',
+  'bread',
+  'breakfast',
+  'soup',
+  'beverage',
+  'sauce',
+  'marinade',
+  'fingerfood',
+  'snack',
+  'drink',
+];

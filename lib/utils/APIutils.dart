@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:smart_chef/utils/authAPI.dart';
+import 'package:smart_chef/utils/recipeData.dart';
 import 'package:smart_chef/utils/userData.dart';
 
 const String API_PREFIX = "https://api-smart-chef.herokuapp.com/";
@@ -11,6 +12,7 @@ final accessTokenHeader = {
   HttpHeaders.authorizationHeader: user.accessToken
 };
 const int resultsPerPage = 30;
+List<Instruction> instructionList = [];
 
 UserData user = UserData.create();
 final messageDelay = Future.delayed(Duration(seconds: 1));

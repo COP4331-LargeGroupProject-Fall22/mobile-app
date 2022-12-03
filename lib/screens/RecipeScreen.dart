@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -36,16 +35,18 @@ class _RecipesState extends State<RecipesScreen> {
   List<RecipeData> recipes = [];
   List<String> cuisineFilter = [];
   List<String> dietFilter = [];
+  List<String> mealTypeFilter = [];
   late ScrollController recipeScroll;
   String errorMessage = 'No recipes to list!';
   String filters = '';
   int itemsToDisplay = 30;
   int page = 1;
   int totalPages = 0;
+  bool noMoreItems = false;
   bool sortingDrawer = false;
 
   Future<void> makeTiles() async {
-    recipes = await retrieveRecipes();
+    recipes.addAll(await retrieveRecipes());
     body = BuildTiles();
   }
 
@@ -106,8 +107,7 @@ class _RecipesState extends State<RecipesScreen> {
                           fontSize: 18,
                         ),
                         textInputAction: TextInputAction.done,
-                        onSubmitted: (query) {
-                        },
+                        onSubmitted: (query) {},
                       ),
                     ),
                     const Icon(
@@ -162,25 +162,47 @@ class _RecipesState extends State<RecipesScreen> {
                 ),
               ),
             ),
-            Container(
-              padding: const EdgeInsets.all(5),
-              child: RichText(
-                text: TextSpan(
-                  text: 'Apply filters',
-                  style: const TextStyle(
-                    color: Colors.blueAccent,
-                    decoration: TextDecoration.underline,
-                  ),
-                  recognizer: TapGestureRecognizer()..onTap= () {
-                    setState(() {});
-                  }
-                )
-              )
-            ),
+            Row(children: <Widget>[
+              Container(
+                  padding: const EdgeInsets.all(5),
+                  child: RichText(
+                      text: TextSpan(
+                          text: 'Apply filters',
+                          style: const TextStyle(
+                            color: Colors.blueAccent,
+                            decoration: TextDecoration.underline,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              page = 1;
+                              itemsToDisplay = 30;
+                              noMoreItems = false;
+                              setState(() {});
+                            }))),
+              Container(
+                  padding: const EdgeInsets.all(5),
+                  child: RichText(
+                      text: TextSpan(
+                          text: 'Remove all filters',
+                          style: const TextStyle(
+                            color: Colors.redAccent,
+                            decoration: TextDecoration.underline,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              cuisineFilter = [];
+                              dietFilter = [];
+                              mealTypeFilter = [];
+                              noMoreItems = false;
+                              page = 1;
+                              itemsToDisplay = 30;
+                              setState(() {});
+                            }))),
+            ]),
             Column(children: <Widget>[
               const Expanded(
                   child: Text(
-                'Sort by cuisine',
+                'Filter by cuisine',
                 style: TextStyle(
                   fontSize: 18,
                   color: black,
@@ -207,13 +229,13 @@ class _RecipesState extends State<RecipesScreen> {
               ),
               const Expanded(
                   child: Text(
-                    'Sort by diet',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: black,
-                    ),
-                    textAlign: TextAlign.left,
-                  )),
+                'Filter by diet',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: black,
+                ),
+                textAlign: TextAlign.left,
+              )),
               ListView.builder(
                 itemCount: dietsList.length,
                 itemBuilder: (context, index) {
@@ -227,6 +249,33 @@ class _RecipesState extends State<RecipesScreen> {
                         dietFilter.add(dietsList[index]);
                       } else {
                         dietFilter.remove(dietsList[index]);
+                      }
+                    },
+                  );
+                },
+              ),
+              const Expanded(
+                  child: Text(
+                'Filter by meal type',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: black,
+                ),
+                textAlign: TextAlign.left,
+              )),
+              ListView.builder(
+                itemCount: mealTypesList.length,
+                itemBuilder: (context, index) {
+                  return CheckboxListTile(
+                    title: Text(mealTypesList[index]),
+                    dense: true,
+                    checkColor: mainScheme,
+                    value: false,
+                    onChanged: (bool? value) {
+                      if (value!) {
+                        mealTypeFilter.add(mealTypesList[index]);
+                      } else {
+                        mealTypeFilter.remove(mealTypesList[index]);
                       }
                     },
                   );
@@ -275,10 +324,7 @@ class _RecipesState extends State<RecipesScreen> {
                               contentPadding: const EdgeInsets.all(15),
                               title: Text(
                                 errorMessage,
-                                style: const TextStyle(
-                                  fontSize: addIngredientPageTextSize,
-                                  color: searchFieldText,
-                                ),
+                                style: noMoreTextStyle,
                                 textAlign: TextAlign.center,
                               ),
                             );
@@ -289,6 +335,11 @@ class _RecipesState extends State<RecipesScreen> {
                     },
                   ),
                 ),
+                if (noMoreItems)
+                  Text(
+                    'Sorry, there are no more recipes to show!',
+                    style: noMoreTextStyle,
+                  ),
               ],
             ),
           ),
@@ -401,18 +452,27 @@ class _RecipesState extends State<RecipesScreen> {
   }
 
   Future<List<RecipeData>> retrieveRecipes() async {
-    String toSortBy = '';
-    page = 1;
-
     List<RecipeData> recipes = [];
 
     final res = await Recipes.searchRecipes(
-        '', resultsPerPage, page, '', '', '', '', '');
+        _search.value.text,
+        resultsPerPage,
+        page,
+        '',
+        '',
+        cuisineFilter.join(','),
+        dietFilter.join(','),
+        mealTypeFilter.join(','));
     bool success = false;
     do {
       if (res.statusCode == 200) {
         var data = json.decode(res.body);
         totalPages = data.containsKey('numOfPages') ? data['numOfPages'] : 0;
+        int currentPage =
+            data.containsKey('currentPage') ? data['currentPage'] : page;
+        if (currentPage == totalPages) {
+          noMoreItems = true;
+        }
         for (var cats in data['results']) {
           recipes.add(RecipeData.create().putRecipe(cats));
         }
@@ -436,8 +496,6 @@ class _RecipesState extends State<RecipesScreen> {
       itemBuilder: (context, index) {
         RecipeData item = recipes[index];
 
-        double tileHeight = MediaQuery.of(context).size.height;
-
         return GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTap: () {
@@ -448,7 +506,6 @@ class _RecipesState extends State<RecipesScreen> {
           child: Stack(
             children: <Widget>[
               Container(
-                height: tileHeight,
                 decoration: const BoxDecoration(
                   borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(20),
@@ -460,7 +517,6 @@ class _RecipesState extends State<RecipesScreen> {
                 ),
               ),
               Container(
-                height: tileHeight,
                 decoration: BoxDecoration(
                   color: white,
                   borderRadius: const BorderRadius.all(Radius.circular(20)),
@@ -548,6 +604,9 @@ class _RecipePageState extends State<RecipePage> {
   }
 
   String errorMessage = '';
+  int numServings = 0;
+  List<int> servingNums = [1, 2, 3, 4, 5, 6];
+  bool missingIngredients = false;
 
   @override
   Widget build(BuildContext context) {
@@ -613,51 +672,114 @@ class _RecipePageState extends State<RecipePage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          Column(
-                            children: <Widget>[
-                              const Text(
-                                'Food Categories',
-                                style: TextStyle(
-                                  fontSize: ingredientInfoFontSize,
-                                  color: black,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 10, horizontal: 5),
-                                child: Text(
-                                  'thing',
-                                  style: ingredientInfoTextStyle,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            'Servings:',
+                            style: ingredientInfoTextStyle,
                           ),
-                        ],
-                      ),
-                      Text(
-                        errorMessage,
-                        style: errorTextStyle,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Column(
-                            children: <Widget>[
-                              Text(
-                                'Expiration Date(s)',
-                                style: ingredientInfoTextStyle,
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
+                          Container(
+                            decoration: const BoxDecoration(
+                              borderRadius: BorderRadius.all(
+                                  Radius.circular(roundedCorner)),
+                              color: mainScheme,
+                            ),
+                            child: DropdownButton<int>(
+                              value: recipeToDisplay.servings,
+                              icon: const Icon(Icons.arrow_drop_down,
+                                  color: white),
+                              onChanged: (int? value) {
+                                setState(() => numServings = value!);
+                              },
+                              items: servingNums
+                                  .map<DropdownMenuItem<int>>((int value) {
+                                return DropdownMenuItem<int>(
+                                  value: value,
+                                  child: Text(value.toString()),
+                                );
+                              }).toList(),
+                            ),
                           ),
                         ],
                       ),
                       Container(
+                        padding: const EdgeInsets.all(5),
+                        child: Row(children: <Widget>[
+                          Text(
+                            'Time to cook:',
+                            style: ingredientInfoTextStyle,
+                            textAlign: TextAlign.left,
+                          ),
+                          Text(
+                            recipeToDisplay.timeToCook.toString(),
+                            style: ingredientInfoTextStyle,
+                            textAlign: TextAlign.left,
+                          )
+                        ]),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(5),
+                        child: Row(children: <Widget>[
+                          Text(
+                            'Time to Prepare:',
+                            style: ingredientInfoTextStyle,
+                            textAlign: TextAlign.left,
+                          ),
+                          Text(
+                            recipeToDisplay.timeToPrepare.toString(),
+                            style: ingredientInfoTextStyle,
+                            textAlign: TextAlign.left,
+                          )
+                        ]),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(5),
+                        child: Row(children: <Widget>[
+                          Text(
+                            'Cuisine types:',
+                            style: ingredientInfoTextStyle,
+                            textAlign: TextAlign.left,
+                          ),
+                          Text(
+                            recipeToDisplay.cuisines.join(','),
+                            style: ingredientInfoTextStyle,
+                            textAlign: TextAlign.left,
+                          )
+                        ]),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(5),
+                        child: Row(children: <Widget>[
+                          Text(
+                            'Diet fulfilments:',
+                            style: ingredientInfoTextStyle,
+                            textAlign: TextAlign.left,
+                          ),
+                          Text(
+                            recipeToDisplay.diets.join(','),
+                            style: ingredientInfoTextStyle,
+                            textAlign: TextAlign.left,
+                          )
+                        ]),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(5),
+                        child: Row(children: <Widget>[
+                          Text(
+                            'Meal type:',
+                            style: ingredientInfoTextStyle,
+                            textAlign: TextAlign.left,
+                          ),
+                          Text(
+                            recipeToDisplay.type.toString(),
+                            style: ingredientInfoTextStyle,
+                            textAlign: TextAlign.left,
+                          )
+                        ]),
+                      ),
+                      Container(
                         width: MediaQuery.of(context).size.width,
                         height: MediaQuery.of(context).size.height,
-                        padding: const EdgeInsets.fromLTRB(5, 20, 5, 0),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 10),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
@@ -675,6 +797,90 @@ class _RecipePageState extends State<RecipePage> {
                           ],
                         ),
                       ),
+                      Container(
+                        width: MediaQuery.of(context).size.width,
+                        height: MediaQuery.of(context).size.height,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width,
+                              child: Text(
+                                'Instructions:',
+                                style: ingredientInfoTextStyle,
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                            Expanded(
+                              child: BuildInstructionList(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width / 1.2,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                padding: const EdgeInsets.all(5),
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    await addMissingIngredients();
+                                  },
+                                  style: buttonStyle,
+                                  child: const Text(
+                                    'Add missing Ingredients To Shopping Cart',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        color: white,
+                                        fontFamily: 'EagleLake'),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                padding: const EdgeInsets.all(5),
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    if (missingIngredients) {
+                                      bool addSome = await holdOnDialog();
+                                      if (addSome) {
+                                        bool success = await addMissingIngredients();
+                                      }
+                                    } else {
+                                      String finished =
+                                          Navigator.restorablePushNamed(
+                                              context, '/recipe/recipe/steps',
+                                              arguments: 1);
+                                      if (finished.isEmpty) {
+                                        List<int> ingredientsToRemoveFromInventoryIDs = await finishedDialog();
+                                        bool success = await removeIngredientsFromInventory(ingredientsToRemoveFromInventoryIDs);
+                                      }
+                                    }
+                                  },
+                                  style: buttonStyle,
+                                  child: const Text(
+                                    'Make!',
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        color: white,
+                                        fontFamily: 'EagleLake'),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
                     ],
                   );
               }
@@ -809,10 +1015,39 @@ class _RecipePageState extends State<RecipePage> {
       itemBuilder: (BuildContext context, int index) {
         return Row(
           children: <Widget>[
-            const Text('\u2022', style: TextStyle(fontSize: 20, color: black)),
+            Text('\u2022', style: ingredientInfoTextStyle),
             Expanded(
               child: Text(
                 ingreds[index].name,
+                style: ingredientInfoTextStyle,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    return toRet;
+  }
+
+  Widget BuildInstructionList() {
+    if (recipeToDisplay.instructions.length == 0) {
+      return Container();
+    }
+
+    List<Instruction> instructs = recipeToDisplay.instructions;
+
+    ListView toRet = ListView.builder(
+      padding: const EdgeInsets.all(10),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: instructs.length,
+      itemBuilder: (BuildContext context, int index) {
+        return Row(
+          children: <Widget>[
+            Expanded(
+              child: Text(
+                'Step $index: ${instructs[index].instruction}',
                 style: ingredientInfoTextStyle,
               ),
             ),
@@ -846,24 +1081,54 @@ class _RecipePageState extends State<RecipePage> {
     }
     return recipe;
   }
+
+  Future<bool> holdOnDialog() async {
+    bool adding = false;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Container();
+      },
+    );
+    return adding;
+  }
+
+  Future<bool> addMissingIngredients() async {
+    bool success = false;
+    return success;
+  }
+
+  Future<List<int>> finishedDialog() async {
+    List<int> ingredsID = [];
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext context) {
+          return Container();
+        },
+    );
+    return ingredsID;
+  }
+
+  Future<bool> removeIngredientsFromInventory(List<int> IDS) async {
+    bool success = false;
+    return success;
+  }
 }
 
 class RecipeInstructionPage extends StatefulWidget {
-  List<Instruction> instructionList;
   int stepNum;
 
-  RecipeInstructionPage(this.instructionList, this.stepNum);
+  RecipeInstructionPage(this.stepNum);
 
   @override
   _RecipeInstructionPageState createState() =>
-      _RecipeInstructionPageState(instructionList, stepNum);
+      _RecipeInstructionPageState(stepNum);
 }
 
 class _RecipeInstructionPageState extends State<RecipeInstructionPage> {
-  List<Instruction> instructionList;
   int stepNum;
 
-  _RecipeInstructionPageState(this.instructionList, this.stepNum);
+  _RecipeInstructionPageState(this.stepNum);
 
   @override
   void initState() {
@@ -931,8 +1196,84 @@ class _RecipeInstructionPageState extends State<RecipeInstructionPage> {
             },
           )),
       body: SingleChildScrollView(
-        child: Container(),
+        child: Center(
+          child: Column(
+            children: <Widget>[
+              Text(
+                'Step $stepNum:',
+                style: const TextStyle(
+                  fontSize: 32,
+                  color: black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                instructionList[stepNum].instruction,
+                style: const TextStyle(
+                  fontSize: 32,
+                  color: black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const Text(
+                'Ingredients for this step:',
+                style: TextStyle(
+                  fontSize: 24,
+                  color: black,
+                ),
+              ),
+              instructionIngredients(
+                  instructionList[stepNum].ingredientsInStep),
+              ElevatedButton(
+                onPressed: () {
+                  if (stepNum + 1 == instructionList.length) {
+                    Navigator.popUntil(
+                        context, ModalRoute.withName('/recipe/recipe'));
+                  } else {
+                    Navigator.restorablePushNamed(
+                        context, '/recipe/recipe/steps',
+                        arguments: stepNum + 1);
+                  }
+                },
+                style: buttonStyle,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    const Text(
+                      'Next Step',
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontFamily: 'EagleLake'),
+                      textAlign: TextAlign.center,
+                    ),
+                    Icon(
+                      Icons.arrow_forward,
+                      size: topBarIconSize,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
+  }
+
+  ListView instructionIngredients(List<IngredientData> ingreds) {
+    return ListView.builder(
+        itemCount: ingreds.length,
+        itemBuilder: (context, index) {
+          return Row(children: <Widget>[
+            const Text('\u2022', style: TextStyle(fontSize: 24, color: black)),
+            Expanded(
+              child: Text(
+                ingreds[index].name,
+                style: const TextStyle(fontSize: 24, color: black),
+              ),
+            ),
+          ]);
+        });
   }
 }

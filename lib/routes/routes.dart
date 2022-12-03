@@ -13,6 +13,7 @@ class Routes {
 
   static const String recipesScreen = '/recipe';
   static const String individualRecipeScreen = '/recipe/recipe';
+  static const String recipeStepsScreen = '/recipe/recipe/steps';
 
   static const String ingredientsScreen = '/food';
   static const String individualIngredientScreen = '/food/food';
@@ -46,16 +47,22 @@ class Routes {
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
-      case '/food/food':
+      case individualIngredientScreen:
         var arguments = settings.arguments;
         if (arguments is IngredientArguments)
           return MaterialPageRoute(builder: (context) => IngredientPage(arguments));
         else
           return MaterialPageRoute(builder: (context) => StartupScreen());
-      case '/recipe/recipe':
+      case individualRecipeScreen:
         var arguments = settings.arguments;
         if (arguments is int)
           return MaterialPageRoute(builder: (context) => RecipePage(arguments));
+        else
+          return MaterialPageRoute(builder: (context) => StartupScreen());
+      case recipeStepsScreen:
+        var arguments = settings.arguments;
+        if (arguments is int)
+          return MaterialPageRoute(builder: (context) => RecipeInstructionPage(arguments));
         else
           return MaterialPageRoute(builder: (context) => StartupScreen());
       default:
