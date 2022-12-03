@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:smart_chef/utils/authAPI.dart';
+import 'package:smart_chef/APIfunctions/authAPI.dart';
 import 'package:smart_chef/utils/recipeData.dart';
 import 'package:smart_chef/utils/userData.dart';
 

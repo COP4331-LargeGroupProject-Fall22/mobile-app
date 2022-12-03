@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:smart_chef/utils/APIutils.dart';
+import 'package:smart_chef/APIfunctions/APIutils.dart';
 
 class FavRecipe {
 

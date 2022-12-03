@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:smart_chef/utils/APIutils.dart';
+import 'package:smart_chef/APIfunctions/APIutils.dart';
 
 class Authentication {
   static const String apiRoute = 'auth';

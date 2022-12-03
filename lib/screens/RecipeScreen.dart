@@ -2,16 +2,17 @@ import 'dart:convert';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:smart_chef/utils/APIutils.dart';
+import 'package:smart_chef/APIfunctions/APIutils.dart';
+import 'package:smart_chef/APIfunctions/ingredientAPI.dart';
+import 'package:smart_chef/APIfunctions/inventoryAPI.dart';
+import 'package:smart_chef/APIfunctions/recipeAPI.dart';
+import 'package:smart_chef/APIfunctions/userAPI.dart';
 import 'package:smart_chef/utils/colors.dart';
 import 'package:smart_chef/utils/globals.dart';
-import 'package:smart_chef/utils/ingredientAPI.dart';
 import 'package:smart_chef/utils/ingredientData.dart';
-import 'package:smart_chef/utils/inventoryAPI.dart';
-import 'package:smart_chef/utils/recipeAPI.dart';
 import 'package:smart_chef/utils/recipeData.dart';
 import 'package:smart_chef/utils/recipeUtils.dart';
-import 'package:smart_chef/utils/userAPI.dart';
+
 
 class RecipesScreen extends StatefulWidget {
   @override
@@ -301,10 +302,7 @@ class _RecipesState extends State<RecipesScreen> {
                 Flexible(
                   child: Text(
                     filters,
-                    style: const TextStyle(
-                      fontSize: ingredientInfoFontSize,
-                      color: black,
-                    ),
+                    style: ingredientInfoTextStyle,
                   ),
                 ),
                 Expanded(
@@ -468,8 +466,9 @@ class _RecipesState extends State<RecipesScreen> {
       if (res.statusCode == 200) {
         var data = json.decode(res.body);
         totalPages = data.containsKey('numOfPages') ? data['numOfPages'] : 0;
+
         int currentPage =
-            data.containsKey('currentPage') ? data['currentPage'] : page;
+            data.containsKey('currentPage') ? int.parse(data['currentPage']) : page;
         if (currentPage == totalPages) {
           noMoreItems = true;
         }

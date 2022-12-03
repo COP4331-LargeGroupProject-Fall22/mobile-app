@@ -30,9 +30,9 @@ class RecipeData {
     this.cuisines = json.containsKey('cuisines') ? createCuisineList(json) : [];
     this.diets = json.containsKey('diets') ? createDietsList(json) : [];
     this.instructions = json.containsKey('instructionSteps') ? Instruction.create().toInstruction(json['instructionSteps']) : [];
-    this.servings = json['servings'];
-    this.timeToCook = json['cookingTimeInMinutes'];
-    this.timeToPrepare = json['preparationTimeInMinutes'];
+    this.servings = json.containsKey('servings') ? json['servings'] : 0;
+    this.timeToCook = json.containsKey('cookingTimeInMinutes') ? json['cookingTimeInMinutes'] : 0;
+    this.timeToPrepare = json.containsKey('preparationTimeInMinutes') ? json['preparationTimeInMinutes'] : 0;
     this.type = json.containsKey('type') ? json['type'] : '';
     return this;
   }

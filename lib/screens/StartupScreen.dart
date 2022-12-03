@@ -4,11 +4,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:smart_chef/utils/APIutils.dart';
-import 'package:smart_chef/utils/authAPI.dart';
+import 'package:smart_chef/APIfunctions/APIutils.dart';
+import 'package:smart_chef/APIfunctions/authAPI.dart';
+import 'package:smart_chef/APIfunctions/userAPI.dart';
 import 'package:smart_chef/utils/colors.dart';
 import 'package:smart_chef/utils/globals.dart';
-import 'package:smart_chef/utils/userAPI.dart';
 import 'package:smart_chef/utils/userData.dart';
 
 class StartupScreen extends StatefulWidget {
