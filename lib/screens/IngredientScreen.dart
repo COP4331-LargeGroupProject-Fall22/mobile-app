@@ -1,17 +1,12 @@
 import 'dart:convert';
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:smart_chef/screens/LoadingOverlay.dart';
 import 'package:smart_chef/utils/APIutils.dart';
-import 'package:smart_chef/utils/authAPI.dart';
 import 'package:smart_chef/utils/colors.dart';
 import 'package:smart_chef/utils/globals.dart';
 import 'package:smart_chef/utils/ingredientAPI.dart';
 import 'package:smart_chef/utils/ingredientData.dart';
 import 'package:smart_chef/utils/inventoryAPI.dart';
-import 'package:smart_chef/utils/userAPI.dart';
 
 class IngredientsScreen extends StatefulWidget {
   @override
@@ -561,7 +556,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
             List<IngredientData> ingredients = [];
             for (var ingred in cats[1]) {
               ingredients
-                  .add(IngredientData.create().inventoryIngredient(ingred));
+                  .add(IngredientData.create().toIngredient(ingred));
             }
             inventory[cats[i]] = ingredients;
           }
@@ -1829,7 +1824,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
               if (res.statusCode == 200) {
                 var data = json.decode(res.body);
                 IngredientData toPass = searchResultList[index];
-                toPass.completeIngredient(data);
+                toPass.toIngredient(data);
                 Navigator.popAndPushNamed(context, '/food/food', arguments: IngredientArguments(ingredient: toPass, isEditing: true, navFromAdd: true));
               } else {
                 errorMessage = 'Could not retrieve item details!';
@@ -1860,7 +1855,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
 
     var data = json.decode(res.body);
     for (var value in data['results']) {
-      searchResultList.add(IngredientData.create().baseIngredient(value));
+      searchResultList.add(IngredientData.create().toIngredient(value));
     }
 
     if (searchResultList.length == oldLength) {

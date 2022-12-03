@@ -10,6 +10,7 @@ final accessTokenHeader = {
   HttpHeaders.contentTypeHeader: 'application/json',
   HttpHeaders.authorizationHeader: user.accessToken
 };
+const int resultsPerPage = 30;
 
 UserData user = UserData.create();
 final messageDelay = Future.delayed(Duration(seconds: 1));

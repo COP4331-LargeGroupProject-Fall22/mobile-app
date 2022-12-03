@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:smart_chef/utils/colors.dart';
 
 const double bottomIconSize = 55;
@@ -40,25 +39,6 @@ TextStyle textFieldFontStyle = const TextStyle(
   color: black,
 );
 TextStyle errorTextStyle = const TextStyle(fontSize: 10, color: Colors.red);
-
-final searchField = TextField(
-  maxLines: 1,
-  decoration: const InputDecoration.collapsed(
-    hintText: 'Search...',
-    hintStyle: TextStyle(
-      color: searchFieldText,
-      fontSize: 18,
-    ),
-  ),
-  style: const TextStyle(
-    color: searchFieldText,
-    fontSize: 18,
-  ),
-  textInputAction: TextInputAction.done,
-  onChanged: (query) {
-    // TODO(15): Dynamic search
-  },
-);
 
 void errorDialog(BuildContext context) {
   showDialog(
@@ -105,7 +85,7 @@ bool deleteDialog(BuildContext context) {
         actions: <Widget>[
           TextButton(
             onPressed: () {
-              delete = true;
+              delete = false;
               Navigator.pop(context, 'Cancel');
             },
             child: const Text(

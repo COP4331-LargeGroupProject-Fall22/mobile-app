@@ -11,7 +11,8 @@ class Routes {
   static const String registerScreen = '/register';
   static const String verificationScreen = '/verification';
 
-  static const String recipeScreen = '/recipe';
+  static const String recipesScreen = '/recipe';
+  static const String individualRecipeScreen = '/recipe/recipe';
 
   static const String ingredientsScreen = '/food';
   static const String individualIngredientScreen = '/food/food';
@@ -31,7 +32,7 @@ class Routes {
     registerScreen: (context) => RegisterPage(),
     verificationScreen: (context) => VerificationPage(),
 
-    recipeScreen: (context) => RecipeScreen(),
+    recipesScreen: (context) => RecipesScreen(),
 
     ingredientsScreen: (context) => IngredientsScreen(),
     addIngredientScreen: (context) => AddIngredientPage(),
@@ -49,6 +50,12 @@ class Routes {
         var arguments = settings.arguments;
         if (arguments is IngredientArguments)
           return MaterialPageRoute(builder: (context) => IngredientPage(arguments));
+        else
+          return MaterialPageRoute(builder: (context) => StartupScreen());
+      case '/recipe/recipe':
+        var arguments = settings.arguments;
+        if (arguments is int)
+          return MaterialPageRoute(builder: (context) => RecipePage(arguments));
         else
           return MaterialPageRoute(builder: (context) => StartupScreen());
       default:

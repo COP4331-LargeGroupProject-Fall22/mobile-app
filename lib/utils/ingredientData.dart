@@ -15,21 +15,14 @@ class IngredientData {
     return origin;
   }
 
-  IngredientData baseIngredient(Map<String, dynamic> json) {
+  IngredientData toIngredient(Map<String, dynamic> json) {
     this.ID = json['id'];
     this.name = json['name'];
     this.category = json.containsKey('category') ? json['category'] : '';
     this.imageUrl = json.containsKey('image') ? (json['image'].containsKey('srcUrl') ? json['image']['srcUrl'] : '') : '';
-    return this;
-  }
-
-  IngredientData completeIngredient(Map<String, dynamic> json) {
-    this.ID = json['id'];
-    this.name = json['name'];
-    this.category = json.containsKey('category') ? json['category'] : '';
-    this.imageUrl = json.containsKey('image') ? (json['image'].containsKey('srcUrl') ? json['image']['srcUrl'] : '') : '';
-    this.units = insertUnits(json);
-    this.nutrients = Nutrient.create().toNutrient(json);
+    this.units = json.containsKey('quantityUnits') ? insertUnits(json) : [];
+    this.nutrients = json.containsKey('nutrients') ? Nutrient.create().toNutrient(json) : [];
+    this.expirationDate = json.containsKey('quantityUnits') ? json['expirationDate'] : 0;
     return this;
   }
 
@@ -39,15 +32,6 @@ class IngredientData {
       units.add(unit);
     }
     return units;
-  }
-
-  IngredientData inventoryIngredient(Map<String, dynamic> json) {
-    this.ID = json['id'];
-    this.name = json['name'];
-    this.category = json.containsKey('category') ? json['category'] : '';
-    this.imageUrl = json.containsKey('image') ? json['image']['srcUrl'] : '';
-    this.expirationDate = json['expirationDate'];
-    return this;
   }
 
   void addInformationToIngredient(Map<String, dynamic> json) {
