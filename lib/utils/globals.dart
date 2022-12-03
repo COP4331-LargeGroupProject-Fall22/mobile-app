@@ -75,9 +75,8 @@ void errorDialog(BuildContext context) {
     },
   );
 }
-bool deleteDialog(BuildContext context) {
-  bool delete = false;
-  showDialog(
+Future<bool> deleteDialog(BuildContext context) async{
+  bool delete = await showDialog(
     context: context,
     barrierDismissible: true,
     builder: (context) {
@@ -89,8 +88,7 @@ bool deleteDialog(BuildContext context) {
         actions: <Widget>[
           TextButton(
             onPressed: () {
-              delete = false;
-              Navigator.pop(context, 'Cancel');
+              Navigator.pop(context, false);
             },
             child: const Text(
               'Cancel',
@@ -99,8 +97,7 @@ bool deleteDialog(BuildContext context) {
           ),
           TextButton(
             onPressed: () {
-              delete = true;
-              Navigator.pop(context, 'delete');
+              Navigator.pop(context, true);
             },
             child: const Text(
               'Delete my account',

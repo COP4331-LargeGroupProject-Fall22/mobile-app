@@ -3,9 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import 'package:smart_chef/screens/LoadingOverlay.dart';
 import 'package:smart_chef/utils/APIutils.dart';
 import 'package:smart_chef/utils/authAPI.dart';
 import 'package:smart_chef/utils/colors.dart';
@@ -175,7 +173,6 @@ class _LogInPageState extends State<LogInPage> {
     super.initState();
   }
 
-  //TODO(30): Reset Password Functionality
   int state = 0;
   Widget detectState() {
     if (state == 1) {
@@ -273,6 +270,7 @@ class _LogInPageState extends State<LogInPage> {
                       ),
                       onPressed: () {
                         clearFields();
+                        user.clear();
                         setState(() {
                           Navigator.pop(context);
                         });
@@ -375,10 +373,11 @@ class _LogInPageState extends State<LogInPage> {
                                 Navigator.restorablePushNamedAndRemoveUntil(
                                     context, '/food', ((Route<dynamic> route) => false));
                               } else {
-                                setState(() {
-                                  unfilledUsername = true;
-                                  unfilledPassword = true;
-                                });
+                                if (mounted)
+                                  setState(() {
+                                    unfilledUsername = true;
+                                    unfilledPassword = true;
+                                  });
                               }
                             },
                             textInputAction: TextInputAction.done,
@@ -409,10 +408,11 @@ class _LogInPageState extends State<LogInPage> {
                               Navigator.restorablePushNamedAndRemoveUntil(
                                   context, '/food', ((Route<dynamic> route) => false));
                             } else {
-                              setState(() {
-                                unfilledUsername = true;
-                                unfilledPassword = true;
-                              });
+                              if (mounted)
+                                setState(() {
+                                  unfilledUsername = true;
+                                  unfilledPassword = true;
+                                });
                             }
                           },
                           style: buttonStyle,
@@ -498,35 +498,36 @@ class _LogInPageState extends State<LogInPage> {
           if (errorCode == 3) {
             user.username = _username.value.text.trim();
             showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: const Text('Account not verified'),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    elevation: 15,
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () {
-                          user.username = _username.value.text;
-                          Navigator.restorablePushReplacementNamed(
-                              context, '/verification');
-                        },
-                        child: const Text(
-                          'OK',
-                          style: TextStyle(color: Colors.red, fontSize: 18),
-                        ),
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text('Account not verified'),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  elevation: 15,
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () {
+                        user.username = _username.value.text;
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/verification');
+                      },
+                      child: const Text(
+                        'OK',
+                        style: TextStyle(color: Colors.red, fontSize: 18),
                       ),
+                    ),
+                  ],
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const <Widget>[
+                      Flexible(
+                          child: Text(
+                              'Your account is not verified!\nPress OK to be taken to the verification page')),
                     ],
-                    content: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const <Widget>[
-                          Flexible(
-                              child: Text(
-                                  'Your account is not verified!\nPress OK to be taken to the verification page')),
-                        ]),
-                  );
-                });
+                  ),
+                );
+              });
             return false;
           }
         }
@@ -541,6 +542,7 @@ class _LogInPageState extends State<LogInPage> {
 
   Future<bool> retrieveUserData() async {
     bool success = false;
+    int tries = 0;
     do {
       final res = await User.getUser();
       if (res.statusCode == 200) {
@@ -554,8 +556,11 @@ class _LogInPageState extends State<LogInPage> {
           errorDialog(context);
           return false;
         }
+        tries++;
       }
-    } while(!success);
+    } while(!success && tries < 3);
+    errorMessage = 'Could not retrieve user data';
+    return success;
   }
 
   int getLogInError(int statusCode) {
@@ -590,7 +595,6 @@ class _LogInPageState extends State<LogInPage> {
           return 2;
         } else {
           errorMessage = 'Could not connect to server!';
-
           return 3;
         }
       case 404:
@@ -1365,22 +1369,11 @@ class _RegisterPageState extends State<RegisterPage> {
                                             final ret =
                                                 await Authentication.register(
                                                     payload);
+
                                             if (ret.statusCode == 200) {
                                               errorMessage = '';
-                                              Map<String, dynamic> package = {
-                                                'username':
-                                                    _email.value.text.trim(),
-                                              };
-                                              final res =
-                                                  await Authentication.sendCode(
-                                                      package);
-                                              if (res.statusCode == 200) {
-                                                errorMessage = '';
-                                                user.username =
-                                                    _email.value.text;
-                                                Navigator.restorablePushNamed(
-                                                    context, '/verification');
-                                              }
+                                              Navigator.restorablePushNamed(
+                                                      context, '/verification');
                                             } else {
                                               errorMessage = getErrorString(
                                                   ret.statusCode);
@@ -1664,12 +1657,10 @@ class _VerificationPageState extends State<VerificationPage> {
                               await Future.delayed(const Duration(seconds: 1));
                               clearFields();
 
-                              Navigator.restorablePushReplacementNamed(
-                                  context, '/login');
+                              Navigator.pushNamedAndRemoveUntil(context, '/startup', (Route<dynamic> route) => false);
                             } else {
                               String message = json.decode(res.body);
                               if (message == "Verification code is either expired or not issued.") {
-                                print('res.body');
                                 Map<String, dynamic> name = {
                                   'username': user.username,
                                 };

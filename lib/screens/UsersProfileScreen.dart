@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:smart_chef/utils/APIutils.dart';
 import 'package:smart_chef/utils/authAPI.dart';
@@ -80,24 +79,36 @@ class _UserProfilePageState extends State<UserProfilePage> {
         actions: <Widget>[
           IconButton(
             onPressed: () async {
-              bool delete = deleteDialog(context);
+              bool delete = await deleteDialog(context);
+              print(delete);
 
               if (!delete) {
                 return;
               }
               try {
-                final res = await User.deleteUser();
-                if (res.statusCode == 200) {
-                  user.clear();
+                bool success = false;
+                do {
+                  final res = await User.deleteUser();
+                  print(res.body);
+                  if (res.statusCode == 200) {
+                    user.clear();
+                    setState(() => errorMessage = 'Successfully delete account!');
+                    await messageDelay;
 
-                  Navigator.pushNamedAndRemoveUntil(
-                      context, '/startup', ((Route<dynamic> route) => false));
-                } else {
-                  int errorCode = await getDeleteError(res.statusCode);
-                }
+                    Navigator.pushNamedAndRemoveUntil(
+                        context, '/startup', ((Route<dynamic> route) => false));
+                    success = true;
+                  } else {
+                    int errorCode = await getDeleteError(res.statusCode);
+                    if (errorCode == 3) {
+                      errorDialog(context);
+                    }
+                  }
+                } while (!success);
               } catch (e) {
                 errorDialog(context);
               }
+              setState(() {});
             },
             icon: const Icon(
               Icons.delete,
@@ -490,7 +501,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       case 401:
         errorMessage = 'Reconnecting...';
         if (await tryTokenRefresh()) {
-          errorMessage = 'Successfully changed password!';
+          errorMessage = 'Reconnected!';
           return 2;
         } else {
           errorMessage = 'Cannot connect to server';

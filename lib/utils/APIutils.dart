@@ -50,8 +50,7 @@ Future<bool> refreshTokenStatus() async {
   switch (changeToken.statusCode) {
     case 200:
       var tokens = json.decode(changeToken.body);
-      user.accessToken = tokens['accessToken']['token'];
-      user.refreshToken = tokens['refreshToken']['token'];
+      user.defineTokens(tokens);
       return true;
     case 400:
       return false;
@@ -74,8 +73,7 @@ Future<bool> reauthenticateUser() async {
   switch (response.statusCode) {
     case 200:
       var data = json.decode(response.body);
-      user.accessToken = data['accessToken'];
-      user.refreshToken = data['refreshToken'];
+      user.defineTokens(data);
       print('Successful relog');
       return true;
     case 400:
