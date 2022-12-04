@@ -598,8 +598,6 @@ class _RecipePageState extends State<RecipePage> {
   int numServings = 0;
   List<int> servingNums = [1, 2, 3, 4, 5, 6];
   bool missingIngredients = false;
-  Widget ingredientList = Container();
-  Widget instructionsList = Container();
 
   @override
   Widget build(BuildContext context) {
@@ -798,7 +796,25 @@ class _RecipePageState extends State<RecipePage> {
                               ),
                             ),
                             Expanded(
-                              child: ingredientList,
+                              child: ListView.builder(
+                                padding: const EdgeInsets.all(10),
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: recipeToDisplay.ingredients.length,
+                                itemBuilder: (BuildContext context, int index) {
+                                  return Row(
+                                    children: <Widget>[
+                                      Text('\u2022', style: ingredientInfoTextStyle),
+                                      Expanded(
+                                        child: Text(
+                                          recipeToDisplay.ingredients[index].name,
+                                          style: ingredientInfoTextStyle,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
                             ),
                           ],
                         ),
@@ -820,7 +836,24 @@ class _RecipePageState extends State<RecipePage> {
                               ),
                             ),
                             Expanded(
-                              child: instructionsList,
+                              child: ListView.builder(
+                                padding: const EdgeInsets.all(10),
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: recipeToDisplay.instructions.length,
+                                itemBuilder: (BuildContext context, int index) {
+                                  return Row(
+                                    children: <Widget>[
+                                      Expanded(
+                                        child: Text(
+                                          'Step $index: ${recipeToDisplay.instructions[index].instruction}',
+                                          style: ingredientInfoTextStyle,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
                             ),
                           ],
                         ),
@@ -1007,68 +1040,7 @@ class _RecipePageState extends State<RecipePage> {
 
   Future<bool> getFullRecipeData() async {
     recipeToDisplay = await fetchRecipeData();
-    ingredientList = await buildIngredientList();
-    instructionsList = await buildInstructionList();
     return true;
-  }
-
-  Future<Widget> buildIngredientList() async {
-    if (recipeToDisplay.ingredients.length == 0) {
-      return Container();
-    }
-
-    List<IngredientData> ingreds = recipeToDisplay.ingredients;
-
-    ListView toRet = ListView.builder(
-      padding: const EdgeInsets.all(10),
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: ingreds.length,
-      itemBuilder: (BuildContext context, int index) {
-        return Row(
-          children: <Widget>[
-            Text('\u2022', style: ingredientInfoTextStyle),
-            Expanded(
-              child: Text(
-                ingreds[index].name,
-                style: ingredientInfoTextStyle,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    return toRet;
-  }
-
-  Future<Widget> buildInstructionList() async {
-    if (recipeToDisplay.instructions.length == 0) {
-      return Container();
-    }
-
-    List<Instruction> instructs = recipeToDisplay.instructions;
-
-    ListView toRet = ListView.builder(
-      padding: const EdgeInsets.all(10),
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: instructs.length,
-      itemBuilder: (BuildContext context, int index) {
-        return Row(
-          children: <Widget>[
-            Expanded(
-              child: Text(
-                'Step $index: ${instructs[index].instruction}',
-                style: ingredientInfoTextStyle,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    return toRet;
   }
 
   Future<int> getError(int status) async {
