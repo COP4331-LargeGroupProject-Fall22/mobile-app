@@ -19,6 +19,14 @@ final globalDecoration = InputDecoration(
       borderSide: const BorderSide(color: textFieldBorder),
     ));
 
+enum sortingBy {
+  EXPRev,
+  LEX,
+  LEXRev,
+  CAT,
+  CATRev
+}
+
 TextStyle bottomRowIconTextStyle = const TextStyle(fontSize: 12, color: bottomRowIcon);
 TextStyle bottomRowOnScreenTextStyle = const TextStyle(fontSize: 12, color: mainScheme);
 TextStyle ingredientInfoTextStyle = const TextStyle(

@@ -31,10 +31,13 @@ class IngredientsPage extends StatefulWidget {
 }
 
 class _IngredientsPageState extends State<IngredientsPage> {
+  Future<bool>? done;
+
   @override
   void initState() {
     super.initState();
     inventoryScroll = ScrollController()..addListener(_scrollListener);
+    done = makeTiles();
   }
 
   @override
@@ -43,14 +46,15 @@ class _IngredientsPageState extends State<IngredientsPage> {
     super.dispose();
   }
 
-  late List<Widget> body;
+  List<Widget>? body;
   Map<String, List<IngredientData>> userInventory = {};
   late ScrollController inventoryScroll;
   String errorMessage = 'You have no items in your inventory!';
 
-  Future<void> makeTiles() async {
-    userInventory = await retrieveInventory(_groupValue);
-    body = await BuildTiles();
+  Future<bool> makeTiles() async {
+    await retrieveInventory(_groupValue);
+    await BuildTiles();
+    return true;
   }
 
   Icon leadingIcon = const Icon(Icons.search, color: black);
@@ -215,7 +219,6 @@ class _IngredientsPageState extends State<IngredientsPage> {
                       continue;
                     }
                     for (var ingreds in userInventory[cat]!) {
-                      print(ingreds.toString());
                       final res = await Inventory.deleteIngredientfromInventory(
                           ingreds.ID);
                       if (res.statusCode == 200) {
@@ -331,7 +334,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                         ))),
                 Expanded(
                   child: FutureBuilder(
-                    future: makeTiles(),
+                    future: done,
                     builder: (BuildContext context, AsyncSnapshot snapshot) {
                       switch (snapshot.connectionState) {
                         case ConnectionState.active:
@@ -341,7 +344,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                           if (snapshot.hasError) {
                             return Text('Error: $snapshot.error}');
                           }
-                          if (body.length == 0) {
+                          if (body!.length == 0) {
                             return ListTile(
                               contentPadding: const EdgeInsets.all(15),
                               title: Text(
@@ -352,9 +355,9 @@ class _IngredientsPageState extends State<IngredientsPage> {
                             );
                           }
                           return ListView.builder(
-                            itemCount: body.length,
+                            itemCount: body!.length,
                             itemBuilder: (context, index) {
-                              return body[index];
+                              return body![index];
                             },
                           );
                       }
@@ -497,16 +500,13 @@ class _IngredientsPageState extends State<IngredientsPage> {
     return date;
   }
 
-  Future<Map<String, List<IngredientData>>> retrieveInventory(
+  Future<void> retrieveInventory(
       int sortBy) async {
     bool reverse = false;
     bool exDate = true;
     bool cat = false;
     bool alphabet = false;
-    String toSortBy = '';
     itemsToDisplay = 30;
-
-    Map<String, List<IngredientData>> inventory = {};
 
     switch (sortBy) {
       case 1:
@@ -515,24 +515,24 @@ class _IngredientsPageState extends State<IngredientsPage> {
       case 2:
         alphabet = true;
         exDate = false;
-        toSortBy = 'lexigraphical';
+        sorted = 'lexigraphical';
         break;
       case 3:
         alphabet = true;
         reverse = true;
         exDate = false;
-        toSortBy = 'reverseLexigraphical';
+        sorted = 'reverseLexigraphical';
         break;
       case 4:
         cat = true;
         exDate = false;
-        toSortBy = 'category';
+        sorted = 'category';
         break;
       case 5:
         cat = true;
         reverse = true;
         exDate = false;
-        toSortBy = 'categoryReversed';
+        sorted = 'categoryReversed';
         break;
       default:
         break;
@@ -541,17 +541,20 @@ class _IngredientsPageState extends State<IngredientsPage> {
     final res =
     await Inventory.retrieveUserInventory(reverse, exDate, cat, alphabet);
     bool success = false;
+    int tries = 0;
     do {
       if (res.statusCode == 200) {
         var data = json.decode(res.body);
         for (int i = 0; i < data.length; i += 2) {
           for (var cats in data) {
+            if (cats[1].isEmpty)
+              continue;
             List<IngredientData> ingredients = [];
             for (var ingred in cats[1]) {
               ingredients
                   .add(await IngredientData.create().toIngredient(ingred));
             }
-            inventory[cats[i]] = ingredients;
+            userInventory[cats[i]] = ingredients;
           }
         }
         success = true;
@@ -561,26 +564,21 @@ class _IngredientsPageState extends State<IngredientsPage> {
           errorDialog(context);
         }
       }
-    } while (!success);
-
-    return inventory;
+      tries++;
+    } while (!success && tries < 3);
   }
 
-  Future<List<Widget>> BuildTiles() async {
-    List<Widget> toRet = [];
+  Future<void> BuildTiles() async {
 
     for (var cat in userInventory.keys) {
-      if (userInventory[cat]!.length == 0) {
-        continue;
-      }
-      toRet.add(Text(
+      body!.add(Text(
         cat,
         style: const TextStyle(
           fontSize: addIngredientPageTextSize,
           color: searchFieldText,
         ),
       ));
-      toRet.add(
+      body!.add(
         GridView.builder(
           itemCount: itemsToDisplay < userInventory[cat]!.length
               ? itemsToDisplay
@@ -711,8 +709,6 @@ class _IngredientsPageState extends State<IngredientsPage> {
       );
     }
     itemsToDisplay += 30;
-
-    return toRet;
   }
 
   Future<int> getDataRetrieveError(int statusCode) async {
@@ -1368,10 +1364,12 @@ class _IngredientPageState extends State<IngredientPage> {
     }
     if (ingredientToDisplay.expirationDate != 0) {
       _selectedDate = convertToDate(ingredientToDisplay.expirationDate);
+      _expirationDate.text = DateFormat.yMd().format(_selectedDate);
     } else {
       _selectedDate = DateTime.now();
+      _expirationDate.text = 'N/A';
     }
-    _expirationDate.text = DateFormat.yMd().format(_selectedDate);
+
   }
 }
 
