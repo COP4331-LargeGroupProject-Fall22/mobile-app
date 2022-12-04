@@ -15,7 +15,7 @@ class IngredientData {
     return origin;
   }
 
-  Future<IngredientData> toIngredient(Map<String, dynamic> json) async {
+  IngredientData toIngredient(Map<String, dynamic> json) {
     this.ID = json['id'];
     this.name = json['name'];
     this.category = json.containsKey('category') ? json['category'] : '';
@@ -23,6 +23,12 @@ class IngredientData {
     this.units = json.containsKey('quantityUnits') ? insertUnits(json) : [];
     this.nutrients = json.containsKey('nutrients') ? Nutrient.create().toNutrient(json) : [];
     this.expirationDate = json.containsKey('expirationDate') ? json['expirationDate'] : 0;
+    return this;
+  }
+
+  IngredientData toRecipeIngredient(Map<String, dynamic> json) {
+    this.ID = json['id'];
+    this.name = json['name'];
     return this;
   }
 
