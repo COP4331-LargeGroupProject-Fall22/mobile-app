@@ -34,6 +34,7 @@ class Routes {
     verificationScreen: (context) => VerificationPage(),
 
     recipesScreen: (context) => RecipesScreen(),
+    individualRecipeScreen: (context) => RecipePage(),
 
     ingredientsScreen: (context) => IngredientsScreen(),
     addIngredientScreen: (context) => AddIngredientPage(),
@@ -49,16 +50,16 @@ class Routes {
     switch (settings.name) {
       case individualIngredientScreen:
         var arguments = settings.arguments;
-        if (arguments is IngredientArguments)
+        if (arguments is String)
           return MaterialPageRoute(builder: (context) => IngredientPage(arguments));
         else
           return MaterialPageRoute(builder: (context) => StartupScreen());
-      case individualRecipeScreen:
-        var arguments = settings.arguments;
-        if (arguments is int)
-          return MaterialPageRoute(builder: (context) => RecipePage(arguments));
-        else
-          return MaterialPageRoute(builder: (context) => StartupScreen());
+      // case individualRecipeScreen:
+      //   var arguments = settings.arguments;
+      //   if (arguments is int)
+      //     return MaterialPageRoute(builder: (context) => RecipePage(arguments));
+      //   else
+      //     return MaterialPageRoute(builder: (context) => StartupScreen());
       case recipeStepsScreen:
         var arguments = settings.arguments;
         if (arguments is int)

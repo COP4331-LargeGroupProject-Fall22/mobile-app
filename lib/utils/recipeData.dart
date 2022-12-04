@@ -22,14 +22,14 @@ class RecipeData {
     return origin;
   }
 
-  RecipeData putRecipe(Map<String, dynamic> json) {
+  Future<RecipeData> putRecipe(Map<String, dynamic> json) async {
     this.ID = json['id'];
     this.name = json['name'];
-    this.ingredients = json.containsKey('ingredients') ? toIngredients(json) : [];
+    this.ingredients = await toIngredients(json);
     this.imageUrl = json.containsKey('image') ? (json['image'].containsKey('srcUrl') ? json['image']['srcUrl'] : '') : '';
-    this.cuisines = json.containsKey('cuisines') ? createCuisineList(json) : [];
-    this.diets = json.containsKey('diets') ? createDietsList(json) : [];
-    this.instructions = json.containsKey('instructionSteps') ? Instruction.create().toInstruction(json['instructionSteps']) : [];
+    this.cuisines = json.containsKey('cuisines') ? await createCuisineList(json) : [];
+    this.diets = json.containsKey('diets') ? await createDietsList(json) : [];
+    this.instructions = json.containsKey('instructionSteps') ? await Instruction.create().toInstruction(json['instructionSteps']) : [];
     this.servings = json.containsKey('servings') ? json['servings'] : 0;
     this.timeToCook = json.containsKey('cookingTimeInMinutes') ? json['cookingTimeInMinutes'] : 0;
     this.timeToPrepare = json.containsKey('preparationTimeInMinutes') ? json['preparationTimeInMinutes'] : 0;
@@ -38,23 +38,23 @@ class RecipeData {
   }
 
 
-  List<IngredientData> toIngredients(Map<String, dynamic> json) {
+  Future<List<IngredientData>> toIngredients(Map<String, dynamic> json) async {
     List<IngredientData> ingredients = [];
     for (var ingred in json['ingredients']) {
-      ingredients.add(IngredientData.create().toIngredient(ingred));
+      ingredients.add(await IngredientData.create().toIngredient(ingred));
     }
     return ingredients;
   }
 
-  List<String> createCuisineList(Map<String, dynamic> json) {
+  Future<List<String>> createCuisineList(Map<String, dynamic> json) async {
     List<String> cuisines = [];
-    for (var cuisine in json['ingredients']) {
+    for (var cuisine in json['cuisines']) {
       cuisines.add(cuisine);
     }
     return cuisines;
   }
 
-  List<String> createDietsList(Map<String, dynamic> json) {
+  Future<List<String>> createDietsList(Map<String, dynamic> json) async {
     List<String> diets = [];
     for (var diet in json['diets']) {
       diets.add(diet);
@@ -96,18 +96,18 @@ class Instruction{
     return origin;
   }
 
-  List<Instruction> toInstruction(Map<String, dynamic> json) {
+  Future<List<Instruction>> toInstruction(List<dynamic> json) async {
     List<Instruction> instruction = [];
-    for (var instruction in json['instructionSteps']) {
-      instruction.add(Instruction(instruction['instruction'], toIngredientList(instruction)));
+    for (var index in json) {
+      //instruction.add(Instruction(json[index]['instruction'], toIngredientList(instruction['ingredients'])));
     }
     return instruction;
   }
 
-  List<IngredientData> toIngredientList(Map<String, dynamic> json) {
+  Future<List<IngredientData>> toIngredientList(Map<String, dynamic> json) async {
     List<IngredientData> ingreds = [];
     for (var ingred in json['ingredients']) {
-      ingreds.add(IngredientData.create().toIngredient(ingred));
+      ingreds.add(await IngredientData.create().toIngredient(ingred));
     }
     return ingreds;
   }

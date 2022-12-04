@@ -13,6 +13,7 @@ final accessTokenHeader = {
 };
 const int resultsPerPage = 30;
 List<Instruction> instructionList = [];
+int recipeId = 0;
 
 UserData user = UserData.create();
 final messageDelay = Future.delayed(Duration(seconds: 1));

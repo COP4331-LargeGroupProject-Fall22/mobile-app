@@ -15,15 +15,19 @@ class IngredientData {
     return origin;
   }
 
-  IngredientData toIngredient(Map<String, dynamic> json) {
+  Future<IngredientData> toIngredient(Map<String, dynamic> json) async {
     this.ID = json['id'];
     this.name = json['name'];
     this.category = json.containsKey('category') ? json['category'] : '';
     this.imageUrl = json.containsKey('image') ? (json['image'].containsKey('srcUrl') ? json['image']['srcUrl'] : '') : '';
     this.units = json.containsKey('quantityUnits') ? insertUnits(json) : [];
     this.nutrients = json.containsKey('nutrients') ? Nutrient.create().toNutrient(json) : [];
-    this.expirationDate = json.containsKey('quantityUnits') ? json['expirationDate'] : 0;
+    this.expirationDate = json.containsKey('expirationDate') ? json['expirationDate'] : 0;
     return this;
+  }
+
+  void addExpDate(Map<String, dynamic> json) {
+    this.expirationDate = json.containsKey('expirationDate') ? json['expirationDate'] : 0;
   }
 
   List<String> insertUnits(Map<String, dynamic> json) {
@@ -67,6 +71,9 @@ class IngredientData {
     }
     if (this.category.isNotEmpty) {
       toString += '\nCategories: ${this.category}';
+    }
+    if (this.expirationDate != 0) {
+      toString += '\nExpirationDate: ${this.expirationDate}';
     }
     return toString;
   }

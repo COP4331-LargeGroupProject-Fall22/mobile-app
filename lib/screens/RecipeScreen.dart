@@ -13,7 +13,6 @@ import 'package:smart_chef/utils/ingredientData.dart';
 import 'package:smart_chef/utils/recipeData.dart';
 import 'package:smart_chef/utils/recipeUtils.dart';
 
-
 class RecipesScreen extends StatefulWidget {
   @override
   _RecipesState createState() => _RecipesState();
@@ -55,6 +54,7 @@ class _RecipesState extends State<RecipesScreen> {
     if (recipeScroll.position.atEdge) {
       bool isTop = recipeScroll.position.pixels == 0;
       if (!isTop) {
+        page++;
         makeTiles();
       }
     }
@@ -293,19 +293,19 @@ class _RecipesState extends State<RecipesScreen> {
         },
         child: SingleChildScrollView(
           controller: recipeScroll,
-          child: Container(
+          child: SizedBox(
             width: MediaQuery.of(context).size.width,
-            height: bodyHeight,
-            decoration: const BoxDecoration(color: white),
+            height: MediaQuery.of(context).size.height,
             child: Column(
               children: <Widget>[
-                Flexible(
+                Expanded(
                   child: Text(
                     filters,
                     style: ingredientInfoTextStyle,
                   ),
                 ),
                 Expanded(
+                  flex: 9,
                   child: FutureBuilder(
                     future: makeTiles(),
                     builder: (BuildContext context, AsyncSnapshot snapshot) {
@@ -467,13 +467,14 @@ class _RecipesState extends State<RecipesScreen> {
         var data = json.decode(res.body);
         totalPages = data.containsKey('numOfPages') ? data['numOfPages'] : 0;
 
-        int currentPage =
-            data.containsKey('currentPage') ? int.parse(data['currentPage']) : page;
+        int currentPage = data.containsKey('currentPage')
+            ? int.parse(data['currentPage'])
+            : page;
         if (currentPage == totalPages) {
           noMoreItems = true;
         }
         for (var cats in data['results']) {
-          recipes.add(RecipeData.create().putRecipe(cats));
+          recipes.add(await RecipeData.create().putRecipe(cats));
         }
         success = true;
       } else {
@@ -560,7 +561,6 @@ class _RecipesState extends State<RecipesScreen> {
         crossAxisSpacing: 20,
         mainAxisSpacing: 20,
       ),
-      physics: const NeverScrollableScrollPhysics(),
     );
     itemsToDisplay += 30;
 
@@ -582,19 +582,11 @@ class _RecipesState extends State<RecipesScreen> {
 }
 
 class RecipePage extends StatefulWidget {
-  final int ID;
-
-  const RecipePage(this.ID);
-
   @override
-  _RecipePageState createState() => _RecipePageState(ID);
+  _RecipePageState createState() => _RecipePageState();
 }
 
 class _RecipePageState extends State<RecipePage> {
-  final int ID;
-
-  _RecipePageState(this.ID);
-
   RecipeData recipeToDisplay = RecipeData.create();
 
   @override
@@ -606,6 +598,8 @@ class _RecipePageState extends State<RecipePage> {
   int numServings = 0;
   List<int> servingNums = [1, 2, 3, 4, 5, 6];
   bool missingIngredients = false;
+  Widget ingredientList = Container();
+  Widget instructionsList = Container();
 
   @override
   Widget build(BuildContext context) {
@@ -635,9 +629,11 @@ class _RecipePageState extends State<RecipePage> {
         margin: const EdgeInsets.fromLTRB(5, 10, 5, 0),
         child: SingleChildScrollView(
           child: FutureBuilder(
+            initialData: false,
             future: getFullRecipeData(),
             builder: (BuildContext context, AsyncSnapshot snapshot) {
               switch (snapshot.connectionState) {
+                case ConnectionState.none:
                 case ConnectionState.active:
                 case ConnectionState.waiting:
                   return const CircularProgressIndicator();
@@ -676,26 +672,32 @@ class _RecipePageState extends State<RecipePage> {
                             style: ingredientInfoTextStyle,
                           ),
                           Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
                             decoration: const BoxDecoration(
                               borderRadius: BorderRadius.all(
                                   Radius.circular(roundedCorner)),
                               color: mainScheme,
                             ),
-                            child: DropdownButton<int>(
-                              value: recipeToDisplay.servings,
-                              icon: const Icon(Icons.arrow_drop_down,
-                                  color: white),
-                              onChanged: (int? value) {
-                                setState(() => numServings = value!);
-                              },
-                              items: servingNums
-                                  .map<DropdownMenuItem<int>>((int value) {
-                                return DropdownMenuItem<int>(
-                                  value: value,
-                                  child: Text(value.toString()),
-                                );
-                              }).toList(),
-                            ),
+                            child: recipeToDisplay.servings != 0
+                                ? DropdownButton<int>(
+                                    value: recipeToDisplay.servings,
+                                    icon: const Icon(Icons.arrow_drop_down,
+                                        color: white),
+                                    onChanged: (int? value) {
+                                      setState(() => numServings = value!);
+                                    },
+                                    items: servingNums
+                                        .map<DropdownMenuItem<int>>(
+                                            (int value) {
+                                      return DropdownMenuItem<int>(
+                                        value: value,
+                                        child: Text(value.toString()),
+                                      );
+                                    }).toList())
+                                : Text(
+                                    'No servings listed',
+                                    style: ingredientInfoTextStyle,
+                                  ),
                           ),
                         ],
                       ),
@@ -703,12 +705,12 @@ class _RecipePageState extends State<RecipePage> {
                         padding: const EdgeInsets.all(5),
                         child: Row(children: <Widget>[
                           Text(
-                            'Time to cook:',
+                            'Time to cook: ',
                             style: ingredientInfoTextStyle,
                             textAlign: TextAlign.left,
                           ),
                           Text(
-                            recipeToDisplay.timeToCook.toString(),
+                            '${recipeToDisplay.timeToCook.toString()} minutes',
                             style: ingredientInfoTextStyle,
                             textAlign: TextAlign.left,
                           )
@@ -718,15 +720,17 @@ class _RecipePageState extends State<RecipePage> {
                         padding: const EdgeInsets.all(5),
                         child: Row(children: <Widget>[
                           Text(
-                            'Time to Prepare:',
+                            'Time to Prepare: ',
                             style: ingredientInfoTextStyle,
                             textAlign: TextAlign.left,
                           ),
-                          Text(
-                            recipeToDisplay.timeToPrepare.toString(),
-                            style: ingredientInfoTextStyle,
-                            textAlign: TextAlign.left,
-                          )
+                          Flexible(
+                            child: Text(
+                              '${recipeToDisplay.timeToPrepare.toString()} minutes',
+                              style: ingredientInfoTextStyle,
+                              textAlign: TextAlign.left,
+                            ),
+                          ),
                         ]),
                       ),
                       Container(
@@ -737,11 +741,13 @@ class _RecipePageState extends State<RecipePage> {
                             style: ingredientInfoTextStyle,
                             textAlign: TextAlign.left,
                           ),
-                          Text(
-                            recipeToDisplay.cuisines.join(','),
-                            style: ingredientInfoTextStyle,
-                            textAlign: TextAlign.left,
-                          )
+                          Flexible(
+                            child: Text(
+                              recipeToDisplay.cuisines.join(','),
+                              style: ingredientInfoTextStyle,
+                              textAlign: TextAlign.left,
+                            ),
+                          ),
                         ]),
                       ),
                       Container(
@@ -752,11 +758,12 @@ class _RecipePageState extends State<RecipePage> {
                             style: ingredientInfoTextStyle,
                             textAlign: TextAlign.left,
                           ),
-                          Text(
-                            recipeToDisplay.diets.join(','),
+                          Flexible(
+                              child: Text(
+                            recipeToDisplay.diets.join(', '),
                             style: ingredientInfoTextStyle,
                             textAlign: TextAlign.left,
-                          )
+                          )),
                         ]),
                       ),
                       Container(
@@ -791,7 +798,7 @@ class _RecipePageState extends State<RecipePage> {
                               ),
                             ),
                             Expanded(
-                              child: BuildIngredientList(),
+                              child: ingredientList,
                             ),
                           ],
                         ),
@@ -813,7 +820,7 @@ class _RecipePageState extends State<RecipePage> {
                               ),
                             ),
                             Expanded(
-                              child: BuildInstructionList(),
+                              child: instructionsList,
                             ),
                           ],
                         ),
@@ -852,7 +859,8 @@ class _RecipePageState extends State<RecipePage> {
                                     if (missingIngredients) {
                                       bool addSome = await holdOnDialog();
                                       if (addSome) {
-                                        bool success = await addMissingIngredients();
+                                        bool success =
+                                            await addMissingIngredients();
                                       }
                                     } else {
                                       String finished =
@@ -860,8 +868,12 @@ class _RecipePageState extends State<RecipePage> {
                                               context, '/recipe/recipe/steps',
                                               arguments: 1);
                                       if (finished.isEmpty) {
-                                        List<int> ingredientsToRemoveFromInventoryIDs = await finishedDialog();
-                                        bool success = await removeIngredientsFromInventory(ingredientsToRemoveFromInventoryIDs);
+                                        List<int>
+                                            ingredientsToRemoveFromInventoryIDs =
+                                            await finishedDialog();
+                                        bool success =
+                                            await removeIngredientsFromInventory(
+                                                ingredientsToRemoveFromInventoryIDs);
                                       }
                                     }
                                   },
@@ -883,7 +895,6 @@ class _RecipePageState extends State<RecipePage> {
                     ],
                   );
               }
-              return const CircularProgressIndicator();
             },
           ),
         ),
@@ -994,12 +1005,14 @@ class _RecipePageState extends State<RecipePage> {
     );
   }
 
-  Future<void> getFullRecipeData() async {
+  Future<bool> getFullRecipeData() async {
     recipeToDisplay = await fetchRecipeData();
-    setState(() {});
+    ingredientList = await buildIngredientList();
+    instructionsList = await buildInstructionList();
+    return true;
   }
 
-  Widget BuildIngredientList() {
+  Future<Widget> buildIngredientList() async {
     if (recipeToDisplay.ingredients.length == 0) {
       return Container();
     }
@@ -1029,7 +1042,7 @@ class _RecipePageState extends State<RecipePage> {
     return toRet;
   }
 
-  Widget BuildInstructionList() {
+  Future<Widget> buildInstructionList() async {
     if (recipeToDisplay.instructions.length == 0) {
       return Container();
     }
@@ -1072,13 +1085,13 @@ class _RecipePageState extends State<RecipePage> {
   }
 
   Future<RecipeData> fetchRecipeData() async {
-    RecipeData recipe = RecipeData.create();
-    final res = await Recipes.getRecipeByID(ID);
+    RecipeData toRet = RecipeData.create();
+    final res = await Recipes.getRecipeByID(recipeId);
     if (res.statusCode == 200) {
       var data = json.decode(res.body);
-      recipe.putRecipe(data);
+      await toRet.putRecipe(data);
     }
-    return recipe;
+    return toRet;
   }
 
   Future<bool> holdOnDialog() async {
@@ -1100,10 +1113,10 @@ class _RecipePageState extends State<RecipePage> {
   Future<List<int>> finishedDialog() async {
     List<int> ingredsID = [];
     showModalBottomSheet(
-        context: context,
-        builder: (BuildContext context) {
-          return Container();
-        },
+      context: context,
+      builder: (BuildContext context) {
+        return Container();
+      },
     );
     return ingredsID;
   }
