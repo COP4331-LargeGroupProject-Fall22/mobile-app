@@ -6,30 +6,34 @@ class IngredientData {
   List<String> units;
   List<Nutrient> nutrients;
   int expirationDate;
-  // TODO(tbd): Add image support for ingredients
-  // int image;
+  String imageUrl;
 
-  IngredientData(this.ID, this.name, this.category, this.units, this.nutrients, this.expirationDate);
+  IngredientData(this.ID, this.name, this.category, this.units, this.nutrients, this.expirationDate, this.imageUrl);
 
   factory IngredientData.create() {
-    IngredientData origin = IngredientData(0, '', '', [], [], 0);
+    IngredientData origin = IngredientData(0, '', '', [], [], 0, '');
     return origin;
   }
 
-  IngredientData baseIngredient(Map<String, dynamic> json) {
+  IngredientData toIngredient(Map<String, dynamic> json) {
     this.ID = json['id'];
     this.name = json['name'];
-    this.category = json.containsKey('category') ? '' : json['category'];
+    this.category = json.containsKey('category') ? json['category'] : '';
+    this.imageUrl = json.containsKey('image') ? (json['image'].containsKey('srcUrl') ? json['image']['srcUrl'] : '') : '';
+    this.units = json.containsKey('quantityUnits') ? insertUnits(json) : [];
+    this.nutrients = json.containsKey('nutrients') ? Nutrient.create().toNutrient(json) : [];
+    this.expirationDate = json.containsKey('expirationDate') ? json['expirationDate'] : 0;
     return this;
   }
 
-  IngredientData completeIngredient(Map<String, dynamic> json) {
+  IngredientData toRecipeIngredient(Map<String, dynamic> json) {
     this.ID = json['id'];
     this.name = json['name'];
-    this.category = json.containsKey('category') ? '' : json['category'];
-    this.units = insertUnits(json);
-    this.nutrients = Nutrient.create().toNutrient(json);
     return this;
+  }
+
+  void addExpDate(Map<String, dynamic> json) {
+    this.expirationDate = json.containsKey('expirationDate') ? json['expirationDate'] : 0;
   }
 
   List<String> insertUnits(Map<String, dynamic> json) {
@@ -38,14 +42,6 @@ class IngredientData {
       units.add(unit);
     }
     return units;
-  }
-
-  IngredientData inventoryIngredient(Map<String, dynamic> json) {
-    this.ID = json['id'];
-    this.name = json['name'];
-    this.category = json.containsKey('category') ? json['category'] : '';
-    this.expirationDate = json['expirationDate'];
-    return this;
   }
 
   void addInformationToIngredient(Map<String, dynamic> json) {
@@ -81,6 +77,9 @@ class IngredientData {
     }
     if (this.category.isNotEmpty) {
       toString += '\nCategories: ${this.category}';
+    }
+    if (this.expirationDate != 0) {
+      toString += '\nExpirationDate: ${this.expirationDate}';
     }
     return toString;
   }
