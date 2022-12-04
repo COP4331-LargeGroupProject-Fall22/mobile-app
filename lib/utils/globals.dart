@@ -25,6 +25,10 @@ TextStyle ingredientInfoTextStyle = const TextStyle(
   fontSize: ingredientInfoFontSize,
   color: black,
 );
+TextStyle noMoreTextStyle = const TextStyle(
+  fontSize: addIngredientPageTextSize,
+  color: searchFieldText,
+);
 
 final buttonStyle = ElevatedButton.styleFrom(
   shape: RoundedRectangleBorder(
