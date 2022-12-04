@@ -47,7 +47,7 @@ class Routes {
     switch (settings.name) {
       case '/food/food':
         var arguments = settings.arguments;
-        if (arguments is IngredientArguments)
+        if (arguments is String)
           return MaterialPageRoute(builder: (context) => IngredientPage(arguments));
         else
           return MaterialPageRoute(builder: (context) => StartupScreen());
