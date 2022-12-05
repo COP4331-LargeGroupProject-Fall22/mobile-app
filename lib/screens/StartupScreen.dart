@@ -9,6 +9,7 @@ import 'package:smart_chef/APIfunctions/authAPI.dart';
 import 'package:smart_chef/APIfunctions/userAPI.dart';
 import 'package:smart_chef/utils/colors.dart';
 import 'package:smart_chef/utils/globals.dart';
+import 'package:smart_chef/utils/userAPI.dart';
 import 'package:smart_chef/utils/userData.dart';
 
 class StartupScreen extends StatefulWidget {
