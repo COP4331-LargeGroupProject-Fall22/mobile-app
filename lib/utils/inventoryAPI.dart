@@ -10,9 +10,9 @@ class Inventory {
 
     String totalUrl = '$API_PREFIX$apiRoute?';
     if (isReverse) {
-      totalUrl += '&isReverse=true';
+      totalUrl += 'isReverse=true';
     } else {
-      totalUrl += '&isReverse=false';
+      totalUrl += 'isReverse=false';
     }
     if (sortByExpirationDate) {
       totalUrl += '&sortByExpirationDate=true';

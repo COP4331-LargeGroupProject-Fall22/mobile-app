@@ -19,7 +19,8 @@ final globalDecoration = InputDecoration(
       borderSide: const BorderSide(color: textFieldBorder),
     ));
 
-enum sortingBy {
+enum SortByOptions {
+  EXP,
   EXPRev,
   LEX,
   LEXRev,

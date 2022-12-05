@@ -46,14 +46,12 @@ class _IngredientsPageState extends State<IngredientsPage> {
     super.dispose();
   }
 
-  List<Widget>? body;
   Map<String, List<IngredientData>> userInventory = {};
   late ScrollController inventoryScroll;
   String errorMessage = 'You have no items in your inventory!';
 
   Future<bool> makeTiles() async {
     await retrieveInventory(_groupValue);
-    await BuildTiles();
     return true;
   }
 
@@ -222,18 +220,18 @@ class _IngredientsPageState extends State<IngredientsPage> {
                       final res = await Inventory.deleteIngredientfromInventory(
                           ingreds.ID);
                       if (res.statusCode == 200) {
-                        errorMessage =
-                        'Successfully cleared your inventory!';
+                        errorMessage = 'Successfully cleared your inventory!';
                         await messageDelay;
                         Navigator.pop(context);
                       } else {
                         int errorCode = await getDeleteError(res.statusCode);
                         if (errorCode == 2) {
-                          final ret = await Inventory.deleteIngredientfromInventory(
-                              ingreds.ID);
+                          final ret =
+                              await Inventory.deleteIngredientfromInventory(
+                                  ingreds.ID);
                           if (ret.statusCode == 200) {
                             errorMessage =
-                            'Successfully deleted ingredient from inventory!';
+                                'Successfully deleted ingredient from inventory!';
                             await messageDelay;
                             Navigator.pop(context);
                           } else {
@@ -243,7 +241,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                       }
                     }
                   }
-                } catch(e) {
+                } catch (e) {
                   print(e.toString());
                   errorMessage = 'Cannot clear Inventory!';
                 }
@@ -271,7 +269,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
               decoration: BoxDecoration(
                   border: Border(
                       bottom:
-                      BorderSide(color: black.withOpacity(.2), width: 3))),
+                          BorderSide(color: black.withOpacity(.2), width: 3))),
               child: const DrawerHeader(
                 child: Text(
                   'Sort by...',
@@ -285,7 +283,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
             Column(
               children: List.generate(
                 checkListItems.length,
-                    (index) => RadioListTile(
+                (index) => RadioListTile(
                   controlAffinity: ListTileControlAffinity.leading,
                   title: Text(
                     checkListItems[index]["title"],
@@ -300,7 +298,9 @@ class _IngredientsPageState extends State<IngredientsPage> {
                   autofocus: checkListItems[index]["value"] ? false : true,
                   onChanged: (value) {
                     sorted = 'Sorting By ${checkListItems[index]["title"]}';
-                    setState(() => _groupValue = value);
+                    _groupValue = value;
+                    done = makeTiles();
+                    setState(() {});
                   },
                 ),
               ),
@@ -337,6 +337,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                     future: done,
                     builder: (BuildContext context, AsyncSnapshot snapshot) {
                       switch (snapshot.connectionState) {
+                        case ConnectionState.none:
                         case ConnectionState.active:
                         case ConnectionState.waiting:
                           return const CircularProgressIndicator();
@@ -344,7 +345,8 @@ class _IngredientsPageState extends State<IngredientsPage> {
                           if (snapshot.hasError) {
                             return Text('Error: $snapshot.error}');
                           }
-                          if (body!.length == 0) {
+                          List<Widget> body = buildTiles();
+                          if (body.length == 0) {
                             return ListTile(
                               contentPadding: const EdgeInsets.all(15),
                               title: Text(
@@ -355,13 +357,12 @@ class _IngredientsPageState extends State<IngredientsPage> {
                             );
                           }
                           return ListView.builder(
-                            itemCount: body!.length,
+                            itemCount: body.length,
                             itemBuilder: (context, index) {
-                              return body![index];
+                              return body[index];
                             },
                           );
                       }
-                      return const CircularProgressIndicator();
                     },
                   ),
                 ),
@@ -378,7 +379,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
           width: MediaQuery.of(context).size.width,
           decoration: BoxDecoration(
             border:
-            Border(top: BorderSide(color: black.withOpacity(.2), width: 3)),
+                Border(top: BorderSide(color: black.withOpacity(.2), width: 3)),
             color: white,
           ),
           child: Row(
@@ -490,7 +491,11 @@ class _IngredientsPageState extends State<IngredientsPage> {
     if (inventoryScroll.position.atEdge) {
       bool isTop = inventoryScroll.position.pixels == 0;
       if (!isTop) {
-        makeTiles();
+        done = makeTiles();
+      }
+      if (isTop) {
+        retrieveInventory(_groupValue);
+        done = makeTiles();
       }
     }
   }
@@ -500,59 +505,55 @@ class _IngredientsPageState extends State<IngredientsPage> {
     return date;
   }
 
-  Future<void> retrieveInventory(
-      int sortBy) async {
+  Future<void> retrieveInventory(int sortBy) async {
+    SortByOptions sort = SortByOptions.values[sortBy];
     bool reverse = false;
-    bool exDate = true;
+    bool exDate = false;
     bool cat = false;
     bool alphabet = false;
     itemsToDisplay = 30;
 
-    switch (sortBy) {
-      case 1:
+    switch (sort) {
+      case SortByOptions.EXP:
+        exDate = true;
+        break;
+      case SortByOptions.EXPRev:
+        exDate = true;
         reverse = true;
         break;
-      case 2:
+      case SortByOptions.LEX:
         alphabet = true;
-        exDate = false;
-        sorted = 'lexigraphical';
         break;
-      case 3:
+      case SortByOptions.LEXRev:
         alphabet = true;
         reverse = true;
-        exDate = false;
-        sorted = 'reverseLexigraphical';
         break;
-      case 4:
+      case SortByOptions.CAT:
         cat = true;
-        exDate = false;
-        sorted = 'category';
         break;
-      case 5:
+      case SortByOptions.CATRev:
         cat = true;
         reverse = true;
-        exDate = false;
-        sorted = 'categoryReversed';
         break;
       default:
         break;
     }
 
     final res =
-    await Inventory.retrieveUserInventory(reverse, exDate, cat, alphabet);
+        await Inventory.retrieveUserInventory(reverse, exDate, cat, alphabet);
     bool success = false;
+    userInventory = {};
     int tries = 0;
     do {
       if (res.statusCode == 200) {
         var data = json.decode(res.body);
         for (int i = 0; i < data.length; i += 2) {
           for (var cats in data) {
-            if (cats[1].isEmpty)
-              continue;
+            if (cats[1].isEmpty) continue;
             List<IngredientData> ingredients = [];
             for (var ingred in cats[1]) {
               ingredients
-                  .add(await IngredientData.create().toIngredient(ingred));
+                  .add(IngredientData.create().toIngredient(ingred));
             }
             userInventory[cats[i]] = ingredients;
           }
@@ -568,21 +569,23 @@ class _IngredientsPageState extends State<IngredientsPage> {
     } while (!success && tries < 3);
   }
 
-  Future<void> BuildTiles() async {
-
+  List<Widget> buildTiles() {
+    int itemsDisplayed = 0;
+    List<Widget> toRet = [];
     for (var cat in userInventory.keys) {
-      body!.add(Text(
+      toRet.add(Text(
         cat,
         style: const TextStyle(
           fontSize: addIngredientPageTextSize,
           color: searchFieldText,
         ),
       ));
-      body!.add(
+      toRet.add(
         GridView.builder(
-          itemCount: itemsToDisplay < userInventory[cat]!.length
-              ? itemsToDisplay
-              : userInventory[cat]!.length,
+          itemCount:
+              itemsToDisplay - itemsDisplayed < userInventory[cat]!.length
+                  ? itemsToDisplay - itemsDisplayed
+                  : userInventory[cat]!.length,
           shrinkWrap: true,
           itemBuilder: (context, index) {
             IngredientData item = userInventory[cat]![index];
@@ -602,6 +605,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                 }
               }
             }
+            itemsDisplayed++;
             return GestureDetector(
               behavior: HitTestBehavior.translucent,
               onTap: () {
@@ -610,7 +614,8 @@ class _IngredientsPageState extends State<IngredientsPage> {
                   'isEditing': 'false',
                   'navFromAddIngred': 'false',
                 });
-                Navigator.restorablePushNamed(context, '/food/food', arguments:toPass);
+                Navigator.restorablePushNamed(context, '/food/food',
+                    arguments: toPass);
                 setState(() {});
               },
               child: Stack(
@@ -709,6 +714,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
       );
     }
     itemsToDisplay += 30;
+    return toRet;
   }
 
   Future<int> getDataRetrieveError(int statusCode) async {
@@ -779,10 +785,13 @@ class _IngredientPageState extends State<IngredientPage> {
   bool isEditing = false;
   bool navFromAddIngred = false;
 
+  Future<bool>? done;
+
   @override
   void initState() {
     super.initState();
     processArgs(temp);
+    done = getIngredientData();
   }
 
   void processArgs(String toDecode) {
@@ -790,6 +799,11 @@ class _IngredientPageState extends State<IngredientPage> {
     ID = int.parse(args['ID']);
     isEditing = args['isEditing'].toLowerCase() == 'true';
     navFromAddIngred = args['navFromAddIngred'].toLowerCase() == 'true';
+  }
+
+  Future<bool> getIngredientData() async {
+    await fetchIngredientData();
+    return true;
   }
 
   Key editingKey = UniqueKey();
@@ -930,7 +944,7 @@ class _IngredientPageState extends State<IngredientPage> {
                       ingredientToDisplay.ID);
                   if (res.statusCode == 200) {
                     errorMessage =
-                    'Successfully deleted ingredient from inventory!';
+                        'Successfully deleted ingredient from inventory!';
                     await messageDelay;
                     Navigator.pop(context);
                   } else {
@@ -940,7 +954,7 @@ class _IngredientPageState extends State<IngredientPage> {
                           ingredientToDisplay.ID);
                       if (ret.statusCode == 200) {
                         errorMessage =
-                        'Successfully deleted ingredient from inventory!';
+                            'Successfully deleted ingredient from inventory!';
                         await messageDelay;
                         Navigator.pop(context);
                       } else {
@@ -958,6 +972,9 @@ class _IngredientPageState extends State<IngredientPage> {
             iconSize: 35,
             onPressed: () {
               if (isEditing) {
+                if (navFromAddIngred) {
+                  Navigator.pop(context);
+                }
                 isEditing = false;
                 setState(() {});
               } else {
@@ -971,9 +988,10 @@ class _IngredientPageState extends State<IngredientPage> {
         margin: const EdgeInsets.fromLTRB(5, 10, 5, 0),
         child: SingleChildScrollView(
           child: FutureBuilder(
-            future: fetchIngredientData(),
+            future: done,
             builder: (BuildContext context, AsyncSnapshot snapshot) {
               switch (snapshot.connectionState) {
+                case ConnectionState.none:
                 case ConnectionState.active:
                 case ConnectionState.waiting:
                   return const CircularProgressIndicator();
@@ -1049,31 +1067,35 @@ class _IngredientPageState extends State<IngredientPage> {
                               ),
                               Container(
                                 width: MediaQuery.of(context).size.width / 2,
-                                margin: const EdgeInsets.symmetric(horizontal: 5),
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 5),
                                 padding: const EdgeInsets.symmetric(
                                     vertical: 5, horizontal: 5),
                                 decoration: const BoxDecoration(
                                   color: mainScheme,
                                   borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
+                                      BorderRadius.all(Radius.circular(10)),
                                 ),
                                 child: isEditing
                                     ? TextField(
-                                    focusNode: AlwaysDisabledFocusNode(),
-                                    controller: _expirationDate,
-                                    decoration: unfilledExpirationDate
-                                        ? invalidTextField.copyWith(
-                                        hintText: 'Click to choose a date')
-                                        : globalDecoration.copyWith(
-                                        hintText: 'Click to choose a date'),
-                                    onTap: () {
-                                      if (isEditing) _selectDate(context);
-                                    })
+                                        key: editingKey,
+                                        focusNode: AlwaysDisabledFocusNode(),
+                                        controller: _expirationDate,
+                                        decoration: unfilledExpirationDate
+                                            ? invalidTextField.copyWith(
+                                                hintText:
+                                                    'Click to choose a date')
+                                            : globalDecoration.copyWith(
+                                                hintText:
+                                                    'Click to choose a date'),
+                                        onTap: () {
+                                          if (isEditing) _selectDate(context);
+                                        })
                                     : Text(
-                                  _expirationDate.value.text,
-                                  style: ingredientInfoTextStyle,
-                                  textAlign: TextAlign.center,
-                                ),
+                                        _expirationDate.value.text,
+                                        style: ingredientInfoTextStyle,
+                                        textAlign: TextAlign.center,
+                                      ),
                               ),
                             ],
                           ),
@@ -1103,7 +1125,6 @@ class _IngredientPageState extends State<IngredientPage> {
                     ],
                   );
               }
-              return const CircularProgressIndicator();
             },
           ),
         ),
@@ -1116,7 +1137,7 @@ class _IngredientPageState extends State<IngredientPage> {
           width: MediaQuery.of(context).size.width,
           decoration: BoxDecoration(
             border:
-            Border(top: BorderSide(color: black.withOpacity(.2), width: 3)),
+                Border(top: BorderSide(color: black.withOpacity(.2), width: 3)),
             color: white,
           ),
           child: Row(
@@ -1369,7 +1390,6 @@ class _IngredientPageState extends State<IngredientPage> {
       _selectedDate = DateTime.now();
       _expirationDate.text = 'N/A';
     }
-
   }
 }
 
@@ -1384,6 +1404,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
   List<IngredientData> searchResultList = [];
   late ListView resultsList;
   late FocusNode _search;
+  Future<bool>? done;
 
   @override
   void initState() {
@@ -1392,6 +1413,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
     _search.addListener(_onFocusChange);
     resultsList = ListView(key: key);
     super.initState();
+    done = setList();
   }
 
   @override
@@ -1403,11 +1425,15 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
   UniqueKey key = UniqueKey();
 
   bool searching = false;
-  bool searchChanged = false;
   String oldQuery = '';
   String errorMessage = '';
   int pageCount = 1;
   int queryID = -1;
+
+  Future<bool> setList() async {
+    await buildSearchList(searchController.text);
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1456,7 +1482,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                 Text(
                   errorMessage,
                   style:
-                  errorTextStyle.copyWith(fontSize: ingredientInfoFontSize),
+                      errorTextStyle.copyWith(fontSize: ingredientInfoFontSize),
                   textAlign: TextAlign.center,
                 ),
                 Container(
@@ -1489,18 +1515,11 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                               fontSize: ingredientInfoFontSize,
                             ),
                             textInputAction: TextInputAction.done,
-                            onChanged: (query) {
-                              if (query == oldQuery) {
-                                searchChanged = false;
-                              } else {
-                                searchChanged = true;
-                              }
-                            },
                             onSubmitted: (query) async {
-                              if (query.isNotEmpty && searchChanged) {
+                              if (query.isNotEmpty && query != oldQuery) {
                                 pageCount = 1;
                                 oldQuery = query;
-                                setList();
+                                done = setList();
                               }
                               if (query.isEmpty) {
                                 oldQuery = '';
@@ -1508,7 +1527,6 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                                   controller: loading,
                                 );
                               }
-                              searchChanged = false;
                             },
                           ),
                         ),
@@ -1593,50 +1611,55 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                     ),
                     searching
                         ? Container(
-                      width: MediaQuery.of(context).size.width / 1.5,
-                      height: MediaQuery.of(context).size.height / 2,
-                      decoration: BoxDecoration(
-                        color: white,
-                        border: Border.all(color: searchFieldText),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Expanded(
-                            child: FutureBuilder(
-                              builder: (BuildContext context,
-                                  AsyncSnapshot snapshot) {
-                                switch (snapshot.connectionState) {
-                                  case ConnectionState.waiting:
-                                    return SizedBox(
-                                      width: MediaQuery.of(context)
-                                          .size
-                                          .width /
-                                          1.5,
-                                      height: MediaQuery.of(context)
-                                          .size
-                                          .height,
-                                      child: const Text(
-                                        'Loading...',
-                                        style: TextStyle(
-                                          fontSize:
-                                          ingredientInfoFontSize,
-                                          color: searchFieldText,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    );
-                                  case ConnectionState.done:
-                                    return resultsList;
-                                  default:
-                                    return resultsList;
-                                }
-                              },
+                            width: MediaQuery.of(context).size.width / 1.5,
+                            height: MediaQuery.of(context).size.height / 2,
+                            decoration: BoxDecoration(
+                              color: white,
+                              border: Border.all(color: searchFieldText),
                             ),
-                          ),
-                        ],
-                      ),
-                    )
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Expanded(
+                                  child: FutureBuilder(
+                                    future: done,
+                                    builder: (BuildContext context,
+                                        AsyncSnapshot snapshot) {
+                                      switch (snapshot.connectionState) {
+                                        case ConnectionState.none:
+                                        case ConnectionState.active:
+                                        case ConnectionState.waiting:
+                                          return SizedBox(
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width /
+                                                1.5,
+                                            height: MediaQuery.of(context)
+                                                .size
+                                                .height,
+                                            child: const Text(
+                                              'Loading...',
+                                              style: TextStyle(
+                                                fontSize:
+                                                    ingredientInfoFontSize,
+                                                color: searchFieldText,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          );
+                                        case ConnectionState.done:
+                                          if (snapshot.hasError) {
+                                            return Text(
+                                                'Error: $snapshot.error}');
+                                          }
+                                          return resultsList;
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
                         : Container(),
                   ],
                 ),
@@ -1653,7 +1676,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
           width: MediaQuery.of(context).size.width,
           decoration: BoxDecoration(
             border:
-            Border(top: BorderSide(color: black.withOpacity(.2), width: 3)),
+                Border(top: BorderSide(color: black.withOpacity(.2), width: 3)),
             color: white,
           ),
           child: Row(
@@ -1755,7 +1778,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
     if (loading.position.atEdge) {
       bool isTop = loading.position.pixels == 0;
       if (!isTop) {
-        setList();
+        done = setList();
       }
     }
   }
@@ -1769,16 +1792,11 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
     }
   }
 
-  void setList() async {
-    resultsList = await buildSearchList(searchController.text);
-    setState(() {});
-  }
-
-  Future<ListView> buildSearchList(String searchQuery) async {
+  Future<void> buildSearchList(String searchQuery) async {
     bool updated = await updateSearchList(searchQuery);
 
     if (searchResultList.length == 0) {
-      return ListView(
+      resultsList = ListView(
         children: <Widget>[
           Align(
             alignment: Alignment.center,
@@ -1800,7 +1818,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
       );
     }
 
-    return ListView.builder(
+    resultsList = ListView.builder(
       padding: const EdgeInsets.all(10),
       itemCount: searchResultList.length,
       controller: loading,
@@ -1824,21 +1842,15 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
             ),
             onTap: () async {
               errorMessage = '';
-              final res = await Ingredients.getIngredientByID(
-                  searchResultList[index].ID, 0, '');
-              if (res.statusCode == 200) {
-                var data = json.decode(res.body);
-                int ID = searchResultList[index].ID;
-                String toPass = json.encode({
-                  'ID': '$ID',
-                  'isEditing': 'true',
-                  'navFromAddIngred': 'true',
-                });
-                Navigator.popAndPushNamed(context, '/food/food', arguments: toPass);
-              } else {
-                errorMessage = 'Could not retrieve item details!';
-              }
+              int ID = searchResultList[index].ID;
+              String toPass = json.encode({
+                'ID': '$ID',
+                'isEditing': 'true',
+                'navFromAddIngred': 'true',
+              });
               setState(() => searching = false);
+              Navigator.popAndPushNamed(context, '/food/food',
+                  arguments: toPass);
             });
       },
     );
@@ -1864,7 +1876,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
 
     var data = json.decode(res.body);
     for (var value in data['results']) {
-      searchResultList.add(await IngredientData.create().toIngredient(value));
+      searchResultList.add(IngredientData.create().toIngredient(value));
     }
 
     if (searchResultList.length == oldLength) {
