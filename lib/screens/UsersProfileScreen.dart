@@ -33,9 +33,6 @@ class UserProfilePage extends StatefulWidget {
 class _UserProfilePageState extends State<UserProfilePage> {
   @override
   void initState() {
-    setState(() {
-      shoppingCartPage = true;
-    });
     super.initState();
   }
 
@@ -60,13 +57,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 setState(() {
                   errorMessage = 'Logout successful!';
                 });
-                await Future.delayed(Duration(seconds: 1));
+                await messageDelay;
                 user.clear();
 
                 Navigator.pushNamedAndRemoveUntil(
                     context, '/startup', ((Route<dynamic> route) => false));
               } else {
-                errorMessage = getLogoutError(res.statusCode);
+                int errorCode = await getLogoutError(res.statusCode);
               }
             } catch (e) {
               print('Could not connect to server');
@@ -94,7 +91,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   Navigator.pushNamedAndRemoveUntil(
                       context, '/startup', ((Route<dynamic> route) => false));
                 } else {
-                  errorMessage = getDeleteError(res.statusCode);
+                  int errorCode = await getDeleteError(res.statusCode);
                 }
               } catch (e) {
                 errorDialog(context);
@@ -374,7 +371,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     ),
                     Text(
                       'Ingredients',
-                      style: bottomRowOnScreenTextStyle,
+                      style: bottomRowIconTextStyle,
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -448,27 +445,46 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  String getLogoutError(int statusCode) {
+  Future<int> getLogoutError(int statusCode) async {
     switch (statusCode) {
       case 400:
-        return "Could not logout";
+        errorMessage = 'Incorrect request format';
+        return 1;
       case 401:
-        return 'Access Token invalid';
+        errorMessage = 'Reconnecting...';
+        if (await tryTokenRefresh()) {
+          errorMessage = 'Successfully changed password!';
+          return 2;
+        } else {
+          errorMessage = 'Cannot connect to server';
+          return 3;
+        }
       default:
-        return 'Something went wrong!';
+        errorMessage = 'Something went wrong!';
+        return 3;
     }
   }
 
-  String getDeleteError(int statusCode) {
+  Future<int> getDeleteError(int statusCode) async {
     switch (statusCode) {
       case 400:
-        return 'Incorrect request format';
+        errorMessage = 'Incorrect request format';
+        return 1;
       case 401:
-        return 'Token is invalid';
+        errorMessage = 'Reconnecting...';
+        if (await tryTokenRefresh()) {
+          errorMessage = 'Successfully changed password!';
+          return 2;
+        } else {
+          errorMessage = 'Cannot connect to server';
+          return 3;
+        }
       case 404:
-        return 'User not found';
+        errorMessage = 'User not found';
+        return 3;
       default:
-        return 'Something went wrong!';
+        errorMessage = 'Something went wrong!';
+        return 3;
     }
   }
 }
@@ -787,47 +803,35 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                                     Map<String, dynamic> changes = {
                                       'firstName': _firstName.value.text.trim(),
                                       'lastName': _lastName.value.text.trim(),
-                                      'lastSeen' : 1,
                                       'email' : user.email.trim(),
                                       'username': _username.value.text.trim(),
                                       'password': user.password,
                                     };
 
                                     try {
-                                      final res =
-                                          await User.updateUser(changes);
-                                      if (res.statusCode == 200) {
-                                        user.firstName =
-                                            _firstName.value.text.trim();
-                                        user.lastName =
-                                            _lastName.value.text.trim();
-                                        user.username = _username.value.text.trim();
-
-                                        errorMessage ==
-                                            'Successfully updated your profile!';
-                                        await Future.delayed(const Duration(seconds: 1));
-
-                                        clearFields();
-                                        Navigator.pop(context);
-                                      }
-                                      errorMessage = await getUpdateProfileError(res.statusCode);
-                                      if (res.statusCode == 403) {
-                                        if (errorMessage ==
-                                            'Successfully updated your profile!') {
+                                      bool success = false;
+                                      do {
+                                        final res =
+                                        await User.updateUser(changes);
+                                        if (res.statusCode == 200) {
                                           user.firstName =
                                               _firstName.value.text.trim();
                                           user.lastName =
                                               _lastName.value.text.trim();
                                           user.username = _username.value.text.trim();
 
+                                          errorMessage ==
+                                              'Successfully updated your profile!';
                                           await Future.delayed(const Duration(seconds: 1));
 
                                           clearFields();
                                           Navigator.pop(context);
-                                        } else {
+                                        }
+                                        int errorCode = await getUpdateProfileError(res.statusCode);
+                                        if (errorCode == 3) {
                                           errorDialog(context);
                                         }
-                                      }
+                                      } while (!success);
                                     } catch (e) {
                                       print('Could not connect to server');
                                     }
@@ -1016,21 +1020,51 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
     _confirmPassword.clear();
   }
 
-  Future<String> getUpdateProfileError(int statusCode) async {
+  Future<int> getChangePasswordError(int statusCode) async {
     switch (statusCode) {
       case 400:
-        return "Username already taken";
+        errorMessage = "Incorrect formatting!";
+        return 1;
+      case 401:
+        errorMessage = 'Access token missing';
+        return 1;
+      case 403:
+        errorMessage = 'Reconnecting...';
+        if (await tryTokenRefresh()) {
+          errorMessage = 'Reconnected';
+          return 2;
+        } else {
+          errorMessage = 'Could not connect to server!';
+          return 3;
+        }
+      case 404:
+        errorMessage = 'User not found!';
+        return 3;
+      default:
+        errorMessage = 'Service temporarily unavailable!';
+        return 3;
+    }
+  }
+  Future<int> getUpdateProfileError(int statusCode) async {
+    switch (statusCode) {
+      case 400:
+        errorMessage = "Username already taken";
+        return 1;
       case 401:
         errorMessage = 'Reconnecting...';
         if (await tryTokenRefresh()) {
-          return 'Successfully changed password!';
+          errorMessage = 'Reconnected';
+          return 2;
         } else {
-          return 'Cannot connect to server';
+          errorMessage = 'Could not connect to server!';
+          return 3;
         }
       case 404:
-        return 'User not found';
+        errorMessage = 'User not found!';
+        return 3;
       default:
-        return 'Something in edit password went wrong!';
+        errorMessage = 'Service temporarily unavailable!';
+        return 3;
     }
   }
 }
@@ -1245,32 +1279,31 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
                                   };
 
                                   try {
-                                    final res = await User.updateUser(changes);
-                                    if (res.statusCode == 200) {
-                                      user.password =
-                                          _newPassword.value.text.trim();
+                                    bool success = false;
+                                    do {
+                                      final res = await User.updateUser(changes);
+                                      if (res.statusCode == 200) {
+                                        user.password =
+                                            _newPassword.value.text.trim();
 
-                                      errorMessage =
-                                          'Successfully updated your password!';
-                                      await Future.delayed(
-                                          const Duration(seconds: 1));
+                                        errorMessage =
+                                        'Successfully updated your password!';
+                                        await Future.delayed(
+                                            const Duration(seconds: 1));
 
-                                      clearFields();
-                                      Navigator.pop(context);
+                                        clearFields();
+                                        Navigator.pop(context);
+                                      }
+                                      int errorCode = await getChangePasswordError(
+                                          res.statusCode);
+                                      if (errorCode == 3) {
+
+                                        clearFields();
+                                        Navigator.pop(context);
+                                      }
+                                      errorDialog(context);
                                     }
-                                    errorMessage = await getChangePasswordError(
-                                        res.statusCode);
-                                    if (errorMessage ==
-                                        'Successfully updated your password!') {
-                                      user.password =
-                                          _newPassword.value.text.trim();
-                                      await Future.delayed(
-                                          const Duration(seconds: 1));
-
-                                      clearFields();
-                                      Navigator.pop(context);
-                                    }
-                                    errorDialog(context);
+                                    while (!success);
                                   } catch (e) {
                                     print('Could not connect to server');
                                   }
@@ -1457,23 +1490,29 @@ class _EditPasswordPageState extends State<EditPasswordPage> {
     _confirmPassword.clear();
   }
 
-  Future<String> getChangePasswordError(int statusCode) async {
+  Future<int> getChangePasswordError(int statusCode) async {
     switch (statusCode) {
       case 400:
-        return "Incorrect formatting!";
+        errorMessage = "Incorrect formatting!";
+        return 1;
       case 401:
-        return 'Access token missing';
+        errorMessage = 'Access token missing';
+        return 1;
       case 403:
         errorMessage = 'Reconnecting...';
         if (await tryTokenRefresh()) {
-          return 'Successfully updated your password!';
+          errorMessage = 'Reconnected';
+          return 2;
         } else {
-          return 'Cannot connect to server';
+          errorMessage = 'Could not connect to server!';
+          return 3;
         }
       case 404:
-        return 'User not found';
+        errorMessage = 'User not found!';
+        return 3;
       default:
-        return 'Something in edit password went wrong!';
+        errorMessage = 'Service temporarily unavailable!';
+        return 3;
     }
   }
 }

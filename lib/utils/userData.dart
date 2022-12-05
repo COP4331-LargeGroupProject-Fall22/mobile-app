@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
 class UserData {
 
   String firstName;
@@ -30,8 +27,8 @@ class UserData {
   }
 
   void defineTokens(Map<String, dynamic> json) {
-    this.accessToken = json['accessToken'];
-    this.refreshToken = json['refreshToken'];
+    this.accessToken = json['accessToken']['token'];
+    this.refreshToken = json['refreshToken']['token'];
   }
 
   void setPassword(String pass) {
@@ -42,7 +39,8 @@ class UserData {
     'firstName': this.firstName,
     'lastName': this.lastName,
     'lastSeen': 1,
-    'username': this.email,
+    'username': this.username,
+    'email': this.email,
     'password': this.password,
   };
 

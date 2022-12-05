@@ -7,12 +7,8 @@ const double bottomRowHeight = 90;
 const double topBarIconSize = 28;
 const double ingredientInfoFontSize = 18;
 const double addIngredientPageTextSize = 32;
-
-bool ingredientPage = true;
-bool recipePage = false;
-bool shoppingCartPage = false;
-bool userProfilePage = false;
 const double roundedCorner = 15;
+const double searchIconButtonSize = 20;
 
 final globalDecoration = InputDecoration(
     contentPadding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
@@ -23,8 +19,25 @@ final globalDecoration = InputDecoration(
       borderSide: const BorderSide(color: textFieldBorder),
     ));
 
+enum SortByOptions {
+  EXP,
+  EXPRev,
+  LEX,
+  LEXRev,
+  CAT,
+  CATRev
+}
+
 TextStyle bottomRowIconTextStyle = const TextStyle(fontSize: 12, color: bottomRowIcon);
 TextStyle bottomRowOnScreenTextStyle = const TextStyle(fontSize: 12, color: mainScheme);
+TextStyle ingredientInfoTextStyle = const TextStyle(
+  fontSize: ingredientInfoFontSize,
+  color: black,
+);
+TextStyle noMoreTextStyle = const TextStyle(
+  fontSize: addIngredientPageTextSize,
+  color: searchFieldText,
+);
 
 final buttonStyle = ElevatedButton.styleFrom(
   shape: RoundedRectangleBorder(
@@ -32,12 +45,12 @@ final buttonStyle = ElevatedButton.styleFrom(
     BorderRadius.circular(roundedCorner),
   ),
   backgroundColor: mainScheme,
-  shadowColor: Colors.black,
+  shadowColor: black,
 );
 
 TextStyle textFieldFontStyle = const TextStyle(
   fontSize: 20,
-  color: Colors.black,
+  color: black,
 );
 TextStyle errorTextStyle = const TextStyle(fontSize: 10, color: Colors.red);
 
@@ -141,3 +154,8 @@ final invalidTextField = globalDecoration.copyWith(
     enabledBorder:
         const OutlineInputBorder(borderSide: BorderSide(color: Colors.red)),
     suffixIcon: const Icon(Icons.clear, color: Colors.red));
+
+class AlwaysDisabledFocusNode extends FocusNode {
+  @override
+  bool get hasFocus => false;
+}

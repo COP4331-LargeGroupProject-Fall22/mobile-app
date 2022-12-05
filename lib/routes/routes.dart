@@ -16,7 +16,6 @@ class Routes {
   static const String ingredientsScreen = '/food';
   static const String individualIngredientScreen = '/food/food';
   static const String addIngredientScreen = '/food/add';
-  static const String editIngredientScreen = '/food/edit';
 
   static const String shoppingCartScreen = '/cart';
 
@@ -35,9 +34,7 @@ class Routes {
     recipeScreen: (context) => RecipeScreen(),
 
     ingredientsScreen: (context) => IngredientsScreen(),
-    individualIngredientScreen: (context) => IngredientPage(),
     addIngredientScreen: (context) => AddIngredientPage(),
-    editIngredientScreen: (context) => EditIngredientPage(),
 
     shoppingCartScreen: (context) => ShoppingCartScreen(),
 
@@ -45,4 +42,17 @@ class Routes {
     editUserProfileScreen: (context) => EditUserProfilePage(),
     editPasswordScreen: (context) => EditPasswordPage(),
   };
+
+  static Route<dynamic> generateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case '/food/food':
+        var arguments = settings.arguments;
+        if (arguments is String)
+          return MaterialPageRoute(builder: (context) => IngredientPage(arguments));
+        else
+          return MaterialPageRoute(builder: (context) => StartupScreen());
+      default:
+        return MaterialPageRoute(builder: (context) => StartupScreen());
+    }
+  }
 }
