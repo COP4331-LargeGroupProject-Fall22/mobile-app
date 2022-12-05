@@ -4,7 +4,7 @@ class RecipeData {
 
   int ID;
   String name;
-  List<IngredientData> ingredients;
+  Map<IngredientData, bool> ingredients;
   String imageUrl;
   List<String> cuisines;
   List<String> diets;
@@ -19,7 +19,7 @@ class RecipeData {
   RecipeData(this.ID, this.name, this.ingredients, this.imageUrl, this.cuisines, this.diets, this.instructions, this.servings, this.timeToCook, this.timeToPrepare, this.types);
 
   factory RecipeData.create() {
-    RecipeData origin = RecipeData(0, '', [], '', [], [], [], 0, 0, 0, []);
+    RecipeData origin = RecipeData(0, '', {}, '', [], [], [], 0, 0, 0, []);
     return origin;
   }
 
@@ -27,10 +27,8 @@ class RecipeData {
     this.ID = json['id'];
     this.name = json['name'];
     for (var ingred in json['ingredients']) {
-      this.ingredients.add(IngredientData.create().toRecipeIngredient(ingred));
+      this.ingredients[IngredientData.create().toRecipeIngredient(ingred)] = false;
     }
-    // print(ingredients);
-    // this.ingredients = toIngredients(json);
     this.imageUrl = json.containsKey('image') ? (json['image'].containsKey('srcUrl') ? json['image']['srcUrl'] : '') : '';
     this.cuisines = json.containsKey('cuisines') ? createCuisineList(json) : [];
     this.diets = json.containsKey('diets') ? createDietsList(json) : [];
@@ -85,7 +83,7 @@ class RecipeData {
   void clear() {
     this.ID = 0;
     this.name = '';
-    this.ingredients = [];
+    this.ingredients = {};
     this.imageUrl = '';
     this.cuisines = [];
     this.diets = [];

@@ -1,7 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:smart_chef/APIfunctions/APIutils.dart';
 import 'package:smart_chef/APIfunctions/ingredientAPI.dart';
 import 'package:smart_chef/APIfunctions/inventoryAPI.dart';
@@ -19,10 +17,13 @@ class RecipesScreen extends StatefulWidget {
 }
 
 class _RecipesState extends State<RecipesScreen> {
+  Future<bool>? done;
+
   @override
   void initState() {
     super.initState();
     recipeScroll = ScrollController()..addListener(_scrollListener);
+    done = getRecipes();
   }
 
   @override
@@ -31,23 +32,21 @@ class _RecipesState extends State<RecipesScreen> {
     super.dispose();
   }
 
-  late GridView body;
-  List<RecipeData> recipes = [];
+  Map<String,List<RecipeData>> recipes = {};
   List<String> cuisineFilter = [];
   List<String> dietFilter = [];
   List<String> mealTypeFilter = [];
   late ScrollController recipeScroll;
   String errorMessage = 'No recipes to list!';
-  String filters = '';
   int itemsToDisplay = 30;
   int page = 1;
   int totalPages = 0;
   bool noMoreItems = false;
   bool sortingDrawer = false;
 
-  Future<void> makeTiles() async {
-    recipes.addAll(await retrieveRecipes());
-    body = BuildTiles();
+  Future<bool> getRecipes() async {
+    await retrieveRecipes();
+    return true;
   }
 
   void _scrollListener() {
@@ -55,7 +54,7 @@ class _RecipesState extends State<RecipesScreen> {
       bool isTop = recipeScroll.position.pixels == 0;
       if (!isTop) {
         page++;
-        makeTiles();
+        done = getRecipes();
       }
     }
   }
@@ -146,9 +145,11 @@ class _RecipesState extends State<RecipesScreen> {
         backgroundColor: white,
         child: ListView(
           padding: EdgeInsets.zero,
+          shrinkWrap: true,
           children: <Widget>[
             Container(
-              padding: const EdgeInsets.only(top: 15),
+              height: 120,
+              padding: const EdgeInsets.only(top: 5),
               decoration: BoxDecoration(
                   border: Border(
                       bottom:
@@ -165,119 +166,133 @@ class _RecipesState extends State<RecipesScreen> {
             ),
             Row(children: <Widget>[
               Container(
-                  padding: const EdgeInsets.all(5),
-                  child: RichText(
-                      text: TextSpan(
-                          text: 'Apply filters',
-                          style: const TextStyle(
-                            color: Colors.blueAccent,
-                            decoration: TextDecoration.underline,
-                          ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              page = 1;
-                              itemsToDisplay = 30;
-                              noMoreItems = false;
-                              setState(() {});
-                            }))),
+                padding: const EdgeInsets.all(5),
+                child: TextButton(
+                  onPressed: () {
+                    page = 1;
+                    itemsToDisplay = 30;
+                    noMoreItems = false;
+                    done = getRecipes();
+                    setState(() {});
+                    Navigator.pop(context);
+                  },
+                  child: const Text(
+                    'Apply filters',
+                    style: TextStyle(
+                      color: Colors.blueAccent,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ),
               Container(
-                  padding: const EdgeInsets.all(5),
-                  child: RichText(
-                      text: TextSpan(
-                          text: 'Remove all filters',
-                          style: const TextStyle(
-                            color: Colors.redAccent,
-                            decoration: TextDecoration.underline,
-                          ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              cuisineFilter = [];
-                              dietFilter = [];
-                              mealTypeFilter = [];
-                              noMoreItems = false;
-                              page = 1;
-                              itemsToDisplay = 30;
-                              setState(() {});
-                            }))),
+                padding: const EdgeInsets.all(5),
+                child: TextButton(
+                  child: const Text(
+                    'Remove all filters',
+                    style: TextStyle(
+                      color: Colors.redAccent,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                  onPressed: () {
+                    cuisineFilter = [];
+                    dietFilter = [];
+                    mealTypeFilter = [];
+                    noMoreItems = false;
+                    page = 1;
+                    itemsToDisplay = 30;
+                    done = getRecipes();
+                    setState(() {});
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
             ]),
             Column(children: <Widget>[
-              const Expanded(
-                  child: Text(
+              const Text(
                 'Filter by cuisine',
                 style: TextStyle(
                   fontSize: 18,
                   color: black,
                 ),
                 textAlign: TextAlign.left,
-              )),
+              ),
               ListView.builder(
                 itemCount: cuisinesList.length,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 itemBuilder: (context, index) {
                   return CheckboxListTile(
                     title: Text(cuisinesList[index]),
                     dense: true,
                     checkColor: mainScheme,
-                    value: false,
+                    value: cuisineFilter.contains(cuisinesList[index]),
                     onChanged: (bool? value) {
                       if (value!) {
                         cuisineFilter.add(cuisinesList[index]);
                       } else {
                         cuisineFilter.remove(cuisinesList[index]);
                       }
+                      setState(() {});
                     },
                   );
                 },
               ),
-              const Expanded(
-                  child: Text(
+              const Text(
                 'Filter by diet',
                 style: TextStyle(
                   fontSize: 18,
                   color: black,
                 ),
                 textAlign: TextAlign.left,
-              )),
+              ),
               ListView.builder(
                 itemCount: dietsList.length,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 itemBuilder: (context, index) {
                   return CheckboxListTile(
                     title: Text(dietsList[index]),
                     dense: true,
                     checkColor: mainScheme,
-                    value: false,
+                    value: dietFilter.contains(dietsList[index]),
                     onChanged: (bool? value) {
                       if (value!) {
                         dietFilter.add(dietsList[index]);
                       } else {
                         dietFilter.remove(dietsList[index]);
                       }
+                      setState(() {});
                     },
                   );
                 },
               ),
-              const Expanded(
-                  child: Text(
+              const Text(
                 'Filter by meal type',
                 style: TextStyle(
                   fontSize: 18,
                   color: black,
                 ),
                 textAlign: TextAlign.left,
-              )),
+              ),
               ListView.builder(
                 itemCount: mealTypesList.length,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 itemBuilder: (context, index) {
                   return CheckboxListTile(
                     title: Text(mealTypesList[index]),
                     dense: true,
                     checkColor: mainScheme,
-                    value: false,
+                    value: mealTypeFilter.contains(mealTypesList[index]),
                     onChanged: (bool? value) {
                       if (value!) {
                         mealTypeFilter.add(mealTypesList[index]);
                       } else {
                         mealTypeFilter.remove(mealTypesList[index]);
                       }
+                      setState(() {});
                     },
                   );
                 },
@@ -295,21 +310,35 @@ class _RecipesState extends State<RecipesScreen> {
           controller: recipeScroll,
           child: SizedBox(
             width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
+            height: bodyHeight,
             child: Column(
               children: <Widget>[
                 Expanded(
-                  child: Text(
-                    filters,
-                    style: ingredientInfoTextStyle,
+                  flex: 1,
+                  child: ListView.builder(
+                    itemCount: cuisineFilter.length,
+                    shrinkWrap: true,
+                    scrollDirection: Axis.horizontal,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        width: MediaQuery.of(context).size.width,
+                        height: 20,
+                        padding: const EdgeInsets.all(5),
+                        child: Text(
+                          cuisineFilter[index],
+                          style: ingredientInfoTextStyle,
+                        ),
+                      );
+                    },
                   ),
                 ),
                 Expanded(
                   flex: 9,
                   child: FutureBuilder(
-                    future: makeTiles(),
+                    future: done,
                     builder: (BuildContext context, AsyncSnapshot snapshot) {
                       switch (snapshot.connectionState) {
+                        case ConnectionState.none:
                         case ConnectionState.active:
                         case ConnectionState.waiting:
                           return const CircularProgressIndicator();
@@ -317,7 +346,8 @@ class _RecipesState extends State<RecipesScreen> {
                           if (snapshot.hasError) {
                             return Text('Error: $snapshot.error}');
                           }
-                          if (recipes.length == 0) {
+                          List<Widget> body = buildTiles();
+                          if (body.length == 0) {
                             return ListTile(
                               contentPadding: const EdgeInsets.all(15),
                               title: Text(
@@ -327,9 +357,13 @@ class _RecipesState extends State<RecipesScreen> {
                               ),
                             );
                           }
-                          return body;
+                          return ListView.builder(
+                            itemCount: body.length,
+                            itemBuilder: (context, index) {
+                              return body[index];
+                            },
+                          );
                       }
-                      return const CircularProgressIndicator();
                     },
                   ),
                 ),
@@ -449,9 +483,7 @@ class _RecipesState extends State<RecipesScreen> {
     );
   }
 
-  Future<List<RecipeData>> retrieveRecipes() async {
-    List<RecipeData> recipes = [];
-
+  Future<void> retrieveRecipes() async {
     final res = await Recipes.searchRecipes(
         _search.value.text,
         resultsPerPage,
@@ -474,7 +506,13 @@ class _RecipesState extends State<RecipesScreen> {
           noMoreItems = true;
         }
         for (var cats in data['results']) {
-          recipes.add(await RecipeData.create().putRecipe(cats));
+          if (cats[1].isEmpty)
+            continue;
+          List<RecipeData> rec = [];
+          for (var reci in cats[1]) {
+            rec.add(RecipeData.create().putRecipe(reci));
+          }
+          recipes[cats[0]] = rec;
         }
         success = true;
       } else {
@@ -484,86 +522,98 @@ class _RecipesState extends State<RecipesScreen> {
         }
       }
     } while (!success);
-
-    return recipes;
   }
 
-  GridView BuildTiles() {
-    GridView toRet = GridView.builder(
-      itemCount:
-          itemsToDisplay < recipes.length ? itemsToDisplay : recipes.length,
-      shrinkWrap: true,
-      itemBuilder: (context, index) {
-        RecipeData item = recipes[index];
+  List<Widget> buildTiles() {
+    int itemsDisplayed = 0;
+    List<Widget> toRet = [];
+    for (var cat in recipes.keys) {
+      toRet.add(Text(
+        cat,
+        style: const TextStyle(
+          fontSize: addIngredientPageTextSize,
+          color: searchFieldText,
+        ),
+      ));
+      toRet.add(
+        GridView.builder(
+          itemCount:
+            itemsToDisplay < recipes[cat]!.length ? itemsToDisplay : recipes[cat]!.length,
+          shrinkWrap: true,
+          itemBuilder: (context, index) {
+            RecipeData item = recipes[cat]![index];
 
-        return GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: () {
-            recipeId = item.ID;
-            Navigator.restorablePushNamed(context, '/recipe/recipe');
-            setState(() {});
-          },
-          child: Stack(
-            children: <Widget>[
-              Container(
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20)),
-                ),
-                child: Image.network(
-                  item.imageUrl,
-                  fit: BoxFit.fitWidth,
-                ),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: white,
-                  borderRadius: const BorderRadius.all(Radius.circular(20)),
-                  gradient: LinearGradient(
-                    begin: FractionalOffset.topCenter,
-                    end: FractionalOffset.bottomCenter,
-                    colors: [
-                      Colors.grey.withOpacity(0.0),
-                      black.withOpacity(0.5),
-                    ],
-                    stops: const [0.0, 0.75],
-                  ),
-                ),
-                child: Align(
-                  alignment: FractionalOffset.bottomLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: Text(
-                            item.name,
-                            style: const TextStyle(
-                              fontSize: ingredientInfoFontSize,
-                              fontWeight: FontWeight.w600,
-                              color: white,
-                            ),
-                            textAlign: TextAlign.left,
-                          ),
-                        ),
-                      ],
+            itemsDisplayed++;
+            return GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () {
+                recipeId = item.ID;
+                Navigator.restorablePushNamed(context, '/recipe/recipe');
+                setState(() {});
+              },
+              child: Stack(
+                children: <Widget>[
+                  Container(
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20)),
+                    ),
+                    child: Image.network(
+                      item.imageUrl,
+                      fit: BoxFit.fitWidth,
                     ),
                   ),
-                ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: white,
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                      gradient: LinearGradient(
+                        begin: FractionalOffset.topCenter,
+                        end: FractionalOffset.bottomCenter,
+                        colors: [
+                          Colors.grey.withOpacity(0.0),
+                          black.withOpacity(0.5),
+                        ],
+                        stops: const [0.0, 0.75],
+                      ),
+                    ),
+                    child: Align(
+                      alignment: FractionalOffset.bottomLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: Text(
+                                item.name,
+                                style: const TextStyle(
+                                  fontSize: ingredientInfoFontSize,
+                                  fontWeight: FontWeight.w600,
+                                  color: white,
+                                ),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            );
+          },
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 20,
+            mainAxisSpacing: 20,
           ),
-        );
-      },
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 20,
-        mainAxisSpacing: 20,
-      ),
-    );
+          physics: const NeverScrollableScrollPhysics(),
+        ),
+      );
+    }
     itemsToDisplay += 30;
-
     return toRet;
   }
 
@@ -824,19 +874,25 @@ class _RecipePageState extends State<RecipePage> {
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: recipeToDisplay.ingredients.length,
                           itemBuilder: (BuildContext context, int index) {
+                            String ingredName = recipeToDisplay.ingredients.keys.elementAt(index).name;
+                            bool hasIngred = recipeToDisplay.ingredients[ingredName]!;
                             return Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
                                 Text('\u2022 ', style: ingredientInfoTextStyle),
                                 Expanded(
                                   child: Text(
-                                    recipeToDisplay.ingredients[index].name,
-                                    style: const TextStyle(
+                                    ingredName,
+                                    style: TextStyle(
                                       fontSize: ingredientInfoFontSize,
-                                      color: black,
+                                      color: hasIngred ? Colors.red : black,
                                     ),
                                   ),
                                 ),
+                                if (!hasIngred)
+                                  Icon(
+                                    Icons.clear
+                                  ),
                               ],
                             );
                           },
@@ -911,8 +967,8 @@ class _RecipePageState extends State<RecipePage> {
                                   child: ElevatedButton(
                                     onPressed: () async {
                                       if (missingIngredients) {
-                                        bool addSome = await holdOnDialog();
-                                        if (addSome) {
+                                        var addSome = await holdOnDialog();
+                                        if (addSome == 'true') {
                                           bool success =
                                           await addMissingIngredients();
                                         }
@@ -1083,6 +1139,12 @@ class _RecipePageState extends State<RecipePage> {
     if (res.statusCode == 200) {
       var data = json.decode(res.body);
       recipeToDisplay.putRecipe(data);
+    }
+    for (var ingreds in recipeToDisplay.ingredients.keys) {
+      bool hasIngred = searchInventory(ingreds);
+      if (!hasIngred)
+        missingIngredients = true;
+      recipeToDisplay.ingredients.update(ingreds, (value) => hasIngred);
     }
     return;
   }

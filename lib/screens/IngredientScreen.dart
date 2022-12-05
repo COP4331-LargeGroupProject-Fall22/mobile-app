@@ -47,7 +47,6 @@ class _IngredientsPageState extends State<IngredientsPage> {
   }
 
   late List<Widget> body;
-  Map<String, List<IngredientData>> userInventory = {};
   late ScrollController inventoryScroll;
   String errorMessage = 'You have no items in your inventory!';
 
@@ -316,10 +315,9 @@ class _IngredientsPageState extends State<IngredientsPage> {
         },
         child: SingleChildScrollView(
           controller: inventoryScroll,
-          child: Container(
+          child: SizedBox(
             width: MediaQuery.of(context).size.width,
             height: bodyHeight,
-            decoration: const BoxDecoration(color: white),
             child: Column(
               children: <Widget>[
                 Container(
@@ -364,7 +362,6 @@ class _IngredientsPageState extends State<IngredientsPage> {
                             },
                           );
                       }
-                      return const CircularProgressIndicator();
                     },
                   ),
                 ),
@@ -557,7 +554,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
               ingredients
                   .add(IngredientData.create().toIngredient(ingred));
             }
-            userInventory[cats[i]] = ingredients;
+            userInventory[cats[0]] = ingredients;
           }
         }
         success = true;

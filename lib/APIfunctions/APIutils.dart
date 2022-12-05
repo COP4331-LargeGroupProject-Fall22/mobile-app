@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:smart_chef/APIfunctions/authAPI.dart';
+import 'package:smart_chef/utils/ingredientData.dart';
 import 'package:smart_chef/utils/recipeData.dart';
 import 'package:smart_chef/utils/userData.dart';
 
@@ -11,12 +11,24 @@ final accessTokenHeader = {
   HttpHeaders.contentTypeHeader: 'application/json',
   HttpHeaders.authorizationHeader: user.accessToken
 };
+
 const int resultsPerPage = 30;
 List<Instruction> instructionList = [];
 int recipeId = 0;
-
 UserData user = UserData.create();
 final messageDelay = Future.delayed(Duration(seconds: 1));
+Map<String, List<IngredientData>> userInventory = {};
+
+bool searchInventory(IngredientData ingred) {
+  for (var cat in userInventory.keys) {
+    for (var inv in userInventory[cat]!) {
+      if (ingred.ID == inv.ID) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
 RegExp emailValidation = RegExp(
     r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$');
