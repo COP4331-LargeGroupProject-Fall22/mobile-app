@@ -54,12 +54,6 @@ class Routes {
           return MaterialPageRoute(builder: (context) => IngredientPage(arguments));
         else
           return MaterialPageRoute(builder: (context) => StartupScreen());
-      // case individualRecipeScreen:
-      //   var arguments = settings.arguments;
-      //   if (arguments is int)
-      //     return MaterialPageRoute(builder: (context) => RecipePage(arguments));
-      //   else
-      //     return MaterialPageRoute(builder: (context) => StartupScreen());
       case recipeStepsScreen:
         var arguments = settings.arguments;
         if (arguments is int)
