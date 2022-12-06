@@ -340,7 +340,8 @@ class _RecipesState extends State<RecipesScreen> {
                         case ConnectionState.none:
                         case ConnectionState.active:
                         case ConnectionState.waiting:
-                          return const Center(child: CircularProgressIndicator());
+                          return const Center(
+                              child: CircularProgressIndicator());
                         case ConnectionState.done:
                           if (snapshot.hasError) {
                             return Text('Error: $snapshot.error}');
@@ -705,12 +706,9 @@ class _RecipePageState extends State<RecipePage> {
                               fit: BoxFit.contain,
                             ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                          ),
                           Container(
                             width: MediaQuery.of(context).size.width,
-                            margin: const EdgeInsets.symmetric(vertical: 20),
+                            margin: const EdgeInsets.symmetric(vertical: 25),
                             child: Text(
                               recipeToDisplay.name,
                               style: const TextStyle(
@@ -720,147 +718,146 @@ class _RecipePageState extends State<RecipePage> {
                               textAlign: TextAlign.center,
                             ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Text(
-                                'Servings:',
-                                style: ingredientInfoTextStyle,
-                              ),
-                              Container(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 10),
-                                decoration: const BoxDecoration(
-                                  borderRadius: BorderRadius.all(
-                                      Radius.circular(roundedCorner)),
-                                  color: mainScheme,
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Text(
+                                  'Servings:',
+                                  style: ingredientInfoTextStyle,
                                 ),
-                                child: recipeToDisplay.servings != 0
-                                    ? DropdownButton<int>(
-                                        value: recipeToDisplay.servings,
-                                        icon: const Icon(Icons.arrow_drop_down,
-                                            color: white),
-                                        onChanged: (int? value) {
-                                          setState(() => numServings = value!);
-                                        },
-                                        items: servingNums
-                                            .map<DropdownMenuItem<int>>(
-                                                (int value) {
-                                          return DropdownMenuItem<int>(
-                                            value: value,
-                                            child: Text(value.toString()),
-                                          );
-                                        }).toList())
-                                    : Text(
-                                        'No servings listed',
-                                        style: ingredientInfoTextStyle,
-                                      ),
-                              ),
-                            ],
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10),
+                                  decoration: const BoxDecoration(
+                                    borderRadius: BorderRadius.all(
+                                        Radius.circular(roundedCorner)),
+                                    color: mainScheme,
+                                  ),
+                                  child: recipeToDisplay.servings != 0
+                                      ? DropdownButton<int>(
+                                          value: recipeToDisplay.servings,
+                                          icon: const Icon(
+                                              Icons.arrow_drop_down,
+                                              color: white),
+                                          onChanged: (int? value) {
+                                            setState(
+                                                () => numServings = value!);
+                                          },
+                                          items: servingNums
+                                              .map<DropdownMenuItem<int>>(
+                                                  (int value) {
+                                            return DropdownMenuItem<int>(
+                                              value: value,
+                                              child: Text(value.toString()),
+                                            );
+                                          }).toList())
+                                      : Text(
+                                          'No servings listed',
+                                          style: ingredientInfoTextStyle,
+                                        ),
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(
-                                'Time to cook: ',
-                                style: ingredientInfoTextStyle,
-                                textAlign: TextAlign.left,
-                              ),
-                              Text(
-                                '${recipeToDisplay.timeToCook.toString()} minutes',
-                                style: ingredientInfoTextStyle,
-                                textAlign: TextAlign.left,
-                              )
-                            ],
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(
-                                'Time to Prepare: ',
-                                style: ingredientInfoTextStyle,
-                                textAlign: TextAlign.left,
-                              ),
-                              Flexible(
-                                child: Text(
-                                  '${recipeToDisplay.timeToPrepare.toString()} minutes',
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  'Time to cook: ',
                                   style: ingredientInfoTextStyle,
                                   textAlign: TextAlign.left,
                                 ),
-                              ),
-                            ],
+                                Text(
+                                  '${recipeToDisplay.timeToCook.toString()} minutes',
+                                  style: ingredientInfoTextStyle,
+                                  textAlign: TextAlign.left,
+                                )
+                              ],
+                            ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(
-                                'Cuisine types: ',
-                                style: ingredientInfoTextStyle,
-                                textAlign: TextAlign.left,
-                              ),
-                              Flexible(
-                                child: Text(
-                                  recipeToDisplay.cuisines.join(','),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  'Time to Prepare: ',
                                   style: ingredientInfoTextStyle,
                                   textAlign: TextAlign.left,
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(
-                                'Diet fulfilments: ',
-                                style: ingredientInfoTextStyle,
-                                textAlign: TextAlign.left,
-                              ),
-                              Flexible(
-                                child: Text(
-                                  recipeToDisplay.diets.join(', '),
-                                  style: ingredientInfoTextStyle,
-                                  textAlign: TextAlign.left,
+                                Flexible(
+                                  child: Text(
+                                    '${recipeToDisplay.timeToPrepare.toString()} minutes',
+                                    style: ingredientInfoTextStyle,
+                                    textAlign: TextAlign.left,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(
-                                'Meal types: ',
-                                style: ingredientInfoTextStyle,
-                                textAlign: TextAlign.left,
+                          Padding(
+                              padding: const EdgeInsets.only(top: 10),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    'Cuisine types: ',
+                                    style: ingredientInfoTextStyle,
+                                    textAlign: TextAlign.left,
+                                  ),
+                                  Flexible(
+                                    child: Text(
+                                      recipeToDisplay.cuisines.join(','),
+                                      style: ingredientInfoTextStyle,
+                                      textAlign: TextAlign.left,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Flexible(
-                                child: Text(
-                                  recipeToDisplay.types.join(', '),
-                                  style: ingredientInfoTextStyle,
-                                  textAlign: TextAlign.left,
-                                ),
-                              ),
-                            ],
                           ),
-                          const SizedBox(
-                            height: 10,
+                          Padding(
+                              padding: const EdgeInsets.only(top: 10),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    'Diet fulfilments: ',
+                                    style: ingredientInfoTextStyle,
+                                    textAlign: TextAlign.left,
+                                  ),
+                                  Flexible(
+                                    child: Text(
+                                      recipeToDisplay.diets.join(', '),
+                                      style: ingredientInfoTextStyle,
+                                      textAlign: TextAlign.left,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ),
+                          Padding(
+                              padding: const EdgeInsets.only(top: 10),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    'Meal types: ',
+                                    style: ingredientInfoTextStyle,
+                                    textAlign: TextAlign.left,
+                                  ),
+                                  Flexible(
+                                    child: Text(
+                                      recipeToDisplay.types.join(', '),
+                                      style: ingredientInfoTextStyle,
+                                      textAlign: TextAlign.left,
+                                    ),
+                                  ),
+                                ],
+                              ),
                           ),
                           Container(
                             width: MediaQuery.of(context).size.width,
@@ -891,7 +888,7 @@ class _RecipePageState extends State<RecipePage> {
                                       ingred.name,
                                       style: TextStyle(
                                         fontSize: ingredientInfoFontSize,
-                                        color: hasIngred ? Colors.red : black,
+                                        color: hasIngred ? black: Colors.red ,
                                       ),
                                     ),
                                   ),
@@ -973,27 +970,32 @@ class _RecipePageState extends State<RecipePage> {
                                   padding: const EdgeInsets.all(5),
                                   child: ElevatedButton(
                                     onPressed: () async {
-                                      if (missing) {
-                                        bool addSome =
-                                            await holdOnDialog(context);
-                                        if (addSome) {
-                                          bool success =
-                                              await addMissingIngredients();
-                                        }
-                                      } else {
-                                        String finished =
-                                            Navigator.restorablePushNamed(
-                                                context, '/recipe/recipe/steps',
-                                                arguments: 1);
-                                        if (finished.isEmpty) {
-                                          List<int>
-                                              ingredientsToRemoveFromInventoryIDs =
-                                              await finishedDialog();
-                                          bool success =
-                                              await removeIngredientsFromInventory(
-                                                  ingredientsToRemoveFromInventoryIDs);
-                                        }
-                                      }
+                                      // if (missing) {
+                                      //   bool addSome =
+                                      //       await holdOnDialog(context);
+                                      //   if (addSome) {
+                                      //     bool success =
+                                      //         await addMissingIngredients();
+                                      //   }
+                                      // } else {
+                                      //   String finished =
+                                      //       Navigator.restorablePushNamed(
+                                      //           context, '/recipe/recipe/steps',
+                                      //           arguments: 1);
+                                      //   if (finished.isEmpty) {
+                                      //     List<int>
+                                      //         ingredientsToRemoveFromInventoryIDs =
+                                      //         await finishedDialog();
+                                      //     bool success =
+                                      //         await removeIngredientsFromInventory(
+                                      //             ingredientsToRemoveFromInventoryIDs);
+                                      //   }
+                                      // }
+                                      instructionList =
+                                          recipeToDisplay.instructions;
+                                      Navigator.restorablePushNamed(
+                                          context, '/recipe/recipe/steps',
+                                          arguments: 1);
                                     },
                                     style: buttonStyle,
                                     child: const Text(
@@ -1350,6 +1352,10 @@ class _RecipeInstructionPageState extends State<RecipeInstructionPage> {
 
   @override
   Widget build(BuildContext context) {
+    double bodyHeight = MediaQuery.of(context).size.height -
+        bottomRowHeight -
+        MediaQuery.of(context).padding.top -
+        AppBar().preferredSize.height;
     return Scaffold(
       appBar: AppBar(
           backgroundColor: white,
@@ -1407,62 +1413,89 @@ class _RecipeInstructionPageState extends State<RecipeInstructionPage> {
             },
           )),
       body: SingleChildScrollView(
-        child: Center(
+        child: Container(
+          width: MediaQuery.of(context).size.width,
+          height: bodyHeight,
+          padding: const EdgeInsets.all(5),
           child: Column(
             children: <Widget>[
-              Text(
-                'Step $stepNum:',
-                style: const TextStyle(
-                  fontSize: 32,
-                  color: black,
-                ),
-                textAlign: TextAlign.center,
+              SizedBox(
+                height: MediaQuery.of(context).size.height / 10,
               ),
-              Text(
-                instructionList[stepNum].instruction,
-                style: const TextStyle(
-                  fontSize: 32,
-                  color: black,
+              if (stepNum + 1 == instructionList.length)
+                const Text(
+                  'Congratulations!\nYou finished the recipe! Click the button to finish',
+                  style: TextStyle(
+                    fontSize: 32,
+                    color: black,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const Text(
-                'Ingredients for this step:',
-                style: TextStyle(
-                  fontSize: 24,
-                  color: black,
+              if (stepNum + 1 != instructionList.length)
+                Text(
+                  'Step $stepNum:',
+                  style: const TextStyle(
+                    fontSize: 32,
+                    color: black,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              instructionIngredients(
-                  instructionList[stepNum].ingredientsInStep),
-              ElevatedButton(
-                onPressed: () {
-                  if (stepNum + 1 == instructionList.length) {
-                    Navigator.popUntil(
-                        context, ModalRoute.withName('/recipe/recipe'));
-                  } else {
-                    Navigator.restorablePushNamed(
-                        context, '/recipe/recipe/steps',
-                        arguments: stepNum + 1);
-                  }
-                },
-                style: buttonStyle,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    const Text(
-                      'Next Step',
-                      style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                          fontFamily: 'EagleLake'),
-                      textAlign: TextAlign.center,
+              if (stepNum + 1 != instructionList.length)
+                Text(
+                  instructionList[stepNum].instruction,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    color: black,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              if (stepNum + 1 != instructionList.length)
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  child: const Text(
+                    'Ingredients for this step:',
+                    style: TextStyle(
+                      fontSize: 24,
+                      color: black,
                     ),
-                    Icon(
-                      Icons.arrow_forward,
-                      size: topBarIconSize,
+                  ),
+                ),
+              if (stepNum + 1 != instructionList.length)
+                instructionIngredients(
+                    instructionList[stepNum].ingredientsInStep),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (stepNum + 1 == instructionList.length) {
+                        Navigator.popUntil(
+                            context, ModalRoute.withName('/recipe/recipe'));
+                      } else {
+                        Navigator.restorablePushNamed(
+                            context, '/recipe/recipe/steps',
+                            arguments: stepNum + 1);
+                      }
+                    },
+                    style: buttonStyle,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text(
+                          stepNum + 1 != instructionList.length ? 'Next Step' : 'Finish',
+                          style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                              fontFamily: 'EagleLake'),
+                          textAlign: TextAlign.center,
+                        ),
+                        const Icon(
+                          Icons.arrow_forward,
+                          size: topBarIconSize,
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -1472,9 +1505,20 @@ class _RecipeInstructionPageState extends State<RecipeInstructionPage> {
     );
   }
 
-  ListView instructionIngredients(List<IngredientData> ingreds) {
+  Widget instructionIngredients(List<IngredientData> ingreds) {
+    if (ingreds.length == 0) {
+      return SizedBox(
+        width: MediaQuery.of(context).size.width,
+        child: Text(
+          'No ingredients for this step',
+          style: ingredientInfoTextStyle,
+        )
+      );
+    }
     return ListView.builder(
         itemCount: ingreds.length,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
         itemBuilder: (context, index) {
           return Row(children: <Widget>[
             const Text('\u2022', style: TextStyle(fontSize: 24, color: black)),
