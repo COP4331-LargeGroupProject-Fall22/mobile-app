@@ -876,27 +876,29 @@ class _RecipePageState extends State<RecipePage> {
                             itemBuilder: (BuildContext context, int index) {
                               IngredientData ingred =
                                   recipeToDisplay.ingredients[index];
-                              bool hasIngred =
+                              bool missingIngred =
                                   missingIngredients.contains(ingred);
                               return Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
-                                  Text('\u2022 ',
+                                  if (missingIngred)
+                                    const Icon(
+                                      Icons.clear,
+                                      color: Colors.red,
+                                    ),
+                                  if (!missingIngred)
+                                    Text('\u2022 ',
                                       style: ingredientInfoTextStyle),
                                   Expanded(
                                     child: Text(
                                       ingred.name,
                                       style: TextStyle(
                                         fontSize: ingredientInfoFontSize,
-                                        color: hasIngred ? black: Colors.red ,
+                                        color: missingIngred ? Colors.red : black ,
                                       ),
                                     ),
                                   ),
-                                  if (!hasIngred)
-                                    const Icon(
-                                      Icons.clear,
-                                      color: Colors.red,
-                                    ),
+
                                 ],
                               );
                             },
@@ -970,6 +972,7 @@ class _RecipePageState extends State<RecipePage> {
                                   padding: const EdgeInsets.all(5),
                                   child: ElevatedButton(
                                     onPressed: () async {
+                                      // TODO(): Add check for if ingredients are missing in inventory
                                       // if (missing) {
                                       //   bool addSome =
                                       //       await holdOnDialog(context);
@@ -995,7 +998,7 @@ class _RecipePageState extends State<RecipePage> {
                                           recipeToDisplay.instructions;
                                       Navigator.restorablePushNamed(
                                           context, '/recipe/recipe/steps',
-                                          arguments: 1);
+                                          arguments: 0);
                                     },
                                     style: buttonStyle,
                                     child: const Text(
@@ -1356,16 +1359,81 @@ class _RecipeInstructionPageState extends State<RecipeInstructionPage> {
         bottomRowHeight -
         MediaQuery.of(context).padding.top -
         AppBar().preferredSize.height;
+    if (stepNum == instructionList.length) {
+      return Scaffold(
+        appBar: AppBar(
+            backgroundColor: white,
+            leading: IconButton(
+              icon: const Icon(Icons.navigate_before, color: black),
+              iconSize: 35,
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            )),
+        body: SingleChildScrollView(
+          child: Container(
+            width: MediaQuery.of(context).size.width,
+            height: bodyHeight,
+            padding: const EdgeInsets.all(5),
+            child: Column(
+              children: <Widget>[
+                SizedBox(
+                  height: MediaQuery.of(context).size.height / 10,
+                ),
+                const Expanded(
+                  child: Text(
+                    'Congratulations!\nYou finished the recipe! Click the button below to be taken back to the recipe page.',
+                    style: TextStyle(
+                      fontSize: 32,
+                      color: black,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.popUntil(
+                            context, ModalRoute.withName('/recipe/recipe'));
+                      },
+                      style: buttonStyle,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Text(
+                            'Finish',
+                            style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                                fontFamily: 'EagleLake'),
+                            textAlign: TextAlign.center,
+                          ),
+                          const Icon(
+                            Icons.arrow_forward,
+                            size: topBarIconSize,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
           backgroundColor: white,
           leading: IconButton(
             icon: const Icon(Icons.navigate_before, color: black),
             iconSize: 35,
-            onPressed: () {
-              if (stepNum == 1) {
-                bool goBack = false;
-                showDialog(
+            onPressed: () async {
+              if (stepNum == 0) {
+                String goBack = await showDialog(
                     context: context,
                     builder: (context) {
                       return AlertDialog(
@@ -1376,8 +1444,7 @@ class _RecipeInstructionPageState extends State<RecipeInstructionPage> {
                         actions: <Widget>[
                           TextButton(
                             onPressed: () {
-                              goBack = false;
-                              Navigator.pop(context, 'Cancel');
+                              Navigator.pop(context, 'false');
                             },
                             child: const Text(
                               'Cancel',
@@ -1386,8 +1453,7 @@ class _RecipeInstructionPageState extends State<RecipeInstructionPage> {
                           ),
                           TextButton(
                             onPressed: () {
-                              goBack = true;
-                              Navigator.pop(context, 'Back to recipe page');
+                              Navigator.pop(context, 'true');
                             },
                             child: const Text(
                               'Go back',
@@ -1404,7 +1470,7 @@ class _RecipeInstructionPageState extends State<RecipeInstructionPage> {
                             ]),
                       );
                     });
-                if (goBack) {
+                if (goBack == 'true') {
                   Navigator.pop(context);
                 }
               } else {
@@ -1422,74 +1488,56 @@ class _RecipeInstructionPageState extends State<RecipeInstructionPage> {
               SizedBox(
                 height: MediaQuery.of(context).size.height / 10,
               ),
-              if (stepNum + 1 == instructionList.length)
-                const Text(
-                  'Congratulations!\nYou finished the recipe! Click the button to finish',
+              Text(
+                'Step ${stepNum+1}:',
+                style: const TextStyle(
+                  fontSize: 32,
+                  color: black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                instructionList[stepNum].instruction,
+                style: const TextStyle(
+                  fontSize: 32,
+                  color: black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              Container(
+                padding: const EdgeInsets.all(10),
+                child: const Text(
+                  'Ingredients for this step:',
                   style: TextStyle(
-                    fontSize: 32,
+                    fontSize: 24,
                     color: black,
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              if (stepNum + 1 != instructionList.length)
-                Text(
-                  'Step $stepNum:',
-                  style: const TextStyle(
-                    fontSize: 32,
-                    color: black,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              if (stepNum + 1 != instructionList.length)
-                Text(
-                  instructionList[stepNum].instruction,
-                  style: const TextStyle(
-                    fontSize: 32,
-                    color: black,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              if (stepNum + 1 != instructionList.length)
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  child: const Text(
-                    'Ingredients for this step:',
-                    style: TextStyle(
-                      fontSize: 24,
-                      color: black,
-                    ),
-                  ),
-                ),
-              if (stepNum + 1 != instructionList.length)
-                instructionIngredients(
+              ),
+              instructionIngredients(
                     instructionList[stepNum].ingredientsInStep),
               Expanded(
                 child: Align(
                   alignment: Alignment.bottomCenter,
                   child: ElevatedButton(
                     onPressed: () {
-                      if (stepNum + 1 == instructionList.length) {
-                        Navigator.popUntil(
-                            context, ModalRoute.withName('/recipe/recipe'));
-                      } else {
-                        Navigator.restorablePushNamed(
-                            context, '/recipe/recipe/steps',
-                            arguments: stepNum + 1);
-                      }
+                      Navigator.restorablePushNamed(
+                          context, '/recipe/recipe/steps',
+                          arguments: stepNum + 1);
                     },
                     style: buttonStyle,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
+                      children: const <Widget>[
                         Text(
-                          stepNum + 1 != instructionList.length ? 'Next Step' : 'Finish',
-                          style: const TextStyle(
+                          'Next Step',
+                          style: TextStyle(
                               fontSize: 14,
                               color: Colors.white,
                               fontFamily: 'EagleLake'),
                           textAlign: TextAlign.center,
                         ),
-                        const Icon(
+                        Icon(
                           Icons.arrow_forward,
                           size: topBarIconSize,
                         ),

@@ -16,7 +16,7 @@ const int resultsPerPage = 30;
 List<Instruction> instructionList = [];
 int recipeId = 0;
 UserData user = UserData.create();
-final messageDelay = Future.delayed(Duration(seconds: 1));
+final messageDelay = Future.delayed(const Duration(seconds: 1));
 Map<String, List<IngredientData>> userInventory = {};
 
 bool searchInventory(IngredientData ingred) {
