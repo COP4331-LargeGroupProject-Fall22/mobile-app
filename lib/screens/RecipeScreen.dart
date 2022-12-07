@@ -22,7 +22,7 @@ class _RecipesState extends State<RecipesScreen> {
   @override
   void initState() {
     super.initState();
-    recipeScroll = ScrollController()..addListener(_scrollListener);
+    recipeScroll = ScrollController(keepScrollOffset: true)..addListener(_scrollListener);
     done = getRecipes();
   }
 
@@ -43,21 +43,6 @@ class _RecipesState extends State<RecipesScreen> {
   int totalPages = 0;
   bool noMoreItems = false;
   bool sortingDrawer = false;
-
-  Future<bool> getRecipes() async {
-    await retrieveRecipes();
-    return true;
-  }
-
-  void _scrollListener() {
-    if (recipeScroll.position.atEdge) {
-      bool isTop = recipeScroll.position.pixels == 0;
-      if (!isTop) {
-        page++;
-        done = getRecipes();
-      }
-    }
-  }
 
   Icon leadingIcon = const Icon(Icons.search, color: black);
   Widget searchBar = const Text('SmartChef',
@@ -485,6 +470,22 @@ class _RecipesState extends State<RecipesScreen> {
     );
   }
 
+  Future<bool> getRecipes() async {
+    await retrieveRecipes();
+    return true;
+  }
+
+  void _scrollListener() {
+    if (recipeScroll.position.atEdge) {
+      bool isTop = recipeScroll.position.pixels == 0;
+      if (!isTop) {
+        print('here');
+        page++;
+        done = getRecipes();
+      }
+    }
+  }
+
   Future<void> retrieveRecipes() async {
     Map<String, dynamic> queries = {
       'recipeName': _search.text,
@@ -496,6 +497,9 @@ class _RecipesState extends State<RecipesScreen> {
     };
 
     final res = await Recipes.searchRecipes(queries);
+    if (page == 0) {
+      recipes = {};
+    }
     bool success = false;
     do {
       if (res.statusCode == 200) {
@@ -514,7 +518,10 @@ class _RecipesState extends State<RecipesScreen> {
           for (var reci in cats[1]) {
             rec.add(RecipeData.create().putRecipe(reci));
           }
-          recipes[cats[0]] = rec;
+          if (recipes[cats[0]] != null)
+            recipes[cats[0]] = recipes[cats[0]]! + rec;
+          else
+            recipes[cats[0]] = rec;
         }
         success = true;
       } else {

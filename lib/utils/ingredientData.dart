@@ -114,12 +114,12 @@ class Nutrient{
 
 class Unit{
   String unit;
-  int value;
+  String value;
 
   Unit(this.unit, this.value);
 
   factory Unit.create() {
-    Unit origin = Unit('', 0);
+    Unit origin = Unit('', '');
     return origin;
   }
 

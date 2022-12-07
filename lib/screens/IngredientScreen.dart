@@ -213,34 +213,25 @@ class _IngredientsPageState extends State<IngredientsPage> {
 
                 try {
                   for (var cat in userInventory.keys) {
-                    if (userInventory[cat]!.length == 0) {
-                      continue;
-                    }
                     for (var ingreds in userInventory[cat]!) {
                       final res = await Inventory.deleteIngredientfromInventory(
                           ingreds.ID);
-                      if (res.statusCode == 200) {
-                        errorMessage = 'Successfully cleared your inventory!';
-                        await messageDelay;
-                        Navigator.pop(context);
-                      } else {
-                        int errorCode = await getDeleteError(res.statusCode);
-                        if (errorCode == 2) {
-                          final ret =
-                              await Inventory.deleteIngredientfromInventory(
-                                  ingreds.ID);
-                          if (ret.statusCode == 200) {
-                            errorMessage =
-                                'Successfully deleted ingredient from inventory!';
-                            await messageDelay;
-                            Navigator.pop(context);
-                          } else {
+                      bool success = false;
+                      do {
+                        if (res.statusCode == 200) {
+                          errorMessage = 'Successfully cleared your inventory!';
+                          await messageDelay;
+                          success = true;
+                        } else {
+                          int errorCode = await getDeleteError(res.statusCode);
+                          if (errorCode == 3) {
                             errorDialog(context);
                           }
                         }
-                      }
+                      } while (!success);
                     }
                   }
+                  done = makeTiles();
                 } catch (e) {
                   print(e.toString());
                   errorMessage = 'Cannot clear Inventory!';
@@ -506,10 +497,6 @@ class _IngredientsPageState extends State<IngredientsPage> {
 
   Future<void> retrieveInventory(int sortBy) async {
     SortByOptions sort = SortByOptions.values[sortBy];
-    bool reverse = false;
-    bool exDate = false;
-    bool cat = false;
-    bool alphabet = false;
     itemsToDisplay = 30;
     Map<String,dynamic> queries = {};
 
@@ -616,7 +603,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                 });
                 Navigator.restorablePushNamed(context, '/food/food',
                     arguments: toPass);
-                setState(() {});
+                done = makeTiles();
               },
               child: Stack(
                 children: <Widget>[
@@ -1386,7 +1373,7 @@ class _IngredientPageState extends State<IngredientPage> {
     final inven = await Inventory.retrieveIngredientFromInventory(queries);
     if (inven.statusCode == 200) {
       var data = json.decode(inven.body);
-      print(data);
+      data = data[0][1][0];
       ingredientToDisplay.addExpDate(data);
     }
     if (ingredientToDisplay.expirationDate != 0) {
@@ -1408,7 +1395,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
   late ScrollController loading;
   final searchController = TextEditingController();
   List<IngredientData> searchResultList = [];
-  late ListView resultsList;
+  late Widget resultsList;
   late FocusNode _search;
   Future<bool>? done;
 
@@ -1494,7 +1481,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                 ),
                 Container(
                   width: MediaQuery.of(context).size.width / 1.5,
-                  padding: const EdgeInsets.all(5),
+                  padding: const EdgeInsets.all(10),
                   decoration: const BoxDecoration(
                     borderRadius: BorderRadius.all(Radius.circular(20)),
                     color: textFieldBacking,
@@ -1510,8 +1497,9 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                             maxLines: 1,
                             focusNode: _search,
                             controller: searchController,
-                            decoration: const InputDecoration.collapsed(
+                            decoration: const InputDecoration(
                               hintText: 'Search...',
+                              isDense: true,
                               hintStyle: TextStyle(
                                 color: searchFieldText,
                                 fontSize: ingredientInfoFontSize,
@@ -1571,49 +1559,50 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                             ],
                           ),
                         ),
-                        Container(
-                          width: MediaQuery.of(context).size.width,
-                          padding: const EdgeInsets.only(
-                              top: 100, left: 15, right: 15, bottom: 50),
-                          child: Row(
-                            children: const <Widget>[
-                              Flexible(
-                                child: Text(
-                                  'Or scan a barcode to automatically add it to your inventory',
-                                  style: TextStyle(
-                                    fontSize: addIngredientPageTextSize,
-                                    color: black,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            // TODO(31): Add ability to scan barcodes
-                          },
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            backgroundColor: mainScheme,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 15, horizontal: 25),
-                            shadowColor: black,
-                          ),
-                          child: const Text(
-                            'Scan!',
-                            style: TextStyle(
-                              fontSize: 50,
-                              color: white,
-                              fontWeight: FontWeight.w400,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
+                        // TODO(31): Add ability to scan barcodes
+                    //     Container(
+                    //       width: MediaQuery.of(context).size.width,
+                    //       padding: const EdgeInsets.only(
+                    //           top: 100, left: 15, right: 15, bottom: 50),
+                    //       child: Row(
+                    //         children: const <Widget>[
+                    //           Flexible(
+                    //             child: Text(
+                    //               'Or scan a barcode to automatically add it to your inventory',
+                    //               style: TextStyle(
+                    //                 fontSize: addIngredientPageTextSize,
+                    //                 color: black,
+                    //                 fontWeight: FontWeight.w400,
+                    //               ),
+                    //               textAlign: TextAlign.center,
+                    //             ),
+                    //           ),
+                    //         ],
+                    //       ),
+                    //     ),
+                    //     ElevatedButton(
+                    //       onPressed: () {
+                    //
+                    //       },
+                    //       style: ElevatedButton.styleFrom(
+                    //         shape: RoundedRectangleBorder(
+                    //           borderRadius: BorderRadius.circular(10),
+                    //         ),
+                    //         backgroundColor: mainScheme,
+                    //         padding: const EdgeInsets.symmetric(
+                    //             vertical: 15, horizontal: 25),
+                    //         shadowColor: black,
+                    //       ),
+                    //       child: const Text(
+                    //         'Scan!',
+                    //         style: TextStyle(
+                    //           fontSize: 50,
+                    //           color: white,
+                    //           fontWeight: FontWeight.w400,
+                    //         ),
+                    //         textAlign: TextAlign.center,
+                    //       ),
+                    //     ),
                       ],
                     ),
                     searching
@@ -1803,25 +1792,16 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
     bool updated = await updateSearchList(searchQuery);
 
     if (searchResultList.length == 0) {
-      resultsList = ListView(
-        children: <Widget>[
-          Align(
-            alignment: Alignment.center,
-            child: Container(
-              width: MediaQuery.of(context).size.width / 1.5,
-              color: white,
-              padding: const EdgeInsets.all(10),
-              child: const Text(
-                'Sorry, your query produced no results',
-                style: TextStyle(
-                  color: searchFieldText,
-                  fontSize: ingredientInfoFontSize,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ],
+      print('here');
+      resultsList = Container(
+        width: MediaQuery.of(context).size.width / 1.5,
+        color: white,
+        padding: const EdgeInsets.all(10),
+        child: Text(
+          'Sorry, your query produced no results',
+          style: ingredientInfoTextStyle,
+          textAlign: TextAlign.center,
+        ),
       );
     }
 
