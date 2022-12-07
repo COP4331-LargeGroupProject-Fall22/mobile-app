@@ -511,35 +511,36 @@ class _IngredientsPageState extends State<IngredientsPage> {
     bool cat = false;
     bool alphabet = false;
     itemsToDisplay = 30;
+    Map<String,dynamic> queries = {};
 
     switch (sort) {
       case SortByOptions.EXP:
-        exDate = true;
+        queries['sortByExpirationDate'] = 'true';
         break;
       case SortByOptions.EXPRev:
-        exDate = true;
-        reverse = true;
+        queries['sortByExpirationDate'] = 'true';
+        queries['isReverse'] = 'true';
         break;
       case SortByOptions.LEX:
-        alphabet = true;
+        queries['sortByLexicographicalOrder'] = 'true';
         break;
       case SortByOptions.LEXRev:
-        alphabet = true;
-        reverse = true;
+        queries['sortByLexicographicalOrder'] = 'true';
+        queries['isReverse'] = 'true';
         break;
       case SortByOptions.CAT:
-        cat = true;
+        queries['sortByCategory'] = 'true';
         break;
       case SortByOptions.CATRev:
-        cat = true;
-        reverse = true;
+        queries['sortByCategory'] = 'true';
+        queries['isReverse'] = 'true';
         break;
       default:
         break;
     }
 
     final res =
-        await Inventory.retrieveUserInventory(reverse, exDate, cat, alphabet);
+        await Inventory.retrieveUserInventory(queries);
     bool success = false;
     userInventory = {};
     int tries = 0;
@@ -834,6 +835,7 @@ class _IngredientPageState extends State<IngredientPage> {
                     };
 
                     final res = await Inventory.addIngredient(payload);
+                    print(res.statusCode);
                     if (res.statusCode == 201) {
                       errorMessage = 'Ingredient Added Successfully!';
                       setState(() {});
@@ -1372,14 +1374,19 @@ class _IngredientPageState extends State<IngredientPage> {
   }
 
   Future<void> fetchIngredientData() async {
-    final res = await Ingredients.getIngredientByID(ID, 0, '');
+    Map<String, dynamic> queries = {
+      'ingredientID': '$ID',
+    };
+
+    final res = await Ingredients.getIngredientByID(ID);
     if (res.statusCode == 200) {
       var data = json.decode(res.body);
       ingredientToDisplay.toIngredient(data);
     }
-    final inven = await Inventory.retrieveIngredientFromInventory(ID);
+    final inven = await Inventory.retrieveIngredientFromInventory(queries);
     if (inven.statusCode == 200) {
       var data = json.decode(inven.body);
+      print(data);
       ingredientToDisplay.addExpDate(data);
     }
     if (ingredientToDisplay.expirationDate != 0) {
@@ -1427,7 +1434,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
   bool searchChanged = false;
   String oldQuery = '';
   String errorMessage = '';
-  int pageCount = 1;
+  int pageCount = 0;
   int queryID = -1;
 
   Future<bool> setList() async {
@@ -1517,7 +1524,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
                             textInputAction: TextInputAction.done,
                             onSubmitted: (query) async {
                               if (query.isNotEmpty && query != oldQuery) {
-                                pageCount = 1;
+                                pageCount = 0;
                                 oldQuery = query;
                                 done = setList();
                               }
@@ -1859,7 +1866,7 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
   Future<bool> updateSearchList(String searchQuery) async {
     int resultsPerPage = 20;
     int oldLength = searchResultList.length;
-    if (pageCount == 1) {
+    if (pageCount == 0) {
       searchResultList = [];
     }
 
@@ -1867,9 +1874,14 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
       searchResultList = [];
       return false;
     }
+    Map<String, dynamic> queries = {
+      'ingredientName': searchQuery,
+      'resultsPerPage': '$resultsPerPage',
+      'page': '$pageCount',
+    };
+    pageCount++;
 
-    final res = await Ingredients.searchIngredients(
-        searchQuery, resultsPerPage, pageCount++, '');
+    final res = await Ingredients.searchIngredients(queries);
     if (res.statusCode != 200) {
       return false;
     }

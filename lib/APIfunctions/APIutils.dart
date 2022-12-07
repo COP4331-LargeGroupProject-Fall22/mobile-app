@@ -5,15 +5,13 @@ import 'package:smart_chef/utils/ingredientData.dart';
 import 'package:smart_chef/utils/recipeData.dart';
 import 'package:smart_chef/utils/userData.dart';
 
-const String API_PREFIX = "https://api-smart-chef.herokuapp.com/";
+const String API_PREFIX = "api-smart-chef.herokuapp.com";
 final baseHeader = {HttpHeaders.contentTypeHeader: 'application/json'};
-final accessTokenHeader = {
-  HttpHeaders.contentTypeHeader: 'application/json',
-  HttpHeaders.authorizationHeader: user.accessToken
-};
 
 const int resultsPerPage = 30;
 List<Instruction> instructionList = [];
+List<IngredientData> ingredientsToAddToCart = [];
+List<RecipeData> favorites = [];
 int recipeId = 0;
 UserData user = UserData.create();
 final messageDelay = Future.delayed(const Duration(seconds: 1));

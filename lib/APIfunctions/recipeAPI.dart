@@ -5,34 +5,11 @@ import 'package:smart_chef/APIfunctions/APIutils.dart';
 class Recipes {
   static const String apiRoute = 'recipes';
 
-  static Future<http.Response> searchRecipes(String searchQuery, int resultsPerPage, int page, String intolerance, String hasIngredients, String cuisines, String diets, String mealTypes) async {
+  static Future<http.Response> searchRecipes(Map<String, dynamic> queries) async {
     http.Response response;
 
-    String totalUrl = '$API_PREFIX$apiRoute?recipeName=$searchQuery';
-    if (resultsPerPage != 0) {
-      totalUrl += '&resultsPerPage=$resultsPerPage';
-    }
-    if (page != 0) {
-      totalUrl += '&page=$page';
-    }
-    if (intolerance.isNotEmpty) {
-      totalUrl += '&intolerance=$intolerance';
-    }
-    if (hasIngredients.isNotEmpty) {
-      totalUrl += '&hasIngredients=$hasIngredients';
-    }
-    if (cuisines.isNotEmpty) {
-      totalUrl += '&cuisines=$cuisines';
-    }
-    if (diets.isNotEmpty) {
-      totalUrl += '&diets=$diets';
-    }
-    if (mealTypes.isNotEmpty) {
-      totalUrl += '&mealTypes=$mealTypes';
-    }
-
     try {
-      response = await http.get(Uri.parse(totalUrl),
+      response = await http.get(Uri.https(API_PREFIX, apiRoute, queries),
           headers: baseHeader);
     } catch (e) {
       print(e.toString());
@@ -45,10 +22,8 @@ class Recipes {
   static Future<http.Response> getRecipeByID(int recipeID) async {
     http.Response response;
 
-    String totalUrl = '$API_PREFIX$apiRoute/$recipeID';
-
     try {
-      response = await http.get(Uri.parse(totalUrl),
+      response = await http.get(Uri.https(API_PREFIX, '$apiRoute/$recipeID'),
           headers: baseHeader);
     } catch (e) {
       print(e.toString());
@@ -61,10 +36,8 @@ class Recipes {
   static Future<http.Response> getFavoriteRecipes() async {
     http.Response response;
 
-    String totalUrl = '$API_PREFIX/user/favorite-recipes';
-
     try {
-      response = await http.get(Uri.parse(totalUrl),
+      response = await http.get(Uri.https(API_PREFIX, '/user/favorite-recipes'),
           headers: baseHeader);
     } catch (e) {
       print(e.toString());
@@ -77,10 +50,8 @@ class Recipes {
   static Future<http.Response> addRecipesToFavorite(Map<String, dynamic> recipe) async {
     http.Response response;
 
-    String totalUrl = '$API_PREFIX/user/favorite-recipes';
-
     try {
-      response = await http.post(Uri.parse(totalUrl),
+      response = await http.post(Uri.https(API_PREFIX, '/user/favorite-recipes'),
           body: json.encode(recipe),
           headers: baseHeader);
     } catch (e) {
@@ -94,10 +65,8 @@ class Recipes {
   static Future<http.Response> getFavoriteRecipeByID(int ID) async {
     http.Response response;
 
-    String totalUrl = '$API_PREFIX/user/favorite-recipes/$ID';
-
     try {
-      response = await http.get(Uri.parse(totalUrl),
+      response = await http.get(Uri.https(API_PREFIX, '/user/favorite-recipes/$ID'),
           headers: baseHeader);
     } catch (e) {
       print(e.toString());
@@ -110,10 +79,8 @@ class Recipes {
   static Future<http.Response> removeFavoriteRecipe(int ID) async {
     http.Response response;
 
-    String totalUrl = '$API_PREFIX/user/favorite-recipes/$ID';
-
     try {
-      response = await http.delete(Uri.parse(totalUrl),
+      response = await http.delete(Uri.https(API_PREFIX, '/user/favorite-recipes/$ID'),
           headers: baseHeader);
     } catch (e) {
       print(e.toString());

@@ -39,7 +39,7 @@ class _RecipesState extends State<RecipesScreen> {
   late ScrollController recipeScroll;
   String errorMessage = 'No recipes to list!';
   int itemsToDisplay = 30;
-  int page = 1;
+  int page = 0;
   int totalPages = 0;
   bool noMoreItems = false;
   bool sortingDrawer = false;
@@ -169,7 +169,7 @@ class _RecipesState extends State<RecipesScreen> {
                 padding: const EdgeInsets.all(5),
                 child: TextButton(
                   onPressed: () {
-                    page = 1;
+                    page = 0;
                     itemsToDisplay = 30;
                     noMoreItems = false;
                     done = getRecipes();
@@ -200,7 +200,7 @@ class _RecipesState extends State<RecipesScreen> {
                     dietFilter = [];
                     mealTypeFilter = [];
                     noMoreItems = false;
-                    page = 1;
+                    page = 0;
                     itemsToDisplay = 30;
                     done = getRecipes();
                     setState(() {});
@@ -486,15 +486,16 @@ class _RecipesState extends State<RecipesScreen> {
   }
 
   Future<void> retrieveRecipes() async {
-    final res = await Recipes.searchRecipes(
-        _search.value.text,
-        resultsPerPage,
-        page,
-        '',
-        '',
-        cuisineFilter.join(','),
-        dietFilter.join(','),
-        mealTypeFilter.join(','));
+    Map<String, dynamic> queries = {
+      'recipeName': _search.text,
+      'resultsPerPage': '$resultsPerPage',
+      'page': '$page',
+      'cuisines': cuisineFilter.join(','),
+      'diets': dietFilter.join(','),
+      'mealTypes': mealTypeFilter.join(',')
+    };
+
+    final res = await Recipes.searchRecipes(queries);
     bool success = false;
     do {
       if (res.statusCode == 200) {
@@ -656,6 +657,8 @@ class _RecipePageState extends State<RecipePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (recipeToDisplay.servings != 0 && !servingNums.contains(recipeToDisplay.servings))
+      servingNums.add(recipeToDisplay.servings);
     return Scaffold(
       appBar: AppBar(
           backgroundColor: white,
@@ -665,7 +668,7 @@ class _RecipePageState extends State<RecipePage> {
                 setState(() {});
               },
               icon:
-                  const Icon(Icons.favorite_border, color: Colors.transparent),
+                  const Icon(Icons.favorite_border, color: black),
               iconSize: topBarIconSize,
             ),
           ],
@@ -698,8 +701,8 @@ class _RecipePageState extends State<RecipePage> {
                       child: Column(
                         children: <Widget>[
                           Container(
-                            width: MediaQuery.of(context).size.width / 2,
-                            height: MediaQuery.of(context).size.width / 2,
+                            width: MediaQuery.of(context).size.width / 1.5,
+                            height: MediaQuery.of(context).size.width / 1.5,
                             margin: const EdgeInsets.symmetric(vertical: 20),
                             child: Image.network(
                               recipeToDisplay.imageUrl,
@@ -745,9 +748,7 @@ class _RecipePageState extends State<RecipePage> {
                                             setState(
                                                 () => numServings = value!);
                                           },
-                                          items: servingNums
-                                              .map<DropdownMenuItem<int>>(
-                                                  (int value) {
+                                          items: servingNums.map<DropdownMenuItem<int>>((int value) {
                                             return DropdownMenuItem<int>(
                                               value: value,
                                               child: Text(value.toString()),
@@ -811,7 +812,7 @@ class _RecipePageState extends State<RecipePage> {
                                   ),
                                   Flexible(
                                     child: Text(
-                                      recipeToDisplay.cuisines.join(','),
+                                      recipeToDisplay.cuisines.isEmpty ? 'No cuisines on file' : recipeToDisplay.cuisines.join(','),
                                       style: ingredientInfoTextStyle,
                                       textAlign: TextAlign.left,
                                     ),
@@ -831,7 +832,7 @@ class _RecipePageState extends State<RecipePage> {
                                   ),
                                   Flexible(
                                     child: Text(
-                                      recipeToDisplay.diets.join(', '),
+                                      recipeToDisplay.diets.isEmpty ? 'No diets on file' : recipeToDisplay.diets.join(', '),
                                       style: ingredientInfoTextStyle,
                                       textAlign: TextAlign.left,
                                     ),
@@ -851,7 +852,7 @@ class _RecipePageState extends State<RecipePage> {
                                   ),
                                   Flexible(
                                     child: Text(
-                                      recipeToDisplay.types.join(', '),
+                                      recipeToDisplay.types.isEmpty ? 'No meal types on file' : recipeToDisplay.types.join(', '),
                                       style: ingredientInfoTextStyle,
                                       textAlign: TextAlign.left,
                                     ),
@@ -891,7 +892,7 @@ class _RecipePageState extends State<RecipePage> {
                                       style: ingredientInfoTextStyle),
                                   Expanded(
                                     child: Text(
-                                      ingred.name,
+                                      ingred.units.value != 0 ? '${ingred.units.value} ${ingred.units.unit} of ${ingred.name}' : ingred.name,
                                       style: TextStyle(
                                         fontSize: ingredientInfoFontSize,
                                         color: missingIngred ? Colors.red : black ,
@@ -951,7 +952,10 @@ class _RecipePageState extends State<RecipePage> {
                                   padding: const EdgeInsets.all(5),
                                   child: ElevatedButton(
                                     onPressed: () async {
-                                      await addMissingIngredients();
+                                      var add = await addMissingIngredients();
+                                      // TODO(): Allow users to put items into their shopping cart
+                                      //if (add == 'true')
+
                                     },
                                     style: buttonStyle,
                                     child: const Text(
@@ -981,24 +985,20 @@ class _RecipePageState extends State<RecipePage> {
                                       //         await addMissingIngredients();
                                       //   }
                                       // } else {
-                                      //   String finished =
-                                      //       Navigator.restorablePushNamed(
-                                      //           context, '/recipe/recipe/steps',
-                                      //           arguments: 1);
-                                      //   if (finished.isEmpty) {
-                                      //     List<int>
-                                      //         ingredientsToRemoveFromInventoryIDs =
-                                      //         await finishedDialog();
-                                      //     bool success =
-                                      //         await removeIngredientsFromInventory(
-                                      //             ingredientsToRemoveFromInventoryIDs);
-                                      //   }
-                                      // }
                                       instructionList =
                                           recipeToDisplay.instructions;
-                                      Navigator.restorablePushNamed(
-                                          context, '/recipe/recipe/steps',
-                                          arguments: 0);
+                                      var finished =
+                                          await Navigator.restorablePushNamed(
+                                              context, '/recipe/recipe/steps',
+                                              arguments: 0);
+                                      if (finished.isEmpty) {
+                                        var fin = await finishedDialog();
+                                        print(fin);
+                                        // bool success =
+                                        //     await removeIngredientsFromInventory(
+                                        //         ingredientsToRemoveFromInventoryIDs);
+                                      }
+                                      // }
                                     },
                                     style: buttonStyle,
                                     child: const Text(
@@ -1240,71 +1240,11 @@ class _RecipePageState extends State<RecipePage> {
   }
 
   Future<bool> addMissingIngredients() async {
-    List<IngredientData> itemsToAdd = List.from(missingIngredients);
+    ingredientsToAddToCart = List.from(missingIngredients);
     var ret = await showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          scrollable: true,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          elevation: 15,
-          actions: <Widget>[
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context, false);
-              },
-              style: buttonStyle,
-              child: const Text(
-                "Cancel",
-                style: TextStyle(color: white, fontSize: 22),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context, true);
-              },
-              style: buttonStyle,
-              child: const Text(
-                "Add!",
-                style: TextStyle(color: white, fontSize: 22),
-              ),
-            ),
-          ],
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  'Select the ingredients to add to your cart:',
-                  style: TextStyle(
-                    fontSize: 24,
-                    color: black,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              for (var item in recipeToDisplay.ingredients)
-                CheckboxListTile(
-                  title: Text(item.name, style: ingredientInfoTextStyle),
-                  dense: true,
-                  checkColor: mainScheme,
-                  value: itemsToAdd.contains(item),
-                  onChanged: (bool? value) {
-                    if (value!) {
-                      itemsToAdd.add(item);
-                    } else {
-                      itemsToAdd.remove(item);
-                    }
-                    setState(() {});
-                  },
-                ),
-            ],
-          ),
-        );
+        return MissingIngredientDialog(recipeToDisplay.ingredients);
       },
     );
     if (ret == true) {
@@ -1314,15 +1254,45 @@ class _RecipePageState extends State<RecipePage> {
     }
   }
 
-  Future<List<int>> finishedDialog() async {
-    List<int> ingredsID = [];
-    showModalBottomSheet(
+  Future<bool> finishedDialog() async {
+    ingredientsToAddToCart = [];
+    var finished = await showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
-        return Container();
+        return Column(
+          children: <Widget>[
+            Expanded(
+              child: const Text(
+                'Now that you\'ve finished, you might have used up some of the ingredients in your inventory.'
+                    'Check the boxes below for each ingredient to remove it from your inventory',
+                style: TextStyle(
+                  fontSize: 24,
+                  color: black,
+                ),
+              ),
+            ),
+            for (var item in recipeToDisplay.ingredients)
+              CheckboxListTile(
+                title: Text(item.name, style: ingredientInfoTextStyle),
+                dense: true,
+                checkColor: mainScheme,
+                value: ingredientsToAddToCart.contains(item),
+                onChanged: (bool? value) {
+                  if (value!) {
+                    ingredientsToAddToCart.add(item);
+                  } else {
+                    ingredientsToAddToCart.remove(item);
+                  }
+                  setState(() {});
+                },
+              ),
+          ],
+        );
       },
     );
-    return ingredsID;
+    if (finished == 'true')
+      return true;
+    return false;
   }
 
   Future<bool> removeIngredientsFromInventory(List<int> IDS) async {
@@ -1356,7 +1326,6 @@ class _RecipeInstructionPageState extends State<RecipeInstructionPage> {
   @override
   Widget build(BuildContext context) {
     double bodyHeight = MediaQuery.of(context).size.height -
-        bottomRowHeight -
         MediaQuery.of(context).padding.top -
         AppBar().preferredSize.height;
     if (stepNum == instructionList.length) {
@@ -1485,9 +1454,6 @@ class _RecipeInstructionPageState extends State<RecipeInstructionPage> {
           padding: const EdgeInsets.all(5),
           child: Column(
             children: <Widget>[
-              SizedBox(
-                height: MediaQuery.of(context).size.height / 10,
-              ),
               Text(
                 'Step ${stepNum+1}:',
                 style: const TextStyle(
@@ -1578,5 +1544,85 @@ class _RecipeInstructionPageState extends State<RecipeInstructionPage> {
             ),
           ]);
         });
+  }
+}
+
+class MissingIngredientDialog extends StatefulWidget {
+  List<IngredientData> ingreds;
+
+  MissingIngredientDialog(this.ingreds);
+
+  @override
+  _MissingIngredientDialogState createState() => _MissingIngredientDialogState(ingreds);
+}
+
+class _MissingIngredientDialogState extends State<MissingIngredientDialog> {
+  List<IngredientData> ingreds;
+
+  _MissingIngredientDialogState(this.ingreds);
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      scrollable: true,
+      shape:
+      RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      elevation: 15,
+      actions: <Widget>[
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context, false);
+          },
+          style: buttonStyle,
+          child: const Text(
+            "Cancel",
+            style: TextStyle(color: white, fontSize: 22),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context, true);
+          },
+          style: buttonStyle,
+          child: const Text(
+            "Add!",
+            style: TextStyle(color: white, fontSize: 22),
+          ),
+        ),
+      ],
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          const Flexible(
+            child: Text(
+              'Select the ingredients to add to your cart:',
+              style: TextStyle(
+                fontSize: 24,
+                color: black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          for (var item in ingreds)
+            CheckboxListTile(
+              title: Text(item.name, style: ingredientInfoTextStyle),
+              dense: true,
+              checkColor: mainScheme,
+              value: ingredientsToAddToCart.contains(item),
+              onChanged: (bool? value) {
+                if (value!) {
+                  ingredientsToAddToCart.add(item);
+                } else {
+                  ingredientsToAddToCart.remove(item);
+                }
+                setState(() {});
+              },
+            ),
+        ],
+      ),
+    );
   }
 }

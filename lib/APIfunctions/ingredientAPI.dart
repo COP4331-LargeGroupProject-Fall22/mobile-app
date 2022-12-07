@@ -5,22 +5,13 @@ import 'package:smart_chef/APIfunctions/APIutils.dart';
 class Ingredients {
   static const String apiRoute = 'ingredients';
 
-  static Future<http.Response> searchIngredients(String searchQuery, int resultsPerPage, int page, String intolerance) async {
+  static Future<http.Response> searchIngredients(Map<String, dynamic> queries) async {
     http.Response response;
 
-    String totalUrl = '$API_PREFIX$apiRoute?ingredientName=$searchQuery';
-    if (resultsPerPage != 0) {
-      totalUrl += '&resultsPerPage=$resultsPerPage';
-    }
-    if (page != 0) {
-      totalUrl += '&page=$page';
-    }
-    if (intolerance.isNotEmpty) {
-      totalUrl += '&intolerance=$intolerance';
-    }
+    Uri totalUrl = Uri.https(API_PREFIX, apiRoute, queries);
 
     try {
-      response = await http.get(Uri.parse(totalUrl),
+      response = await http.get(totalUrl,
           headers: baseHeader);
     } catch (e) {
       print(e.toString());
@@ -30,19 +21,11 @@ class Ingredients {
     return response;
   }
 
-  static Future<http.Response> getIngredientByID(int ingredientID, int quantity, String unit) async {
+  static Future<http.Response> getIngredientByID(int ID) async {
     http.Response response;
 
-    String totalUrl = '$API_PREFIX$apiRoute/$ingredientID';
-    if (quantity != 0) {
-      totalUrl += '&quantity=$quantity';
-    }
-    if (unit.isNotEmpty) {
-      totalUrl += '&unit=$unit';
-    }
-
     try {
-      response = await http.get(Uri.parse(totalUrl),
+      response = await http.get(Uri.https(API_PREFIX, '${apiRoute}/${ID}'),
           headers: baseHeader);
     } catch (e) {
       print(e.toString());

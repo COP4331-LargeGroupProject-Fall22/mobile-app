@@ -1,34 +1,22 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:smart_chef/APIfunctions/APIutils.dart';
 
 class Inventory {
   static const String apiRoute = 'user/inventory';
 
-  static Future<http.Response> retrieveUserInventory(bool isReverse, bool sortByExpirationDate, bool sortByCategory, bool sortByLexicographicalOrder) async {
+  static Future<http.Response> retrieveUserInventory(Map<String, dynamic> queries) async {
     http.Response response;
 
-    String totalUrl = '$API_PREFIX$apiRoute?';
-    if (isReverse) {
-      totalUrl += 'isReverse=true';
-    } else {
-      totalUrl += 'isReverse=false';
-    }
-    if (sortByExpirationDate) {
-      totalUrl += '&sortByExpirationDate=true';
-    } else {
-      if (sortByCategory) {
-        totalUrl += '&sortByCategory=true';
-      } else {
-        if (sortByLexicographicalOrder) {
-          totalUrl += '&sortByLexicographicalOrder=true';
-        }
-      }
-    }
+    final header = {
+      HttpHeaders.contentTypeHeader: 'application/json',
+      HttpHeaders.authorizationHeader: user.accessToken
+    };
 
     try {
-      response = await http.get(Uri.parse(totalUrl),
-          headers: accessTokenHeader);
+      response = await http.get(Uri.https(API_PREFIX, apiRoute, queries),
+          headers: header);
     } catch (e) {
       print(e.toString());
       throw Exception('Could not connect to server');
@@ -40,12 +28,15 @@ class Inventory {
   static Future<http.Response> addIngredient(Map<String, dynamic> payload) async {
     http.Response response;
 
-    String totalUrl = '$API_PREFIX$apiRoute';
+    final header = {
+      HttpHeaders.contentTypeHeader: 'application/json',
+      HttpHeaders.authorizationHeader: user.accessToken
+    };
 
     try {
-      response = await http.post(Uri.parse(totalUrl),
+      response = await http.post(Uri.https(API_PREFIX, apiRoute),
           body: json.encode(payload),
-          headers: accessTokenHeader);
+          headers: header);
     } catch (e) {
       print(e.toString());
       throw Exception('Could not connect to server');
@@ -54,12 +45,17 @@ class Inventory {
     return response;
   }
 
-  static Future<http.Response> retrieveIngredientFromInventory(int id) async {
+  static Future<http.Response> retrieveIngredientFromInventory(Map<String, dynamic> queries) async {
     http.Response response;
 
+    final header = {
+      HttpHeaders.contentTypeHeader: 'application/json',
+      HttpHeaders.authorizationHeader: user.accessToken
+    };
+
     try {
-      response = await http.get(Uri.parse('$API_PREFIX$apiRoute/$id'),
-          headers: accessTokenHeader);
+      response = await http.get(Uri.https(API_PREFIX, apiRoute, queries),
+          headers: header);
     } catch (e) {
       print(e.toString());
       throw Exception('Could not connect to server');
@@ -71,10 +67,15 @@ class Inventory {
   static Future<http.Response> updateIngredientInInventory(int id, Map<String, dynamic> payload) async {
     http.Response response;
 
+    final header = {
+      HttpHeaders.contentTypeHeader: 'application/json',
+      HttpHeaders.authorizationHeader: user.accessToken
+    };
+
     try {
-      response = await http.put(Uri.parse('$API_PREFIX$apiRoute/$id'),
+      response = await http.put(Uri.https(API_PREFIX, '$apiRoute/$id'),
           body: json.encode(payload),
-          headers: accessTokenHeader);
+          headers: header);
     } catch (e) {
       print(e.toString());
       throw Exception('Could not connect to server');
@@ -86,9 +87,14 @@ class Inventory {
   static Future<http.Response> deleteIngredientfromInventory(int id) async {
     http.Response response;
 
+    final header = {
+      HttpHeaders.contentTypeHeader: 'application/json',
+      HttpHeaders.authorizationHeader: user.accessToken
+    };
+
     try {
-      response = await http.delete(Uri.parse('$API_PREFIX$apiRoute/$id'),
-          headers: accessTokenHeader);
+      response = await http.delete(Uri.https(API_PREFIX, '$apiRoute/$id'),
+          headers: header);
     } catch (e) {
       print(e.toString());
       throw Exception('Could not connect to server');

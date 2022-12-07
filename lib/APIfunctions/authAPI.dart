@@ -10,7 +10,7 @@ class Authentication {
     http.Response response;
 
     try {
-      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/login'),
+      response = await http.post(Uri.https(API_PREFIX, '${apiRoute}/login'),
           body: json.encode(payload),
           headers: baseHeader);
     } catch (e) {
@@ -26,7 +26,7 @@ class Authentication {
 
     try {
       Map<String, dynamic> tokenBody = {'refreshToken': user.refreshToken};
-      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/refreshJWT'),
+      response = await http.post(Uri.https(API_PREFIX, '${apiRoute}/refreshJWT'),
           body: json.encode(tokenBody),
           headers: baseHeader);
     } catch (e) {
@@ -41,7 +41,7 @@ class Authentication {
     http.Response response;
 
     try {
-      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/register'),
+      response = await http.post(Uri.https(API_PREFIX, '${apiRoute}/register'),
           body: json.encode(payload),
           headers: baseHeader);
     } catch (e) {
@@ -55,13 +55,13 @@ class Authentication {
   static Future<http.Response> logout() async {
     http.Response response;
 
-    final headers = {
+    final header = {
       HttpHeaders.contentTypeHeader: 'application/json',
       HttpHeaders.authorizationHeader: user.accessToken
     };
 
     try {
-      response = await http.get(Uri.parse('$API_PREFIX$apiRoute/logout'), headers: headers);
+      response = await http.get(Uri.https(API_PREFIX, '${apiRoute}/logout'), headers: header);
     } catch (e) {
       print(e.toString());
       throw Exception('Could not connect to server');
@@ -74,7 +74,7 @@ class Authentication {
     http.Response response;
 
     try {
-      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/send-verification-code'),
+      response = await http.post(Uri.https(API_PREFIX, '${apiRoute}/send-verification-code'),
           body: json.encode(payload),
           headers: baseHeader);
     } catch (e) {
@@ -89,7 +89,7 @@ class Authentication {
     http.Response response;
 
     try {
-      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/confirm-verification-code'),
+      response = await http.post(Uri.https(API_PREFIX, '${apiRoute}/confirm-verification-code'),
           body: json.encode(payload),
           headers: baseHeader);
     } catch (e) {
@@ -104,7 +104,7 @@ class Authentication {
     http.Response response;
 
     try {
-      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/request-password-reset'),
+      response = await http.post(Uri.https(API_PREFIX, '${apiRoute}/request-password-reset'),
           body: json.encode(payload),
           headers: baseHeader);
     } catch (e) {
@@ -119,7 +119,7 @@ class Authentication {
     http.Response response;
 
     try {
-      response = await http.post(Uri.parse('$API_PREFIX$apiRoute/perform-password-reset'),
+      response = await http.post(Uri.https(API_PREFIX, '${apiRoute}/perform-password-reset'),
           body: json.encode(payload),
           headers: baseHeader);
     } catch (e) {
