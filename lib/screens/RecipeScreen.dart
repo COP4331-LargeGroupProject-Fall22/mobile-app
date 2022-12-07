@@ -18,6 +18,7 @@ class RecipesScreen extends StatefulWidget {
 
 class _RecipesState extends State<RecipesScreen> {
   Future<bool>? done;
+  Key list = GlobalKey();
 
   @override
   void initState() {
@@ -343,6 +344,7 @@ class _RecipesState extends State<RecipesScreen> {
                             );
                           }
                           return ListView.builder(
+                            key: list,
                             itemCount: body.length,
                             shrinkWrap: true,
                             controller: recipeScroll,
@@ -479,9 +481,9 @@ class _RecipesState extends State<RecipesScreen> {
     if (recipeScroll.position.atEdge) {
       bool isTop = recipeScroll.position.pixels == 0;
       if (!isTop) {
-        print('here');
         page++;
         done = getRecipes();
+        setState(() {});
       }
     }
   }
@@ -661,6 +663,7 @@ class _RecipePageState extends State<RecipePage> {
   List<int> servingNums = [1, 2, 3, 4, 5, 6];
   List<IngredientData> missingIngredients = [];
   bool missing = false;
+  bool favorite = false;
 
   @override
   Widget build(BuildContext context) {
@@ -672,10 +675,19 @@ class _RecipePageState extends State<RecipePage> {
           actions: [
             IconButton(
               onPressed: () {
-                setState(() {});
+                if (favorite) {
+                  setState(() {
+                    favorite = false;
+                  });
+                } else {
+                  setState(() {
+                    favorite = true;
+                  });
+                }
+
               },
               icon:
-                  const Icon(Icons.favorite_border, color: black),
+                  favorite ? Icon(Icons.favorite, color: Colors.red) : Icon(Icons.favorite_border, color: black),
               iconSize: topBarIconSize,
             ),
           ],
@@ -899,7 +911,7 @@ class _RecipePageState extends State<RecipePage> {
                                       style: ingredientInfoTextStyle),
                                   Expanded(
                                     child: Text(
-                                      ingred.units.value != 0 ? '${ingred.units.value} ${ingred.units.unit} of ${ingred.name}' : ingred.name,
+                                      ingred.units.value != 0 ? '${ingred.units.value} ${ingred.units.unit} ${ingred.name}' : ingred.name,
                                       style: TextStyle(
                                         fontSize: ingredientInfoFontSize,
                                         color: missingIngred ? Colors.red : black ,

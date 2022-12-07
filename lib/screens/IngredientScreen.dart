@@ -123,7 +123,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                 child: Row(
                   children: <Widget>[
                     SizedBox(
-                      width: 230,
+                      width: 180,
                       height: MediaQuery.of(context).size.height,
                       child: TextField(
                         maxLines: 1,
@@ -305,10 +305,8 @@ class _IngredientsPageState extends State<IngredientsPage> {
           FocusManager.instance.primaryFocus?.unfocus();
         },
         child: SingleChildScrollView(
-          controller: inventoryScroll,
           child: SizedBox(
             width: MediaQuery.of(context).size.width,
-            height: bodyHeight,
             child: Column(
               children: <Widget>[
                 Container(
@@ -322,8 +320,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
                           fontSize: ingredientInfoFontSize,
                           color: black,
                         ))),
-                Expanded(
-                  child: FutureBuilder(
+                FutureBuilder(
                     future: done,
                     builder: (BuildContext context, AsyncSnapshot snapshot) {
                       switch (snapshot.connectionState) {
@@ -348,13 +345,14 @@ class _IngredientsPageState extends State<IngredientsPage> {
                           }
                           return ListView.builder(
                             itemCount: body.length,
+                            controller: inventoryScroll,
+                            shrinkWrap: true,
                             itemBuilder: (context, index) {
                               return body[index];
                             },
                           );
                       }
                     },
-                  ),
                 ),
               ],
             ),
@@ -482,16 +480,18 @@ class _IngredientsPageState extends State<IngredientsPage> {
       bool isTop = inventoryScroll.position.pixels == 0;
       if (!isTop) {
         done = makeTiles();
+        setState(() {});
       }
       if (isTop) {
         retrieveInventory(_groupValue);
         done = makeTiles();
+        setState(() {});
       }
     }
   }
 
   DateTime convertToDate(int secondEpoch) {
-    var date = DateTime.fromMicrosecondsSinceEpoch(secondEpoch * 1000);
+    var date = DateTime.fromMicrosecondsSinceEpoch(secondEpoch);
     return date;
   }
 
@@ -551,6 +551,7 @@ class _IngredientsPageState extends State<IngredientsPage> {
         if (errorCode == 3) {
           errorDialog(context);
         }
+        setState(() {});
       }
       tries++;
     } while (!success && tries < 3);
@@ -559,6 +560,8 @@ class _IngredientsPageState extends State<IngredientsPage> {
   List<Widget> buildTiles() {
     int itemsDisplayed = 0;
     List<Widget> toRet = [];
+    double tileHeight = 220;
+    double aspectRatio = (MediaQuery.of(context).size.width / 2.2) / tileHeight;
     for (var cat in userInventory.keys) {
       toRet.add(Text(
         cat,
@@ -579,16 +582,14 @@ class _IngredientsPageState extends State<IngredientsPage> {
             bool expiresSoon = false;
             bool expired = false;
 
-            double tileHeight = MediaQuery.of(context).size.height;
-
             if (item.expirationDate != 0) {
               DateTime expDate = convertToDate(item.expirationDate);
 
-              if (DateTime.now().difference(expDate).inDays < 7) {
-                expiresSoon = true;
+              if (DateTime.now().difference(expDate).inDays > 0) {
+                expired = true;
               } else {
-                if (expDate.difference(DateTime.now()).inDays > 0) {
-                  expired = true;
+                if (expDate.difference(DateTime.now()).inDays < 7) {
+                  expiresSoon = true;
                 }
               }
             }
@@ -639,22 +640,26 @@ class _IngredientsPageState extends State<IngredientsPage> {
                     ),
                   ),
                   Container(
-                    height: tileHeight - 40,
+                    alignment: Alignment.center,
+                    height: tileHeight - 35,
                     decoration: const BoxDecoration(
                       borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(20),
                           topRight: Radius.circular(20)),
+                      color: white,
                     ),
                     child: Image.network(
                       item.imageUrl,
-                      fit: BoxFit.fitWidth,
+                      fit: BoxFit.fill,
                     ),
                   ),
                   Container(
-                    height: tileHeight - 40,
+                    height: tileHeight - 35,
                     decoration: BoxDecoration(
                       color: white,
-                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                      borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20)),
                       gradient: LinearGradient(
                         begin: FractionalOffset.topCenter,
                         end: FractionalOffset.bottomCenter,
@@ -691,10 +696,11 @@ class _IngredientsPageState extends State<IngredientsPage> {
               ),
             );
           },
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             crossAxisSpacing: 20,
             mainAxisSpacing: 20,
+            childAspectRatio: aspectRatio,
           ),
           physics: const NeverScrollableScrollPhysics(),
         ),
@@ -797,7 +803,7 @@ class _IngredientPageState extends State<IngredientPage> {
 
   final _expirationDate = TextEditingController();
   bool unfilledExpirationDate = false;
-  late DateTime _selectedDate;
+  DateTime _selectedDate = DateTime.now();
 
   String errorMessage = '';
 
@@ -822,27 +828,22 @@ class _IngredientPageState extends State<IngredientPage> {
                     };
 
                     final res = await Inventory.addIngredient(payload);
-                    print(res.statusCode);
-                    if (res.statusCode == 201) {
-                      errorMessage = 'Ingredient Added Successfully!';
-                      setState(() {});
-                      await messageDelay;
-                      Navigator.pop(context);
-                      navFromAddIngred = false;
-                    } else {
-                      int errorCode = await getError(res.statusCode);
-                      if (errorCode == 2) {
-                        final ret = await Inventory.addIngredient(payload);
-                        if (ret.statusCode == 200) {
-                          errorMessage = 'Ingredient Added Successfully!';
-                          await messageDelay;
-                          Navigator.pop(context);
-                          navFromAddIngred = false;
-                        } else {
+                    bool success = false;
+                    do {
+                      if (res.statusCode == 201) {
+                        errorMessage = 'Ingredient Added Successfully!';
+                        setState(() {});
+                        await messageDelay;
+                        success = true;
+                        Navigator.pop(context);
+                        navFromAddIngred = false;
+                      } else {
+                        int errorCode = await getError(res.statusCode);
+                        if (errorCode == 3) {
                           errorDialog(context);
                         }
                       }
-                    }
+                    } while (!success);
                   } else {
                     Map<String, dynamic> payload = {
                       'expirationDate': _expirationDate.text.isEmpty
@@ -851,25 +852,20 @@ class _IngredientPageState extends State<IngredientPage> {
                     };
                     final res = await Inventory.updateIngredientInInventory(
                         ingredientToDisplay.ID, payload);
-                    if (res.statusCode == 200) {
-                      errorMessage = 'Ingredient Updated Successfully!';
-                      await messageDelay;
-                      Navigator.pop(context);
-                    } else {
-                      int errorCode = await getError(res.statusCode);
-                      if (errorCode == 2) {
-                        final res = await Inventory.updateIngredientInInventory(
-                            ingredientToDisplay.ID, payload);
-                        if (res.statusCode == 200) {
-                          errorMessage = 'Ingredient Updated Successfully!';
-                          await messageDelay;
-                          Navigator.pop(context);
-                          navFromAddIngred = false;
-                        } else {
+                    bool success = false;
+                    do {
+                      if (res.statusCode == 200) {
+                        errorMessage = 'Ingredient Updated Successfully!';
+                        await messageDelay;
+                        success = true;
+                        Navigator.pop(context);
+                      } else {
+                        int errorCode = await getError(res.statusCode);
+                        if (errorCode == 3) {
                           errorDialog(context);
                         }
                       }
-                    }
+                    } while (!success);
                   }
                 },
                 icon: const Icon(Icons.check, color: Colors.red),
@@ -887,8 +883,7 @@ class _IngredientPageState extends State<IngredientPage> {
             if (!isEditing)
               IconButton(
                 onPressed: () async {
-                  bool delete = false;
-                  await showDialog(
+                  bool delete = await showDialog(
                     context: context,
                     barrierDismissible: true,
                     builder: (context) {
@@ -901,8 +896,7 @@ class _IngredientPageState extends State<IngredientPage> {
                         actions: <Widget>[
                           TextButton(
                             onPressed: () {
-                              delete = false;
-                              Navigator.pop(context);
+                              Navigator.pop(context, 'false');
                             },
                             child: const Text(
                               'Cancel',
@@ -911,8 +905,7 @@ class _IngredientPageState extends State<IngredientPage> {
                           ),
                           TextButton(
                             onPressed: () {
-                              delete = true;
-                              Navigator.pop(context);
+                              Navigator.pop(context, true);
                             },
                             child: const Text(
                               'Yes',
@@ -924,31 +917,23 @@ class _IngredientPageState extends State<IngredientPage> {
                     },
                   );
 
-                  if (!delete) {
-                    return;
-                  }
-
-                  final res = await Inventory.deleteIngredientfromInventory(
-                      ingredientToDisplay.ID);
-                  if (res.statusCode == 200) {
-                    errorMessage =
-                        'Successfully deleted ingredient from inventory!';
-                    await messageDelay;
-                    Navigator.pop(context);
-                  } else {
-                    int errorCode = await getError(res.statusCode);
-                    if (errorCode == 2) {
-                      final ret = await Inventory.deleteIngredientfromInventory(
-                          ingredientToDisplay.ID);
-                      if (ret.statusCode == 200) {
+                  if (delete) {
+                    final res = await Inventory.deleteIngredientfromInventory(
+                        ingredientToDisplay.ID);
+                    bool success = false;
+                    do {
+                      if (res.statusCode == 200) {
                         errorMessage =
-                            'Successfully deleted ingredient from inventory!';
+                        'Successfully deleted ingredient from inventory!';
                         await messageDelay;
                         Navigator.pop(context);
                       } else {
-                        errorDialog(context);
+                        int errorCode = await getError(res.statusCode);
+                        if (errorCode == 3) {
+                          errorDialog(context);
+                        }
                       }
-                    }
+                    } while (!success);
                   }
                 },
                 icon: const Icon(Icons.delete, color: Colors.red),
@@ -970,11 +955,11 @@ class _IngredientPageState extends State<IngredientPage> {
               }
             },
           )),
-      body: Container(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height,
-        margin: const EdgeInsets.fromLTRB(5, 10, 5, 0),
-        child: SingleChildScrollView(
+      body: SingleChildScrollView(
+        child: Container(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height,
+          margin: const EdgeInsets.fromLTRB(5, 10, 5, 0),
           child: FutureBuilder(
             future: done,
             builder: (BuildContext context, AsyncSnapshot snapshot) {
@@ -1792,7 +1777,6 @@ class _AddIngredientPageState extends State<AddIngredientPage> {
     bool updated = await updateSearchList(searchQuery);
 
     if (searchResultList.length == 0) {
-      print('here');
       resultsList = Container(
         width: MediaQuery.of(context).size.width / 1.5,
         color: white,
