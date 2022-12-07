@@ -8,12 +8,11 @@ class UserData {
   String accessToken;
   String refreshToken;
   // TODO(6): Add profile image support
-  //static late bool hasProfileImage;
-  //static late String profileImage;
+  String profileImage;
 
-  UserData(this.firstName, this.lastName, this.username, this.email, this.password, this.accessToken, this.refreshToken);
+  UserData(this.firstName, this.lastName, this.username, this.email, this.password, this.accessToken, this.refreshToken, this.profileImage);
 
-  static final UserData origin = UserData('', '', '', '', '', '', '');
+  static final UserData origin = UserData('', '', '', '', '', '', '', '');
 
   factory UserData.create() {
     return origin;
@@ -24,6 +23,10 @@ class UserData {
     this.lastName = json['lastName'];
     this.username = json['username'];
     this.email = json['email'];
+  }
+
+  void defineProfileImage(Map<String, dynamic> json) {
+    this.profileImage = json.containsKey('srcUrl') ? json['srcUrl'] : '';
   }
 
   void defineTokens(Map<String, dynamic> json) {

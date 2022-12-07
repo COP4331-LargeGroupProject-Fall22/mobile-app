@@ -11,7 +11,9 @@ class Routes {
   static const String registerScreen = '/register';
   static const String verificationScreen = '/verification';
 
-  static const String recipeScreen = '/recipe';
+  static const String recipesScreen = '/recipe';
+  static const String individualRecipeScreen = '/recipe/recipe';
+  static const String recipeStepsScreen = '/recipe/recipe/steps';
 
   static const String ingredientsScreen = '/food';
   static const String individualIngredientScreen = '/food/food';
@@ -31,7 +33,8 @@ class Routes {
     registerScreen: (context) => RegisterPage(),
     verificationScreen: (context) => VerificationPage(),
 
-    recipeScreen: (context) => RecipeScreen(),
+    recipesScreen: (context) => RecipesScreen(),
+    individualRecipeScreen: (context) => RecipePage(),
 
     ingredientsScreen: (context) => IngredientsScreen(),
     addIngredientScreen: (context) => AddIngredientPage(),
@@ -45,10 +48,16 @@ class Routes {
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
-      case '/food/food':
+      case individualIngredientScreen:
         var arguments = settings.arguments;
         if (arguments is String)
           return MaterialPageRoute(builder: (context) => IngredientPage(arguments));
+        else
+          return MaterialPageRoute(builder: (context) => StartupScreen());
+      case recipeStepsScreen:
+        var arguments = settings.arguments;
+        if (arguments is int)
+          return MaterialPageRoute(builder: (context) => RecipeInstructionPage(arguments));
         else
           return MaterialPageRoute(builder: (context) => StartupScreen());
       default:

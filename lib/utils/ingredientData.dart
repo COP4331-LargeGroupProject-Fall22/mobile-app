@@ -3,7 +3,7 @@ class IngredientData {
   int ID;
   String name;
   String category;
-  List<String> units;
+  Unit units;
   List<Nutrient> nutrients;
   int expirationDate;
   String imageUrl;
@@ -11,16 +11,16 @@ class IngredientData {
   IngredientData(this.ID, this.name, this.category, this.units, this.nutrients, this.expirationDate, this.imageUrl);
 
   factory IngredientData.create() {
-    IngredientData origin = IngredientData(0, '', '', [], [], 0, '');
+    IngredientData origin = IngredientData(0, '', '', Unit.create(), [], 0, '');
     return origin;
   }
 
   IngredientData toIngredient(Map<String, dynamic> json) {
     this.ID = json['id'];
     this.name = json['name'];
-    this.category = json.containsKey('category') ? json['category'] : '';
+    this.category = json.containsKey('category') && json['category'] != null ? json['category'] : '';
     this.imageUrl = json.containsKey('image') ? (json['image'].containsKey('srcUrl') ? json['image']['srcUrl'] : '') : '';
-    this.units = json.containsKey('quantityUnits') ? insertUnits(json) : [];
+    this.units = json.containsKey('quantity') && json['quantity'] != null ? Unit(json['quantity']['unit'], json['quantity']['value']) : Unit.create();
     this.nutrients = json.containsKey('nutrients') ? Nutrient.create().toNutrient(json) : [];
     this.expirationDate = json.containsKey('expirationDate') ? json['expirationDate'] : 0;
     return this;
@@ -29,6 +29,7 @@ class IngredientData {
   IngredientData toRecipeIngredient(Map<String, dynamic> json) {
     this.ID = json['id'];
     this.name = json['name'];
+    this.units = json.containsKey('quantity') ? Unit(json['quantity']['unit'], json['quantity']['value']) : Unit.create();
     return this;
   }
 
@@ -45,7 +46,6 @@ class IngredientData {
   }
 
   void addInformationToIngredient(Map<String, dynamic> json) {
-    this.units = insertUnits(json);
     this.nutrients = Nutrient.create().toNutrient(json);
   }
 
@@ -62,7 +62,7 @@ class IngredientData {
     this.name = '';
     this.category = '';
     this.nutrients = [];
-    this.units = [];
+    this.units = Unit.create();
     this.expirationDate = 0;
   }
 
@@ -114,12 +114,12 @@ class Nutrient{
 
 class Unit{
   String unit;
-  num value;
+  String value;
 
   Unit(this.unit, this.value);
 
   factory Unit.create() {
-    Unit origin = Unit('', 0);
+    Unit origin = Unit('', '');
     return origin;
   }
 

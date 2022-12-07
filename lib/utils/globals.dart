@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:smart_chef/utils/colors.dart';
 
 const double bottomIconSize = 55;
@@ -54,25 +53,6 @@ TextStyle textFieldFontStyle = const TextStyle(
 );
 TextStyle errorTextStyle = const TextStyle(fontSize: 10, color: Colors.red);
 
-final searchField = TextField(
-  maxLines: 1,
-  decoration: const InputDecoration.collapsed(
-    hintText: 'Search...',
-    hintStyle: TextStyle(
-      color: searchFieldText,
-      fontSize: 18,
-    ),
-  ),
-  style: const TextStyle(
-    color: searchFieldText,
-    fontSize: 18,
-  ),
-  textInputAction: TextInputAction.done,
-  onChanged: (query) {
-    // TODO(15): Dynamic search
-  },
-);
-
 void errorDialog(BuildContext context) {
   showDialog(
     context: context,
@@ -104,9 +84,8 @@ void errorDialog(BuildContext context) {
     },
   );
 }
-bool deleteDialog(BuildContext context) {
-  bool delete = false;
-  showDialog(
+Future<bool> deleteDialog(BuildContext context) async{
+  bool delete = await showDialog(
     context: context,
     barrierDismissible: true,
     builder: (context) {
@@ -118,8 +97,7 @@ bool deleteDialog(BuildContext context) {
         actions: <Widget>[
           TextButton(
             onPressed: () {
-              delete = true;
-              Navigator.pop(context, 'Cancel');
+              Navigator.pop(context, false);
             },
             child: const Text(
               'Cancel',
@@ -128,8 +106,7 @@ bool deleteDialog(BuildContext context) {
           ),
           TextButton(
             onPressed: () {
-              delete = true;
-              Navigator.pop(context, 'delete');
+              Navigator.pop(context, true);
             },
             child: const Text(
               'Delete my account',

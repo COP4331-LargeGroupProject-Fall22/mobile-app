@@ -2,11 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:smart_chef/utils/APIutils.dart';
-import 'package:smart_chef/utils/authAPI.dart';
+import 'package:smart_chef/APIfunctions/APIutils.dart';
+import 'package:smart_chef/APIfunctions/authAPI.dart';
 import 'package:smart_chef/utils/colors.dart';
 import 'package:smart_chef/utils/globals.dart';
-import 'package:smart_chef/utils/userAPI.dart';
+import 'package:smart_chef/APIfunctions/userAPI.dart';
 
 class ShoppingCartScreen extends StatefulWidget {
   @override

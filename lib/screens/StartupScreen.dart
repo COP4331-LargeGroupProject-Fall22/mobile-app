@@ -1,14 +1,14 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
-import 'package:smart_chef/utils/APIutils.dart';
-import 'package:smart_chef/utils/authAPI.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:smart_chef/APIfunctions/APIutils.dart';
+import 'package:smart_chef/APIfunctions/authAPI.dart';
+import 'package:smart_chef/APIfunctions/userAPI.dart';
 import 'package:smart_chef/utils/colors.dart';
 import 'package:smart_chef/utils/globals.dart';
-import 'package:smart_chef/utils/userAPI.dart';
-import 'package:smart_chef/utils/userData.dart';
 
 class StartupScreen extends StatefulWidget {
   @override
@@ -172,15 +172,14 @@ class _LogInPageState extends State<LogInPage> {
     super.initState();
   }
 
-  //TODO(30): Reset Password Functionality
-  //int state = 0;
-  // Widget detectState() {
-  //   if (state == 1) {
-  //     return buildForgot();
-  //   } else {
-  //     return buildLogIn();
-  //   }
-  // }
+  int state = 0;
+  Widget detectState() {
+    if (state == 1) {
+      return buildForgot();
+    } else {
+      return buildLogIn();
+    }
+  }
 
   final _username = TextEditingController();
   bool unfilledUsername = false;
@@ -231,7 +230,7 @@ class _LogInPageState extends State<LogInPage> {
                       ),
                     ),
                   ),
-                  buildLogIn()
+                  detectState(),
                 ],
               ),
             ),
@@ -270,6 +269,7 @@ class _LogInPageState extends State<LogInPage> {
                       ),
                       onPressed: () {
                         clearFields();
+                        user.clear();
                         setState(() {
                           Navigator.pop(context);
                         });
@@ -366,7 +366,18 @@ class _LogInPageState extends State<LogInPage> {
                               }
                             },
                             onSubmitted: (sub) async {
-                              await runLogin();
+                              bool logged = await runLogin();
+                              if (logged) {
+                                setState(() => clearFields());
+                                Navigator.restorablePushNamedAndRemoveUntil(
+                                    context, '/food', ((Route<dynamic> route) => false));
+                              } else {
+                                if (mounted)
+                                  setState(() {
+                                    unfilledUsername = true;
+                                    unfilledPassword = true;
+                                  });
+                              }
                             },
                             textInputAction: TextInputAction.done,
                           ),
@@ -390,7 +401,18 @@ class _LogInPageState extends State<LogInPage> {
                       children: <Widget>[
                         ElevatedButton(
                           onPressed: () async {
-                            await runLogin();
+                            bool logged = await runLogin();
+                            if (logged) {
+                              setState(() => clearFields());
+                              Navigator.restorablePushNamedAndRemoveUntil(
+                                  context, '/food', ((Route<dynamic> route) => false));
+                            } else {
+                              if (mounted)
+                                setState(() {
+                                  unfilledUsername = true;
+                                  unfilledPassword = true;
+                                });
+                            }
                           },
                           style: buttonStyle,
                           child: const Text(
@@ -417,12 +439,10 @@ class _LogInPageState extends State<LogInPage> {
                         ),
                       ),
                       onPressed: () {
-                        // TODO(30): Resetting Password
-                        // clearFields();
-                        // topMessage = 'Forgot Your\nPassword?';
-                        // setState(() {
-                        //   state = 1;
-                        // });
+                        clearFields();
+                        topMessage = 'Forgot Your\nPassword?';
+                        errorMessage = '';
+                        setState(() => state = 1);
                       },
                       child: const Text('Forgot Your Password?'),
                     ),
@@ -436,13 +456,13 @@ class _LogInPageState extends State<LogInPage> {
     );
   }
 
-  bool allLoginFieldsValid(bool hasPassword) {
+  bool allLoginFieldsValid() {
     bool toReturn = true;
     if (_username.value.text.isEmpty) {
       toReturn = false;
       setState(() => unfilledUsername = true);
     }
-    if (hasPassword & _password.value.text.isEmpty) {
+    if (_password.value.text.isEmpty) {
       toReturn = false;
       setState(() => unfilledPassword = true);
     }
@@ -452,12 +472,14 @@ class _LogInPageState extends State<LogInPage> {
   void clearFields() {
     unfilledUsername = false;
     unfilledPassword = false;
+    unfilledCode = false;
     _username.clear();
     _password.clear();
+    _code.clear();
   }
 
-  Future<void> runLogin() async {
-    if (allLoginFieldsValid(/*hasPassword=*/ true)) {
+  Future<bool> runLogin() async {
+    if (allLoginFieldsValid()) {
       Map<String, dynamic> payload = {
         'username': _username.value.text.trim(),
         'password': _password.value.text.trim()
@@ -469,87 +491,442 @@ class _LogInPageState extends State<LogInPage> {
           var tokens = json.decode(ret.body);
           user.defineTokens(tokens);
 
-          final res = await User.getUser();
-          if (res.statusCode == 200) {
-            var data = json.decode(res.body);
-            user.defineUserData(data);
-            user.setPassword(_password.value.text.trim());
-
-            setState(() => clearFields());
-            Navigator.restorablePushNamedAndRemoveUntil(
-                context, '/food', ((Route<dynamic> route) => false));
-          } else {
-            errorMessage = getDataRetrieveError(res.statusCode);
-          }
+          return await retrieveUserData();
         } else {
-          errorMessage = getLogInError(ret.statusCode);
-          if (ret.statusCode == 403) {
+          int errorCode = getLogInError(ret.statusCode);
+          if (errorCode == 3) {
             user.username = _username.value.text.trim();
             showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: const Text('Account not verified'),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    elevation: 15,
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () {
-                          user.username = _username.value.text;
-                          Navigator.restorablePushReplacementNamed(
-                              context, '/verification');
-                        },
-                        child: const Text(
-                          'OK',
-                          style: TextStyle(color: Colors.red, fontSize: 18),
-                        ),
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text('Account not verified'),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  elevation: 15,
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () {
+                        user.username = _username.value.text;
+                        Navigator.restorablePushReplacementNamed(
+                            context, '/verification');
+                      },
+                      child: const Text(
+                        'OK',
+                        style: TextStyle(color: Colors.red, fontSize: 18),
                       ),
+                    ),
+                  ],
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const <Widget>[
+                      Flexible(
+                          child: Text(
+                              'Your account is not verified!\nPress OK to be taken to the verification page')),
                     ],
-                    content: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const <Widget>[
-                          Flexible(
-                              child: Text(
-                                  'Your account is not verified!\nPress OK to be taken to the verification page')),
-                        ]),
-                  );
-                });
+                  ),
+                );
+              });
+            return false;
           }
         }
       } catch (e) {
         errorMessage = 'Could not connect to server';
         print('Could not connect to /auth/user');
+        return false;
       }
     }
+    return false;
   }
 
-  String getLogInError(int statusCode) {
+  Future<bool> retrieveUserData() async {
+    bool success = false;
+    int tries = 0;
+    do {
+      final res = await User.getUser();
+      if (res.statusCode == 200) {
+        var data = json.decode(res.body);
+        user.defineUserData(data);
+        user.setPassword(_password.value.text.trim());
+        return true;
+      } else {
+        int errorCode = await getDataRetrieveError(res.statusCode);
+        if (errorCode == 3) {
+          errorDialog(context);
+          return false;
+        }
+        tries++;
+      }
+    } while(!success && tries < 3);
+    errorMessage = 'Could not retrieve user data';
+    return success;
+  }
+
+  int getLogInError(int statusCode) {
     switch (statusCode) {
       case 400:
-        return "Incorrect formatting!";
+        errorMessage = "Incorrect formatting!";
+        return 1;
       case 401:
-        return 'Password is incorrect';
+        errorMessage = 'Password is incorrect';
+        return 2;
       case 403:
-        return 'Account not verified';
+        errorMessage = 'Account not verified';
+        return 3;
       case 404:
-        return 'User not found';
+        errorMessage = 'User not found';
+        return 4;
       default:
-        return 'Something in auth went wrong!';
+        return 5;
     }
   }
 
-  String getDataRetrieveError(int statusCode) {
+  Future<int> getDataRetrieveError(int statusCode) async {
     switch (statusCode) {
       case 400:
-        return "Incorrect formatting!";
+        errorMessage = "Incorrect formatting!";
+        return 1;
       case 401:
-        return 'Token is invalid';
+        errorMessage = 'Reconnecting...';
+        setState(() {});
+        if (await tryTokenRefresh()) {
+          errorMessage = 'Reconnected';
+          return 2;
+        } else {
+          errorMessage = 'Could not connect to server!';
+          return 3;
+        }
       case 404:
-        return 'User Not Found';
+        errorMessage = 'User not found';
+        return 4;
       default:
-        return 'Something in auth went wrong!';
+        return 5;
     }
+  }
+
+  final _email = TextEditingController();
+  bool unfilledEmail = false;
+  bool codeSent = false;
+
+  final _code = TextEditingController();
+  bool unfilledCode = false;
+
+  Widget buildForgot() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              padding: const EdgeInsets.all(10),
+              width: MediaQuery.of(context).size.width / 1.6,
+              height: MediaQuery.of(context).size.height / 2.3,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.all(Radius.circular(35)),
+                color: Colors.black.withOpacity(.45),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width,
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        textStyle: const TextStyle(
+                          fontSize: 18,
+                          color: textFieldBorder,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                      onPressed: () {
+                        clearFields();
+                        errorMessage = '';
+                        setState(() => state = 0);
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const <Widget>[
+                          Icon(
+                            Icons.navigate_before,
+                          ),
+                          Text('Go Back'),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 210,
+                    padding: const EdgeInsets.only(top: 15),
+                    child: const Text(
+                      'Email',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                          fontFamily: 'EagleLake'),
+                      textAlign: TextAlign.left,
+                    ),
+                  ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        SizedBox(
+                          width: 210,
+                          height: 40,
+                          child: TextField(
+                            maxLines: 1,
+                            readOnly: codeSent,
+                            controller: _email,
+                            decoration: unfilledEmail
+                                ? invalidTextField.copyWith(
+                                hintText: 'Enter Email')
+                                : globalDecoration.copyWith(
+                                hintText: 'Enter Email'),
+                            style: textFieldFontStyle,
+                            onChanged: (email) {
+                              if (email.isEmpty) {
+                                setState(() => unfilledUsername = true);
+                              } else {
+                                if (isEmail(email)) {
+                                  errorMessage = '';
+                                  setState(() => unfilledUsername = false);
+                                } else {
+                                  errorMessage =
+                                  'Email must be in proper format';
+                                  setState(() => unfilledUsername = true);
+                                }
+                              }
+                            },
+                            onSubmitted: (reset) async {
+                              bool done = await sendResetCode();
+                              if (done) {
+                                setState(() => codeSent = true);
+                              }
+                            },
+                            textInputAction: codeSent ? TextInputAction.next : TextInputAction.done,
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  if (codeSent)
+                    Container(
+                      width: 210,
+                      padding: const EdgeInsets.only(top: 10),
+                      child: const Text(
+                        'Password',
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontFamily: 'EagleLake'),
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                  if (codeSent)
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          SizedBox(
+                            width: 210,
+                            height: 40,
+                            child: TextField(
+                              maxLines: 1,
+                              controller: _password,
+                              obscureText: true,
+                              decoration: unfilledPassword
+                                  ? invalidTextField.copyWith(
+                                  hintText: 'Enter Password')
+                                  : globalDecoration.copyWith(
+                                  hintText: 'Enter Password'),
+                              style: textFieldFontStyle,
+                              onChanged: (password) {
+                                if (password.isEmpty) {
+                                  setState(() => unfilledPassword = true);
+                                } else {
+                                  errorMessage = '';
+                                  setState(() => unfilledPassword = false);
+                                }
+                              },
+                              textInputAction: TextInputAction.next,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (codeSent)
+                    Container(
+                      width: 210,
+                      padding: const EdgeInsets.only(top: 10),
+                      child: const Text(
+                        'Code',
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontFamily: 'EagleLake'),
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                  if (codeSent)
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          SizedBox(
+                            width: 210,
+                            height: 40,
+                            child: TextField(
+                              maxLines: 1,
+                              controller: _code,
+                              obscureText: true,
+                              decoration: unfilledCode
+                                  ? invalidTextField.copyWith(
+                                  hintText: 'Enter Code')
+                                  : globalDecoration.copyWith(
+                                  hintText: 'Enter Code'),
+                              style: textFieldFontStyle,
+                              onChanged: (code) {
+                                if (code.isEmpty) {
+                                  setState(() => unfilledCode = true);
+                                } else {
+                                  errorMessage = '';
+                                  setState(() => unfilledCode = false);
+                                }
+                              },
+                              onSubmitted: (sub) async {
+                                bool logged = await resetPassword();
+                                if (logged) {
+                                  errorMessage = 'Password reset Successful!';
+                                  await messageDelay;
+                                  setState(() => clearFields());
+                                  Navigator.pop(context);
+                                }
+                              },
+                              textInputAction: TextInputAction.done,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width,
+                    child: Text(
+                      errorMessage,
+                      style: const TextStyle(fontSize: 14, color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.only(top: 10, bottom: 10),
+                    width: MediaQuery.of(context).size.width,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        ElevatedButton(
+                          onPressed: () async {
+                            if (codeSent) {
+                              bool logged = await resetPassword();
+                              if (logged) {
+                                errorMessage = 'Password reset Successful!';
+                                await messageDelay;
+                                setState(() => clearFields());
+                                Navigator.pop(context);
+                              }
+                            } else {
+                              bool done = await sendResetCode();
+                              if (done) {
+                                setState(() => codeSent = true);
+                              }
+                            }
+
+                          },
+                          style: buttonStyle,
+                          child: Text(
+                            codeSent ? 'Reset Password' : 'Send Code',
+                            style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                                fontFamily: 'EagleLake'),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Future<bool> sendResetCode() async {
+    if (validateEmail()) {
+      Map<String, dynamic> payload = {
+        'email': _email.value.text.trim(),
+      };
+      final ret = await Authentication.requestResetCode(payload);
+      if (ret.statusCode == 200) {
+        errorMessage = 'Code sent!';
+        return true;
+      } else {
+        errorMessage = 'Account not found';
+      }
+    }
+    return false;
+  }
+
+  bool validateEmail() {
+    bool toRet = true;
+    if (_email.value.text.isEmpty) {
+      errorMessage = 'Email cannot be left blank';
+      toRet = false;
+    }
+    if (!isEmail(_email.value.text)) {
+      errorMessage = 'Email must be in valid form';
+      toRet = false;
+    }
+    return toRet;
+  }
+
+  Future<bool> resetPassword() async {
+    if (validateForgotFields()) {
+      Map<String, dynamic> payload = {
+        'email': _email.value.text.trim(),
+        'password': _password.value.text.trim(),
+        'code': int.parse(_code.value.text.trim()),
+      };
+      try {
+        final ret = await Authentication.resetPassword(payload);
+        if (ret.statusCode == 200) {
+          return true;
+        } else {
+          return false;
+        }
+      } catch(e) {
+        print(e.toString());
+        throw Exception('Something went wrong');
+      }
+    } else return false;
+  }
+
+  bool validateForgotFields() {
+    bool toRet = true;
+    if (_code.text.isEmpty) {
+      errorMessage = 'Code cannot be left blank';
+      toRet = false;
+    }
+    if (_password.text.isEmpty) {
+      errorMessage = 'Password cannot be left blank';
+      toRet = false;
+    }
+    return toRet;
   }
 }
 
@@ -583,6 +960,8 @@ class _RegisterPageState extends State<RegisterPage> {
   String errorMessage = '';
   String topMessage = 'Welcome\nTo SmartChef!';
 
+  XFile? image;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -605,20 +984,42 @@ class _RegisterPageState extends State<RegisterPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   Container(
-                    margin: const EdgeInsets.only(top: 5, bottom: 50),
+                    margin: const EdgeInsets.symmetric(vertical: 25),
                     padding: const EdgeInsets.all(8),
-                    width: MediaQuery.of(context).size.width,
-                    decoration: BoxDecoration(
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(35)),
-                        color: Colors.black.withOpacity(.45)),
-                    child: Text(
-                      topMessage,
-                      style: const TextStyle(
-                          fontSize: 48,
-                          color: Colors.white,
-                          fontFamily: 'EagleLake'),
-                      textAlign: TextAlign.center,
+                    width: MediaQuery.of(context).size.width / 2,
+                    height: MediaQuery.of(context).size.width / 2,
+                    color: Colors.grey,
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        XFile? imageSrc = await _getImageFromGallery();
+                        if (imageSrc != null) {
+                          image = imageSrc;
+                        }
+                      },
+                      child: image == null ? Center(
+                        child: Column(
+                          children: const <Widget>[
+                            Icon(
+                              Icons.upload,
+                              size: bottomIconSize,
+                              color: black,
+                            ),
+                            Flexible(
+                              child: Text(
+                                'Click to upload a profile image',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                      ),
+                      ) : Image.file(
+                        File(image!.path),
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                   Column(
@@ -947,7 +1348,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: <Widget>[
                                   SizedBox(
-                                    width: 85,
                                     height: 36,
                                     child: ElevatedButton(
                                       onPressed: () async {
@@ -968,22 +1368,11 @@ class _RegisterPageState extends State<RegisterPage> {
                                             final ret =
                                                 await Authentication.register(
                                                     payload);
+
                                             if (ret.statusCode == 200) {
                                               errorMessage = '';
-                                              Map<String, dynamic> package = {
-                                                'username':
-                                                    _email.value.text.trim(),
-                                              };
-                                              final res =
-                                                  await Authentication.sendCode(
-                                                      package);
-                                              if (res.statusCode == 200) {
-                                                errorMessage = '';
-                                                user.username =
-                                                    _email.value.text;
-                                                Navigator.restorablePushNamed(
-                                                    context, '/verification');
-                                              }
+                                              Navigator.restorablePushNamed(
+                                                      context, '/verification');
                                             } else {
                                               errorMessage = getErrorString(
                                                   ret.statusCode);
@@ -1100,6 +1489,15 @@ class _RegisterPageState extends State<RegisterPage> {
         return 'Username already in use';
       default:
         return 'Something went wrong!';
+    }
+  }
+
+  Future<XFile?> _getImageFromGallery() async {
+    XFile? pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+    );
+    if (pickedFile != null) {
+      return pickedFile;
     }
   }
 }
@@ -1236,7 +1634,6 @@ class _VerificationPageState extends State<VerificationPage> {
                     ),
                   ),
                   SizedBox(
-                    width: 100,
                     height: 36,
                     child: ElevatedButton(
                       onPressed: () async {
@@ -1246,22 +1643,23 @@ class _VerificationPageState extends State<VerificationPage> {
                         } else {
                           Map<String, dynamic> payload = {
                             'username': user.username.trim(),
-                            'verificationCode':
+                            'code':
                                 int.parse(_code.value.text.trim())
                           };
 
                           try {
                             final res =
                                 await Authentication.verifyCode(payload);
+
                             if (res.statusCode == 200) {
                               errorMessage = 'Account successfully created!';
                               await Future.delayed(const Duration(seconds: 1));
                               clearFields();
 
-                              Navigator.restorablePushReplacementNamed(
-                                  context, '/login');
+                              Navigator.pushNamedAndRemoveUntil(context, '/startup', (Route<dynamic> route) => false);
                             } else {
-                              if (res.statusCode == 401) {
+                              String message = json.decode(res.body);
+                              if (message == "Verification code is either expired or not issued.") {
                                 Map<String, dynamic> name = {
                                   'username': user.username,
                                 };
